@@ -10,34 +10,42 @@ import AL_CFG
 -- symbols
 --
 e :: Symbol
-e = NT "E"
+e = SE (Term "E") (Text "Expression")
+
+-- variable usage
+varu :: Symbol
+varu = SE (Use "u") (Text "Usage of a bound variable")
+
+-- variable definition
+vard :: Symbol
+vard = SE (Def "v") (Text "Binding a name to an expression")
 
 i :: Symbol
-i = T "i"
+i = SE (Term "I") (Code "1,2,3,4,5")
 
 -- operator
 o :: Symbol
-o = NT "O"
+o = SE (Term "O") (Code "<,>,+,-,*,/,=")
 
 -- plus
 p :: Symbol
-p = T "+"
+p = SE (Term "+") (Text "Adds two integers together")
 
 -- minus
 m :: Symbol
-m = T "-"
+m = SE (Term "-") (Text "Subtracts one integer from another")
 
 -- multiplication
 x :: Symbol
-x = T "x"
+x = SE (Term "*") (Text "Multiplies two integers together")
 
 -- division
 d :: Symbol
-d = T "/"
+d = SE (Term "/") (Text "Divided one integer by another")
 
 -- or
 orr :: Symbol
-orr = T "|"
+orr = SE (Term "|") (Text "Either the first or the second is true?")
 
 --
 -- rules
@@ -45,18 +53,24 @@ orr = T "|"
 
 -- int represents an expr
 exprRule :: Rule
-exprRule = Rule "E" [
-  RHS "Single Int" [i],
-  RHS "Two Exprs with Operator" [e,o,e]]
+exprRule = Rule e [
+  RHS "Single Int" [i],                   -- ex: 42
+  RHS "Variable" [varu],                  -- ex: var
+  RHS "Two Exprs with Operator" [e,o,e],  -- ex: 1 + 2
+  RHS "Let Expression" [vard,e,e]]        -- ex: let var = e1 in e2
+
+--nameRule :: Rule
+--nameRule = Rule "V" [
+--  RHS "Variable can resolve to an expression" [e]]
 
 -- operator can be one of many
 opRule :: Rule
-opRule = Rule "O" [
-  RHS "Plus" [p],
+opRule = Rule o [
+  RHS "Plus"  [p],
   RHS "Minus" [m],
-  RHS "Mult"[x],
-  RHS "Div" [d],
-  RHS "Or" [orr]
+  RHS "Mult"  [x],
+  RHS "Div"   [d],
+  RHS "Or"    [orr]
   ]
 
 arithmetic_grammar :: Grammar

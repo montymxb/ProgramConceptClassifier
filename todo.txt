@@ -19,5 +19,21 @@
     - language deps come from syntax (language definitions)
         - lang deps are relationships between nonterminals derived in grammar productions
         - lexical primitives (integers, terminals), not defined in the grammar itself
-        
-> enrich symbols (provide explanations...context)
+- enrich symbols (provide explanations...context)
+    - something of that...
+
+:: may 10th, 2020 ::
+
+- for any rule, LHS must be a symbol as well
+- quickly add some code that determines NTs and Ts in our language purely by whether they are present in any LHS or not
+  - lower case Ts, upper case NTs on print
+- extend Symbol with Def (bind) & Use (call) parts, in addition to what we already have
+  - both are akin to Terminal 'T', but allow easier usage dep identification
+  - plug this into the arithmetic grammar
+  - should allow checking of usage deps now
+- Use SymbolType, check email
+  - converts them all to NonTerm or Term when doing basic analysis
+- plug this into the arithmetic lang
+- write a simple version of it Arithmetic Lang using this
+
+- write analyzer in Dependencies.hs
