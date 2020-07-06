@@ -4,48 +4,52 @@
 -- Representation of a simplistic arithmetic language's syntax
 --
 
-import AL_CFG
+import Grammar
+import Node
+import Rule
+import KnowledgeBase
 
 --
 -- symbols
 --
-e :: Symbol
-e = SE (Term "E") (Text "Expression")
+e :: Node
+e = sym (Term "E") [(TextAndCode "Expression")]
 
 -- variable usage
-varu :: Symbol
-varu = SE (Use "u") (Text "Usage of a bound variable")
+varu :: Node
+varu = sym (Use "u") [(TextAndCode "Usage of a bound variable")]
 
 -- variable definition
-vard :: Symbol
-vard = SE (Def "v") (Text "Binding a name to an expression")
+vard :: Node
+vard = sym (Def "v") [(TextAndCode "Binding a name to an expression")]
 
-i :: Symbol
-i = SE (Term "I") (Code "1,2,3,4,5")
+-- integer
+i :: Node
+i = sym (Term "I") [(TextAndCode "1,2,3,4,5")]
 
 -- operator
-o :: Symbol
-o = SE (Term "O") (Code "<,>,+,-,*,/,=")
+o :: Node
+o = sym (Term "O") [(TextAndCode "<,>,+,-,*,/,=")]
 
 -- plus
-p :: Symbol
-p = SE (Term "+") (Text "Adds two integers together")
+p :: Node
+p = sym (Term "+") [(TextAndCode "Adds two integers together")]
 
 -- minus
-m :: Symbol
-m = SE (Term "-") (Text "Subtracts one integer from another")
+m :: Node
+m = sym (Term "-") [(TextAndCode "Subtracts one integer from another")]
 
 -- multiplication
-x :: Symbol
-x = SE (Term "*") (Text "Multiplies two integers together")
+x :: Node
+x = sym (Term "*") [(TextAndCode "Multiplies two integers together")]
 
 -- division
-d :: Symbol
-d = SE (Term "/") (Text "Divided one integer by another")
+d :: Node
+d = sym (Term "/") [(TextAndCode "Divided one integer by another")]
 
 -- or
-orr :: Symbol
-orr = SE (Term "|") (Text "Either the first or the second is true?")
+orr :: Node
+orr = sym (Term "|") [(TextAndCode "Either the first or the second is true?")]
 
 --
 -- rules
@@ -57,7 +61,7 @@ exprRule = Rule e [
   RHS "Single Int" [i],                   -- ex: 42
   RHS "Variable" [varu],                  -- ex: var
   RHS "Two Exprs with Operator" [e,o,e],  -- ex: 1 + 2
-  RHS "Let Expression" [vard,e,e]]        -- ex: let var = e1 in e2
+  RHS "Let Expression" [vard,e,e]]        -- ex: let var := e1 in e2
 
 --nameRule :: Rule
 --nameRule = Rule "V" [
@@ -73,7 +77,22 @@ opRule = Rule o [
   RHS "Or"    [orr]
   ]
 
-arithmetic_grammar :: Grammar
-arithmetic_grammar = Grammar "Arithmetic Toy Lang" [
+{--
+Examples of this language
+5
+1 + 2
+3 * 4
+12 / 4
+x ::= 1
+y ::= 2 + 3
+z ::= x + y
+a ::= x | z
+
+
+--}
+
+-- representation of the simple arithmetic grammar
+arithmetic_grammar_rep :: Grammar
+arithmetic_grammar_rep = Grammar "Arithmetic Toy Lang" [
   exprRule,
   opRule]
