@@ -4,7 +4,10 @@
 -- Simplified representation of BOGL's syntax
 --
 
-import AL_CFG
+import Grammar
+import Node
+import Rule
+import KnowledgeBase
 
 
 bogl_grammar :: Grammar

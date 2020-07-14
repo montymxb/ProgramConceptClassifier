@@ -24,7 +24,7 @@ type KnownConcepts = [Node]
 type GoalConcepts  = [Node]
 
 -- List of nodes that represent a path to one or more goal nodes
-type PathToGoal_Ordering = [Node]
+type Path = [Node]
 
 
 conceptGraph_FromGrammar :: Grammar -> ConceptGraph
@@ -32,5 +32,5 @@ conceptGraph_FromGrammar g = let nlist = nodes g in (nlist,updateEdgeNodeData nl
 
 -- TODO needs a search algo
 -- Likely to be based on setting up the best possible
---generatePathToGoalsWithGrammar :: Grammar -> GoalConcepts -> PathToGoal_Ordering
+--generatePathToGoalsWithGrammar :: Grammar -> GoalConcepts -> Path
 --generatePathToGoalsWithGrammar g glist = ---can setup various searches in here to demonstrate later
