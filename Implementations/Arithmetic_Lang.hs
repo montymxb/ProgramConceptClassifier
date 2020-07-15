@@ -4,52 +4,44 @@
 -- Representation of a simplistic arithmetic language's syntax
 --
 
-import Grammar
-import Node
+import Symbol
 import Rule
-import KnowledgeBase
+import Grammar
+import GrammarToGraph
+import GraphToConceptGraph
+import ConceptGraph
 
 --
 -- symbols
 --
-e :: Node
-e = sym (Term "E") [(TextAndCode "Expression")]
+e = NonTerminal "E" ["Expression"]
 
 -- variable usage
-varu :: Node
-varu = sym (Use "u") [(TextAndCode "Usage of a bound variable")]
+varu = Terminal "u" ["Usage of a bound variable"]
 
 -- variable definition
-vard :: Node
-vard = sym (Def "v") [(TextAndCode "Binding a name to an expression")]
+vard = Terminal "v" ["Binding of a name to an expression"]
 
 -- integer
-i :: Node
-i = sym (Term "I") [(TextAndCode "1,2,3,4,5")]
+i = Terminal "i" ["1,2,3,4,5","Integers"]
 
 -- operator
-o :: Node
-o = sym (Term "O") [(TextAndCode "<,>,+,-,*,/,=")]
+o = NonTerminal "O" ["<,>,+,-,*,/,=","Operators"]
 
 -- plus
-p :: Node
-p = sym (Term "+") [(TextAndCode "Adds two integers together")]
+p = Terminal "+" ["Adds 2 integers"]
 
 -- minus
-m :: Node
-m = sym (Term "-") [(TextAndCode "Subtracts one integer from another")]
+m = Terminal "-" ["Subtraces one integer from another"]
 
 -- multiplication
-x :: Node
-x = sym (Term "*") [(TextAndCode "Multiplies two integers together")]
+x = Terminal "*" ["Multiplies 2 integers"]
 
 -- division
-d :: Node
-d = sym (Term "/") [(TextAndCode "Divided one integer by another")]
+d = Terminal "/" ["Divide one integer by another"]
 
 -- or
-orr :: Node
-orr = sym (Term "|") [(TextAndCode "Either the first or the second is true?")]
+orr = Terminal "|" ["Either the first of the second is true"]
 
 --
 -- rules
@@ -96,3 +88,7 @@ arithmetic_grammar_rep :: Grammar
 arithmetic_grammar_rep = Grammar "Arithmetic Toy Lang" [
   exprRule,
   opRule]
+
+
+arithmetic_concept_graph :: ConceptGraph GrammarDependency Symbol
+arithmetic_concept_graph = graph_to_concept_graph (grammar_to_graph arithmetic_grammar_rep)
