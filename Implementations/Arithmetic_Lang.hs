@@ -10,10 +10,13 @@ import Grammar
 import GrammarToGraph
 import GraphToConceptGraph
 import ConceptGraph
+import Query
 
 --
 -- symbols
 --
+f = NonTerminal "F" ["Fake symbol for testing"]
+
 e = NonTerminal "E" ["Expression"]
 
 -- variable usage
@@ -69,6 +72,16 @@ opRule = Rule o [
   RHS "Or"    [orr]
   ]
 
+fakeRule :: Rule
+fakeRule = Rule f [
+  RHS "FakeRule" [e]
+  ]
+
+fakeRule2 :: Rule
+fakeRule2 = Rule f [
+  RHS "FakeRule2" [o]
+  ]
+
 {--
 Examples of this language
 5
@@ -87,8 +100,20 @@ a ::= x | z
 arithmetic_grammar_rep :: Grammar
 arithmetic_grammar_rep = Grammar "Arithmetic Toy Lang" [
   exprRule,
-  opRule]
+  opRule
+  --fakeRule,
+  --fakeRule2
+  ]
 
-
+-- gen a concept graph
 arithmetic_concept_graph :: ConceptGraph GrammarDependency Symbol
 arithmetic_concept_graph = graph_to_concept_graph (grammar_to_graph arithmetic_grammar_rep)
+
+-- a test query
+-- From 'o' to 'f'
+q1 :: Query Symbol
+q1 = query o e
+
+-- example query on this representation of the arithmetic language
+arith_query :: Query Symbol -> [Maybe (Path Symbol)]
+arith_query q = queryGraph arithmetic_concept_graph q

@@ -14,6 +14,7 @@ type Description = String
 data Concept a =
   -- conecpt has a name and zero or more descriptions
   Concept a
+  deriving (Eq)
 
 
 instance (Show a) => Show (Concept a) where
