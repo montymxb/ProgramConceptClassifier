@@ -1,6 +1,8 @@
 --
 -- KnowledgeBase.hs
 --
+-- TODO remove once the rest is cleaned up...this is more of a conceptual layout file
+--
 
 module KnowledgeBase where
 

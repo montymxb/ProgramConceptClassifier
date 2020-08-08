@@ -50,7 +50,7 @@ orr = Terminal "|" ["Either the first of the second is true"]
 -- rules
 --
 
--- int represents an expr
+-- valid expressions
 exprRule :: Rule
 exprRule = Rule e [
   RHS "Single Int" [i],                   -- ex: 42
@@ -72,11 +72,13 @@ opRule = Rule o [
   RHS "Or"    [orr]
   ]
 
+-- a fake rule to test things with
 fakeRule :: Rule
 fakeRule = Rule f [
   RHS "FakeRule" [e]
   ]
 
+-- another fake rule to test things with
 fakeRule2 :: Rule
 fakeRule2 = Rule f [
   RHS "FakeRule2" [o]
@@ -96,7 +98,7 @@ a ::= x | z
 
 --}
 
--- representation of the simple arithmetic grammar
+-- | Representation of the simple arithmetic grammar
 arithmetic_grammar_rep :: Grammar
 arithmetic_grammar_rep = Grammar "Arithmetic Toy Lang" [
   exprRule,

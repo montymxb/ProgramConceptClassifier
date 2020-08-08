@@ -12,9 +12,9 @@ import Data.Char
 import Data.Set (toList,fromList)
 import Data.List
 
-
+-- | The name to associate with a representation of a grammar
 type Name = String
 
--- defines the grammar for an arbitrary language
+-- | Defines a representation of a grammar that can represent a language
 data Grammar = Grammar Name [Rule]
   deriving (Show)

@@ -10,20 +10,21 @@ import GraphToConceptGraph
 import ConceptGraph
 import Query
 
-algorithm = NonTerminal "Algorithm" []
-output = Terminal "Output" []
-instructions = NonTerminal "Instructions" []
-conditions = Terminal "Conditions" []
-input = Terminal "Input" []
+-- Individual nodes
+algorithm       = NonTerminal "Algorithm" []
+output          = Terminal "Output" []
+instructions    = NonTerminal "Instructions" []
+conditions      = Terminal "Conditions" []
+input           = Terminal "Input" []
 representations = NonTerminal "Representations" []
-names = Terminal "Names" []
+names           = Terminal "Names" []
 -- not really a Term, but putting it like that to avoid the loop
-abstraction = Terminal "Abstraction" []
+abstraction     = Terminal "Abstraction" []
+resources       = Terminal "Resources" []
+computer        = NonTerminal "Computer" []
+computation     = NonTerminal "Computation" []
 
-resources = Terminal "Resources" []
-computer = NonTerminal "Computer" []
-computation = NonTerminal "Computation" []
-
+-- Relationships
 algoRule = Rule algorithm [
   RHS "receives" [input],
   RHS "consists of" [instructions],
@@ -49,6 +50,7 @@ computationRule = Rule computation [
   RHS "requires/takes up" [resources]
   ]
 
+-- | CSforAll word poster as a 'grammar'
 concept_rep = Grammar "CSforAll Word Poster" [
   algoRule,
   instructionsRule,
@@ -57,8 +59,11 @@ concept_rep = Grammar "CSforAll Word Poster" [
   computationRule
   ]
 
+-- | Concept graph from this grammar representation
 concept_graph = graph_to_concept_graph (grammar_to_graph concept_rep)
 
+-- | Query from names -> computer
 q1 = query names computer
 
+-- | Performs a query on the concept graph of CSforAll items
 csforall_query q = queryGraph concept_graph q

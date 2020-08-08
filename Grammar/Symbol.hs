@@ -13,18 +13,22 @@ type SymbolName = String
 type Explanation = String
 
 
--- Term or NonTerm symbol
+-- | Defines types of symbols we can use in our grammar
 data Symbol =
-  Terminal SymbolName [Explanation]   | -- terminal symbol
-  NonTerminal SymbolName [Explanation]  -- non-terminal symbol
-  deriving (Show,Eq,Ord)
+  Terminal SymbolName [Explanation]   | -- ^ terminal symbol
+  NonTerminal SymbolName [Explanation]  -- ^ non-terminal symbol
+  deriving (Eq,Ord)
+
+instance Show Symbol where
+  show (Terminal sn _) = sn
+  show (NonTerminal sn _ ) = sn
 
 
--- constructs terminal symbol w/out explanation
+-- | Constructs terminal symbol w/out explanation
 terminal :: SymbolName -> Symbol
 terminal n = Terminal n []
 
 
--- constructs nonterm symbol w/out explanation
+-- | Constructs non-term symbol w/out explanation
 nonterminal :: SymbolName -> Symbol
 nonterminal n = NonTerminal n []
