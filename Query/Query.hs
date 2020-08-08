@@ -2,7 +2,7 @@
 -- Represents a query performed on a concept graph
 --
 
-module Query (Query(Query),Path,query,queryGraph,queryFromKnownToGoal) where
+module Query (Query(Query),Path,query,queryGraph,queryFromKnownToGoal,_queryFromKnownToGoal,_queryGraph) where
 
 import Concept
 import ConceptGraph

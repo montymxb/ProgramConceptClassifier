@@ -13,8 +13,6 @@ import ConceptGraph
 import Query
 import GVSpec
 
-import TaggedSyntax
-
 {-
 program -> gameName,typeSyns,boardDef,inputDef,decls | expr --ehhh...more or less correct
 gameName -> 'game',name
@@ -51,114 +49,112 @@ position -> '(',Int,Int,')'
 -}
 
 
-program = NonTerminal "Program" ["A BoGL Program"]
-body = NonTerminal "Body" ["Body of a BoGL Program"]
+program = NonTerminal "Program" ["--bogl example\n"]
+body = NonTerminal "Body" ["--body of a bogl program\n"]
 
-gameDecl = NonTerminal "GameDecl" ["Declares a Game in BoGL"]
-gameKeyword = Terminal "game" ["Game keyword"]
-gameName = Terminal "GameName" ["Names a game in BoGL"]
+gameDecl = NonTerminal "GameDecl" ["game BoGLExample\n"]
+gameKeyword = Terminal "game" ["game"]
+gameName = Terminal "GameName" ["ExampleGame"]
 
-boardDef = NonTerminal "BoardDef" ["Board Definition"]
-inputDef = NonTerminal "InputDef" ["Input Definition"]
-typeSyn = NonTerminal "TypeSyn" ["Type Synonym"]
-decl = NonTerminal "Decl" ["Declaration"]
-boglType = NonTerminal "Type" ["Type"]
-varEq = NonTerminal "VarEq" ["Variable Equation"]
-funcEq = NonTerminal "FuncEq" ["Function Equation"]
-boardEq = NonTerminal "BoardEq" ["Board Equation"]
-name = Terminal "Name" ["Name"]
+boardDef = NonTerminal "BoardDef" ["type Board = Array(1,1) of ",""]
+inputDef = NonTerminal "InputDef" ["type Input = ",""]
+typeSyn = NonTerminal "TypeSyn" ["type TypeSyn = "]
+decl = NonTerminal "Decl" []
+boglType = NonTerminal "Type" []
+varEq = NonTerminal "VarEq" ["x : Int\nx = "]
+funcEq = NonTerminal "FuncEq" ["succ : Int -> Int\nsucc(y) = "]
+boardEq = NonTerminal "BoardEq" ["exampleBoard : Board\nexampleBoard!(x,y) = "]
+name = Terminal "Name" ["succ,x,exampleBoard"]
 
-lowercaseWord = Terminal "Lowercase_Word" ["Lowercase Identifier (names)"]
-uppercaseWord = Terminal "Uppercase_Word" ["Uppercase Identifier (types)"]
+lowercaseWord = Terminal "Lowercase_Word" [] -- for identifiers
+uppercaseWord = Terminal "Uppercase_Word" [] -- for types
 
-typeKeyword = Terminal "type" ["Type Keyword"]
-typeName = Terminal "TypeName" ["Type Name"]
+typeKeyword = Terminal "type" ["type"]
+typeName = Terminal "TypeName" []
 
-boardType = Terminal "Board" ["Board Type"]
-inputType = Terminal "Input" ["Input Type"]
-intType = Terminal "Int" ["Int Type"]
-boolType = Terminal "Bool" ["Bool Type"]
-playerType = Terminal "Player" ["Player Type"]
+boardType = Terminal "Board" ["Board"]
+inputType = Terminal "Input" ["Input"]
+intType = Terminal "Int" ["Int"]
+boolType = Terminal "Bool" ["Bool"]
+playerType = Terminal "Player" ["Player"]
 symbol = NonTerminal "Symbol" ["Symbol"]
-tupleType = NonTerminal "Tuple" ["Tuple Type"]
+tupleType = NonTerminal "Tuple" ["Tuple"]
 
-assignment = Terminal "=" ["Assignment"]
+assignment = Terminal "=" ["="]
 
-arrayDecl = NonTerminal "ArrayDecl" ["Array Declaration"]
+arrayDecl = NonTerminal "ArrayDecl" []
 arrayType = Terminal "Array" ["Array"]
-_of = Terminal "of" ["Of"]
+_of = Terminal "of" ["of"]
 
-expr = NonTerminal "Expression" ["Expression"]
-binop = NonTerminal "BinOp" ["Binary Operator"]
-position = NonTerminal "Position" ["Position"]
+expr = NonTerminal "Expression" []
+binop = NonTerminal "BinOp" ["+","-","*","/","%","==","/=","<=",">=",">","<"]
+position = NonTerminal "Position" ["(Int,Int)"]
 
-colon = Terminal ":" ["Separates Name from Signature"]
-arrow = Terminal "->" ["Distinguishes Input from Output"]
-_and = Terminal "&" ["Union of Sets"]
-get = Terminal "!" ["Array Get Operator"]
+colon = Terminal ":" [] -- separates name from type in function/var signature
+arrow = Terminal "->" [] -- Distinguishes Input from Output
+_and = Terminal "&" [] -- Union of Sets
+get = Terminal "!" [] -- Array Get Operator
 
-ocurly = Terminal "{" ["Open Curly Brace"]
-ccurly = Terminal "}" ["Close Curly Brace"]
+ocurly = Terminal "{" []
+ccurly = Terminal "}" []
 
-oparen = Terminal "(" ["Open Parentheses"]
-cparen = Terminal ")" ["Close Parentheses"]
+oparen = Terminal "(" []
+cparen = Terminal ")" []
 
-plus = Terminal "+" ["Plus"]
-minus = Terminal "-" ["Minus"]
-times = Terminal "*" ["Times"]
-division = Terminal "/" ["Division"]
-modulo = Terminal "%" ["Modulo"]
+plus = Terminal "+" ["5 + 2"]
+minus = Terminal "-" ["5 - 2"]
+times = Terminal "*" ["5 * 2"]
+division = Terminal "/" ["5 / 2"]
+modulo = Terminal "%" ["5 % 2"]
 
-let_in = NonTerminal "let-in" ["let ... in ..."]
+let_in = NonTerminal "let-in" ["let x = 5 in x"]
 _let = Terminal "let" []
 _in = Terminal "in" []
 
-if_then_else = NonTerminal "if-then-else" ["if ... then ... else ..."]
+if_then_else = NonTerminal "if-then-else" ["if True then 1 else 0","if False then 1 else 0"]
 _if = Terminal "if" []
 _then = Terminal "then" []
 _else = Terminal "else" []
 
-while_do = NonTerminal "while-do" ["while ... do ..."]
+while_do = NonTerminal "while-do" ["while (x < 10) do (x+1)"]
 _while = Terminal "while" []
 _do = Terminal "do" []
 
-symbolSet = NonTerminal "Set_of_Symbols" ["Set of Symbols"]
+symbolSet = NonTerminal "Set_of_Symbols" ["{A,B,C}"]
 
-parameters = NonTerminal "Parameters" ["Parameters passed to a function"]
+parameters = NonTerminal "Parameters" ["(x,y)"]
+
+sep = Terminal "line-break" ["\n"] -- separates statements
 
 programR = Rule program [
-  RHS "Start" [gameDecl]]
+  RHS "" [gameDecl]]
 
 bodyR = Rule body [
-  RHS "Body" [typeSyn,boardDef,inputDef,decl],
-  RHS "Just an Expr" [expr]]
-
---programR = Rule program [
---  RHS "Full Program" [gameDecl,typeSyn,boardDef,inputDef,decl],
---  RHS "Just an Expr" [expr]]
+  RHS "-- a normal bogl program" [typeSyn,sep,boardDef,sep,inputDef,sep,decl],
+  RHS "-- just an expression to run in the REPL" [expr]]
 
 gameDeclR = Rule gameDecl [
-  RHS "Game Declaration" [gameKeyword,gameName,body]]
+  RHS "name of a BoGL game" [gameKeyword,gameName,sep,body]]
 
 boardDefR = Rule boardDef [
-  RHS "Explicit Board" [typeKeyword,boardType,assignment,arrayDecl],
-  RHS "None" []]
+  RHS "defines the size and type of the boards we can use" [typeKeyword,boardType,assignment,arrayDecl,sep],
+  RHS "" []]
 
 arrayDeclR = Rule arrayDecl [
-  RHS "Array(x,y) of Type" [arrayType,position,_of,boglType]]
+  RHS "" [arrayType,position,_of,boglType]]
 
 inputDefR = Rule inputDef [
-  RHS "Explicit Input" [typeKeyword,inputType,assignment,boglType],
-  RHS "None" []]
+  RHS "tells BoGL what kind of input you may expect" [typeKeyword,inputType,assignment,boglType],
+  RHS "" []]
 
 typeSynR = Rule typeSyn [
-  RHS "One Type Syn" [typeKeyword,typeName,assignment,boglType],
+  RHS "One Type Syn" [typeKeyword,typeName,assignment,boglType,sep],
   RHS "Many" [typeSyn,typeSyn]]
 
 declR = Rule decl [
-  RHS "Var Eq Decl" [name,colon,boglType,varEq],
-  RHS "Func Eq Decl" [name,colon,boglType,arrow,boglType,funcEq],
-  RHS "Board Eq Decl" [name,colon,boardType,boardEq],
+  RHS "Var Eq Decl" [name,colon,boglType,sep,varEq],
+  RHS "Func Eq Decl" [name,colon,boglType,arrow,boglType,sep,funcEq],
+  RHS "Board Eq Decl" [name,colon,boardType,sep,boardEq],
   RHS "TypeSyn" [typeSyn],
   RHS "Many Decl" [decl,decl]]
 
@@ -235,7 +231,7 @@ binopR = Rule binop [
   RHS "Mod" [modulo]]
 
 positionR = Rule position [
-  RHS "2d Position" [oparen,intType,intType,cparen]]
+  RHS "2D Position" [oparen,intType,intType,cparen]]
 
 -- | Representation of the BoGL language as a grammar
 bogl_grammar_rep :: Grammar
@@ -275,7 +271,7 @@ bogl_concept_graph = graph_to_concept_graph (grammar_to_graph bogl_grammar_rep)
 -- like: query name program...
 -- gives all possible paths from program -> name
 q1 :: Query Symbol
-q1 = query intType program
+q1 = query let_in decl
 
 --
 -- To see the ConceptLattice
@@ -286,23 +282,18 @@ q1 = query intType program
 bogl_query :: Query Symbol -> ConceptLattice GrammarDependency Symbol
 bogl_query q = queryGraph bogl_concept_graph q
 
+--
+-- > bogl_paths q1
+-- > symbolsToExamples $ bogl_paths q1
+--
+bogl_paths :: Query Symbol -> [Maybe (Path Symbol)]
+bogl_paths q = _queryGraph bogl_concept_graph q
 
 
+pall :: [String] -> IO ()
+pall []     = putStrLn ""
+pall (s:ls) = do
+  putStrLn (s ++ "\n")
+  pall ls
 
---
--- Tagged BoGL Expr
---
-tagged_expr = (Any [(TS "123" intValue)])
-
---
--- Tagged BoGL Body
---
---tagged_body = (All [] ...)
-
---
---
---
-tagged_prog :: TaggedProgram Symbol
-tagged_prog = (All [
-  (TS "--example program" program),
-  (TS "game Example" gameDecl)] (Any [(TS "--expr" tagged_expr)]))
+bogl_exs = symbolsToExamples $ bogl_paths q1

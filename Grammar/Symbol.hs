@@ -2,7 +2,7 @@
 -- Symbol in a grammar
 --
 
-module Symbol (Symbol(Terminal,NonTerminal),terminal,nonterminal) where
+module Symbol (Symbol(Terminal,NonTerminal),terminal,nonterminal,symbolsToExamples) where
 
 
 -- name of this symbol
@@ -32,3 +32,18 @@ terminal n = Terminal n []
 -- | Constructs non-term symbol w/out explanation
 nonterminal :: SymbolName -> Symbol
 nonterminal n = NonTerminal n []
+
+symbolsToExamples :: [Maybe [Symbol]] -> [String]
+symbolsToExamples ms = map toExamples ms
+
+toExamples :: Maybe [Symbol] -> String
+toExamples (Just syms) = concat $ map toExample syms
+toExamples Nothing     = ""
+
+toExample :: Symbol -> String
+-- no examples
+toExample (NonTerminal _ [])       = ""
+toExample (Terminal _ [])          = ""
+-- use the 1st example
+toExample (NonTerminal _ (ex:ls))  = ex
+toExample (Terminal _ (ex:ls))     = ex
