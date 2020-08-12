@@ -94,8 +94,6 @@ x ::= 1
 y ::= 2 + 3
 z ::= x + y
 a ::= x | z
-
-
 --}
 
 -- | Representation of the simple arithmetic grammar

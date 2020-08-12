@@ -2,7 +2,7 @@
 -- Represents a query performed on a concept graph
 --
 
-module Query (Query(Query),Path,query,queryGraph,queryFromKnownToGoal,_queryFromKnownToGoal,_queryGraph) where
+module Query (Query(Query),Path,query,queryGraph,queryFromKnownToGoal,_queryFromKnownToGoal,_queryGraph,queryInOrder) where
 
 import Concept
 import ConceptGraph
@@ -23,15 +23,23 @@ data Query a =
               -- known is expanded as the query is used to explore towards a goal node
 
 
+
 -- | Constructs a simple query with a single start point
 query :: a -> a -> Query a
 query start end = Query [start] end
 
 
--- | Generates multiple queries from different source concepts to a single destination concept
-queriesTo :: [a] -> a -> [Query a]
-queriesTo [] _        = []
-queriesTo (s:ls) (d)  = Query [s] d : queriesTo ls d
+-- | Produces a list of concept dependencies froma list of paths
+getEdgesFromPaths :: b -> [a] -> [ConceptDependency b a]
+getEdgesFromPaths _ []      = [] -- no items
+getEdgesFromPaths _ (p1:[]) = [] -- last item
+getEdgesFromPaths e (p1:(p2:ls)) = ((ConceptDependency e p1 p2) : (getEdgesFromPaths e (p2:ls))) -- dep to add
+
+
+-- | Gets the unique vertices present across all paths
+getUniqueVertices :: Ord a => [Path a] -> [Concept a]
+getUniqueVertices xl = map (\x -> Concept x) (toList $ fromList $ (concat xl))
+
 
 -- | Filters paths for a given concept graph into a concept lattice, using the same concept depencies for all edges
 _filterPathsIntoLattice :: (Eq a, Ord a, Ord b) => (ConceptGraph b a) -> [Maybe (Path a)] -> ConceptLattice b a
@@ -40,32 +48,67 @@ _filterPathsIntoLattice cg@(ConceptGraph _ ((ConceptDependency e1 _ _):_)) mpath
                   let vertices= getUniqueVertices paths in
                   (ConceptGraph vertices edges)
 
--- | Performs multiple queries from various src/goal pairs, and unifies the final result into a concept graph (not a lattice in this case)
+
+
+--
+--
+-- Multi-Query from [Known] -> [Goal]
+--
+--
+
+-- | Performs multiple queries from various src/goal pairs, and unifies the final result into a concept graph (not always a lattice in this case)
 queryFromKnownToGoal :: (Eq a, Ord a, Ord b) => (ConceptGraph b a) -> [a] -> [a] -> ConceptLattice b a
 queryFromKnownToGoal cg src dst = _filterPathsIntoLattice cg (_queryFromKnownToGoal cg src dst)
+
+
+-- | Generates multiple queries from different source concepts to a single destination concept
+queriesTo :: [a] -> a -> [Query a]
+queriesTo [] _        = []
+queriesTo (s:ls) (d)  = Query [s] d : queriesTo ls d
+
 
 -- | Evaluates and combines the results of multiple queries into a single list of possible paths
 -- Takes a concept graph, a list of start concepts, and a list of destination concepts
 _queryFromKnownToGoal :: (Eq a, Ord a) => (ConceptGraph b a) -> [a] -> [a] ->  [Maybe (Path a)]
 _queryFromKnownToGoal _ _ [] = [Nothing]
-_queryFromKnownToGoal cg sl (d:dl) = join $ map (_queryGraph cg) (queriesTo sl d)
-
--- | From a given list of paths, produces a list of concept dependencies
-getEdgesFromPaths :: b -> [a] -> [ConceptDependency b a]
-getEdgesFromPaths _ []      = [] -- no items
-getEdgesFromPaths _ (p1:[]) = [] -- last item
-getEdgesFromPaths e (p1:(p2:ls)) = ((ConceptDependency e p1 p2) : (getEdgesFromPaths e (p2:ls))) -- dep to add
-
--- | Gets the unique vertices present across all paths
-getUniqueVertices :: Ord a => [Path a] -> [Concept a]
-getUniqueVertices xl = map (\x -> Concept x) (toList $ fromList $ (concat xl))
+_queryFromKnownToGoal cg sl (d:dl) = (join $ map (_queryGraph cg) (queriesTo sl d)) ++ (_queryFromKnownToGoal cg sl dl)
 
 
--- | Queries a concept graph with a query, and returns a concept lattice
+
+
+--
+--
+-- Chained Querying, A -> B -> C
+--
+--
+
+
+-- | Generates a chain of queries from concept to concept
+genInOrderQueries :: (Eq a) => [a] -> [Query a]
+genInOrderQueries []            = []
+genInOrderQueries (_:[])        = []
+genInOrderQueries (i1:(i2:ls))  = (Query [i1] i2) : (genInOrderQueries (i2:ls))
+
+
+-- | Perform queries in order, from one node to another node, until done
+queryInOrder :: (Eq a, Ord a, Ord b) => ConceptGraph b a -> [a] -> ConceptLattice b a
+queryInOrder cg concepts = _filterPathsIntoLattice cg (concat (map (_queryGraph cg) (genInOrderQueries concepts)))
+
+
+
+
+--
+--
+-- Standard Querying
+--
+--
+
+-- | Queries a concept graph and returns a concept lattice
 queryGraph :: (Eq a, Ord a, Ord b) => ConceptGraph b a -> Query a -> ConceptLattice b a
 queryGraph cg q = _filterPathsIntoLattice cg (_queryGraph cg q)
 
--- | Produces a list of possible paths to the goal concept
+
+-- | Produces a list of possible paths to a goal concept from a given concept
 _queryGraph :: (Eq a) => ConceptGraph b a -> Query a -> [Maybe (Path a)]
 _queryGraph _ (Query [] _) = [] -- nothing to query
 _queryGraph cg@(ConceptGraph concepts deps) q@(Query sls@(start:ls) end) | find (==(Concept start)) concepts == Nothing = [Nothing] -- node does not exist
