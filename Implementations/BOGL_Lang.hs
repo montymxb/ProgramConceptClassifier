@@ -329,7 +329,7 @@ q1 = query let_in decl
 -- To see the ConceptLattice
 -- writeGVSpec "conceptlattice_1" $ bogl_query q1
 --
--- writeGVSpec "cl_3" $ queryFromKnownToGoal bogl_concept_graph [name] [boglType]
+-- writeGVSpec "cl_3" $ queryFromKnownToGoal bogl_concept_graph [let_in] [expr,varEq,decl]
 --
 bogl_query :: Query Symbol -> ConceptLattice GrammarDependency Symbol
 bogl_query q = queryGraph bogl_concept_graph q
@@ -356,3 +356,7 @@ pall (s:ls) = do
 -- > pall $ bogl_exs
 bogl_exs :: [String]
 bogl_exs = symbolsToExamples $ bogl_paths q1
+
+--
+-- > ghci Implementations/BOGL_Lang.hs ConceptGraph/*.hs GVSpec/*.hs Grammar/*.hs Query/*.hs
+--
