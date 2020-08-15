@@ -1,0 +1,17 @@
+digraph G {
+BoardEq [label="BoardEq"];
+Decl [label="Decl"];
+Expression [label="Expression"];
+FuncEq [label="FuncEq"];
+Program [label="Program"];
+VarEq [label="VarEq"];
+BoardEq -> Expression;
+Decl -> BoardEq;
+Decl -> FuncEq;
+Decl -> VarEq;
+FuncEq -> Expression;
+Program -> Decl;
+Program -> Expression;
+VarEq -> Expression;
+
+}

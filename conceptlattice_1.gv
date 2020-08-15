@@ -1,0 +1,43 @@
+digraph G {
+Int [label="Int"];
+TypeName [label="TypeName"];
+ArrayDecl [label="ArrayDecl"];
+BoardDef [label="BoardDef"];
+BoardEq [label="BoardEq"];
+Decl [label="Decl"];
+Expression [label="Expression"];
+FuncEq [label="FuncEq"];
+InputDef [label="InputDef"];
+Position [label="Position"];
+Program [label="Program"];
+Type [label="Type"];
+TypeSyn [label="TypeSyn"];
+VarEq [label="VarEq"];
+TypeName -> Int;
+ArrayDecl -> Position;
+ArrayDecl -> Type;
+BoardDef -> ArrayDecl;
+BoardEq -> Expression;
+BoardEq -> Position;
+Decl -> BoardEq;
+Decl -> FuncEq;
+Decl -> Type;
+Decl -> TypeSyn;
+Decl -> VarEq;
+Expression -> Int;
+Expression -> Position;
+FuncEq -> Expression;
+InputDef -> Type;
+Position -> Int;
+Program -> BoardDef;
+Program -> Decl;
+Program -> Expression;
+Program -> InputDef;
+Program -> TypeSyn;
+Type -> Int;
+Type -> TypeName;
+TypeSyn -> TypeName;
+TypeSyn -> Type;
+VarEq -> Expression;
+
+}

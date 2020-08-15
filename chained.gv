@@ -1,0 +1,23 @@
+digraph G {
+BoardEq [label="BoardEq"];
+Body [label="Body"];
+Decl [label="Decl"];
+Expression [label="Expression"];
+FuncEq [label="FuncEq"];
+GameDecl [label="GameDecl"];
+Program [label="Program"];
+VarEq [label="VarEq"];
+letMinussin [label="let-in"];
+BoardEq -> Expression;
+Body -> Decl;
+Body -> Expression;
+Decl -> BoardEq;
+Decl -> FuncEq;
+Decl -> VarEq;
+Expression -> letMinussin;
+FuncEq -> Expression;
+GameDecl -> Body;
+Program -> GameDecl;
+VarEq -> Expression;
+
+}

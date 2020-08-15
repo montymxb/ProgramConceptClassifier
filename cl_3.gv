@@ -1,0 +1,16 @@
+digraph G {
+BoardEq [label="BoardEq"];
+Decl [label="Decl"];
+Expression [label="Expression"];
+FuncEq [label="FuncEq"];
+VarEq [label="VarEq"];
+letMinussin [label="let-in"];
+BoardEq -> Expression;
+Decl -> BoardEq;
+Decl -> FuncEq;
+Decl -> VarEq;
+Expression -> letMinussin;
+FuncEq -> Expression;
+VarEq -> Expression;
+
+}
