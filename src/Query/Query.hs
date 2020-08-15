@@ -2,16 +2,18 @@
 -- Represents a query performed on a concept graph
 --
 
-module Query (Query(Query),Path,query,queryGraph,queryFromKnownToGoal,_queryFromKnownToGoal,_queryGraph,queryInOrder) where
+module Query.Query (Query(Query),Path,query,queryGraph,queryFromKnownToGoal,_queryFromKnownToGoal,_queryGraph,queryInOrder) where
 
-import Concept
-import ConceptGraph
-import ConceptDependency
+import ConceptGraph.Concept
+import ConceptGraph.ConceptGraph
+import ConceptGraph.ConceptDependency
+import Grammar.GrammarToGraph
+
 import Data.List (find,concat)
 import Control.Monad (join)
 import Data.Set (toList,fromList)
 import Data.Maybe(catMaybes)
-import GrammarToGraph
+
 
 -- | Path of solutions
 type Path a = [a]
@@ -33,7 +35,7 @@ query start end = Query [start] end
 getEdgesFromPaths :: b -> [a] -> [ConceptDependency b a]
 getEdgesFromPaths _ []      = [] -- no items
 getEdgesFromPaths _ (p1:[]) = [] -- last item
-getEdgesFromPaths e (p1:(p2:ls)) = ((ConceptDependency e p1 p2) : (getEdgesFromPaths e (p2:ls))) -- dep to add
+getEdgesFromPaths e (p1:(p2:ls)) = ((e,p1,p2) : (getEdgesFromPaths e (p2:ls))) -- dep to add
 
 
 -- | Gets the unique vertices present across all paths
@@ -43,7 +45,7 @@ getUniqueVertices xl = map (\x -> Concept x) (toList $ fromList $ (concat xl))
 
 -- | Filters paths for a given concept graph into a concept lattice, using the same concept depencies for all edges
 _filterPathsIntoLattice :: (Eq a, Ord a, Ord b) => (ConceptGraph b a) -> [Maybe (Path a)] -> ConceptLattice b a
-_filterPathsIntoLattice cg@(ConceptGraph _ ((ConceptDependency e1 _ _):_)) mpaths = let paths = catMaybes mpaths in
+_filterPathsIntoLattice cg@(ConceptGraph _ ((e1,_,_):_)) mpaths = let paths = catMaybes mpaths in
                   let edges   = toList $ fromList $ concat $ map (getEdgesFromPaths e1) paths in
                   let vertices= getUniqueVertices paths in
                   (ConceptGraph vertices edges)
@@ -119,5 +121,5 @@ _queryGraph cg@(ConceptGraph concepts deps) q@(Query sls@(start:ls) end) | find 
 -- | Generates a list of next possible queries to perform, if any
 genNextQueries :: (Eq a) => Query a -> [ConceptDependency b a] -> [Query a]
 genNextQueries _ [] = []
-genNextQueries q@(Query sls@(start:sl) end) ((ConceptDependency _ c1 c2):ls) | c2 == start =((Query (c1:sls) end):(genNextQueries q ls)) -- gen new query and continue
+genNextQueries q@(Query sls@(start:sl) end) ((_,c1,c2):ls) | c2 == start =((Query (c1:sls) end):(genNextQueries q ls)) -- gen new query and continue
                                                                   | c2 /= start = genNextQueries q ls -- skip to next dep

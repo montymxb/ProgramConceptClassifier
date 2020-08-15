@@ -2,7 +2,7 @@
 -- Represents a concept in the graph
 --
 
-module Concept (Concept(Concept),concept) where
+module ConceptGraph.Concept (Concept(Concept),concept) where
 
 -- | Name associated with a concept
 type Name = String

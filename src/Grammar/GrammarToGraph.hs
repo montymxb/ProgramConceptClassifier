@@ -2,11 +2,11 @@
 -- Converts a grammar to a graph
 --
 
-module GrammarToGraph (GrammarDependency(LanguageDependency),grammar_to_graph) where
+module Grammar.GrammarToGraph (GrammarDependency(LanguageDependency),grammar_to_graph) where
 
-import Symbol
-import Rule
-import Grammar
+import Grammar.Symbol
+import Grammar.Rule
+import Grammar.Grammar
 import Data.Set (toList,fromList)
 
 

@@ -3,10 +3,10 @@
 --
 -- Used to describe a CFG that can be used to represent an arbitrary language
 --
-module Grammar (Grammar(Grammar)) where
+module Grammar.Grammar (Grammar(Grammar)) where
 
-import Symbol
-import Rule
+import Grammar.Symbol
+import Grammar.Rule
 
 import Data.Char
 import Data.Set (toList,fromList)

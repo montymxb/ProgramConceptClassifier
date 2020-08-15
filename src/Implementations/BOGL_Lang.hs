@@ -4,14 +4,16 @@
 -- Simplified representation of BOGL's syntax
 --
 
-import Symbol
-import Rule
-import Grammar
-import GrammarToGraph
-import GraphToConceptGraph
-import ConceptGraph
-import Query
-import GVSpec
+module Implementations.BOGL_Lang where
+
+import Grammar.Symbol
+import Grammar.Rule
+import Grammar.Grammar
+import Grammar.GrammarToGraph
+import ConceptGraph.GraphToConceptGraph
+import ConceptGraph.ConceptGraph
+import Query.Query
+import GVSpec.GVSpec
 
 --
 --

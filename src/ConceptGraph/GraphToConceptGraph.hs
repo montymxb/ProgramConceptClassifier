@@ -2,11 +2,11 @@
 -- Converts a graph to a concept graph
 --
 
-module GraphToConceptGraph (graph_to_concept_graph) where
+module ConceptGraph.GraphToConceptGraph (graph_to_concept_graph) where
 
-import Concept
-import ConceptDependency
-import ConceptGraph
+import ConceptGraph.Concept
+import ConceptGraph.ConceptDependency
+import ConceptGraph.ConceptGraph
 
 -- | Constructs a ConceptGraph from a provided list of vertex concepts and dependencies amongst them
 graph_to_concept_graph :: ([a],[(b,a,a)]) -> ConceptGraph b a

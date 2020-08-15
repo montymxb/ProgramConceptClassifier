@@ -4,13 +4,15 @@
 -- Representation of a simplistic arithmetic language's syntax
 --
 
-import Symbol
-import Rule
-import Grammar
-import GrammarToGraph
-import GraphToConceptGraph
-import ConceptGraph
-import Query
+module Implementations.Arithmetic_Lang where
+
+import Grammar.Symbol
+import Grammar.Rule
+import Grammar.Grammar
+import Grammar.GrammarToGraph
+import ConceptGraph.GraphToConceptGraph
+import ConceptGraph.ConceptGraph
+import Query.Query
 
 --
 -- symbols
@@ -115,5 +117,5 @@ q1 :: Query Symbol
 q1 = query o e
 
 -- example query on this representation of the arithmetic language
-arith_query :: Query Symbol -> [Maybe (Path Symbol)]
-arith_query q = queryGraph arithmetic_concept_graph q
+arith_query :: [Maybe (Path Symbol)]
+arith_query = _queryGraph arithmetic_concept_graph q1

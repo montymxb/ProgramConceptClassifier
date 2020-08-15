@@ -2,7 +2,7 @@
 -- Symbol in a grammar
 --
 
-module Symbol (Symbol(Terminal,NonTerminal),terminal,nonterminal,symbolsToExamples) where
+module Grammar.Symbol (Symbol(Terminal,NonTerminal),terminal,nonterminal,symbolsToExamples) where
 
 
 -- name of this symbol

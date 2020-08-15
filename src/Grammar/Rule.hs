@@ -2,10 +2,10 @@
 -- Rules used to represent a grammar
 --
 
-module Rule (Rule(Rule),RHS(RHS),rhs) where
+module Grammar.Rule (Rule(Rule),RHS(RHS),rhs) where
 
 
-import Symbol
+import Grammar.Symbol
 
 
 -- | Comment to describe a rule, if desired

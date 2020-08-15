@@ -4,10 +4,10 @@
 -- a grammar's rule set
 --
 
-module ConceptGraph (ConceptGraph(ConceptGraph),ConceptLattice) where
+module ConceptGraph.ConceptGraph (ConceptGraph(ConceptGraph),ConceptLattice) where
 
-import Concept
-import ConceptDependency
+import ConceptGraph.Concept
+import ConceptGraph.ConceptDependency
 
 -- | ConceptGraph type, represents a graph with a list of concepts (vertices) and depedencies amongst those concepts (edges)
 data ConceptGraph b a =
