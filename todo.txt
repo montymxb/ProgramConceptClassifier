@@ -237,11 +237,20 @@
   - deps 'should' be externally definable...
 - Change ConceptDependency to a type of (b,a,a)
   - so if we 'want' to add optional edges..then we can do so via a 'print' to describe the edge type...yeah...that would be best
-
-- turn this into a package, or somehow include it into the existing BoGL setup
 - integrate stack to build a package out of this
+
+
+
+## Aug 16th, 2020
+> Change from 'show' to 'showGV', and implement a special GVSpec type class that we can use instead (better practice)
+  - then show can be whatever it wants to be
+
+- Use 'scrap your boilerplate' with Data & Typeable to make this work for a data arbitrary setup...
+  - Test it with skipping into a ConceptGraph directly, without mapping from the Grammar...doable right?
+  - might be weird with the typeclasses perhaps...eh w/e
+
+- use BoGL's stack package to pull in it's AST directly from here...w/out having to interact with it directly, yep!
 - use the package to integrate with the full BoGL AST (from this repo ideally...so changes are reflected immediately)
-- using Data and Typeable should be able to make this work generically...
 - should allow extracting nodes into a list
 - can use that list to make queries from nodes into the full graph
 - Downsides of doing it this way? The actual AST implementation may not make sense in relation to the program.

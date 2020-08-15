@@ -13,7 +13,11 @@ import Data.Set (toList,fromList)
 -- | Defines grammar dependencies we can have
 data GrammarDependency =
   LanguageDependency  -- ^ language dependency
-  deriving (Show,Ord,Eq)
+  deriving (Ord,Eq)
+
+
+instance Show GrammarDependency where
+  show (LanguageDependency) = ""
 
 
 -- | Get symbols from the RHS of a grammar

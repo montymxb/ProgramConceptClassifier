@@ -312,7 +312,7 @@ bogl_grammar_rep = Grammar "BOGL Lang" [
 -- | Produces a BoGL Concept Graph (of all concepts)
 --
 -- To see the entire concept graph
--- writeGVSpec "test1" bogl_concept_graph
+-- GVSpec.writeGVSpec "test1" BOGL.bogl_concept_graph
 --
 bogl_concept_graph :: ConceptGraph GrammarDependency Symbol
 bogl_concept_graph = graph_to_concept_graph (grammar_to_graph bogl_grammar_rep)
@@ -328,10 +328,10 @@ q1 = query let_in decl
 -- | Takes a query object to perform a query on the BoGL concept graph
 -- Produces a ConceptLattice
 --
--- To see the ConceptLattice
--- writeGVSpec "conceptlattice_1" $ bogl_query q1
+-- To see the ConceptLattice for query Q1
+-- GVSpec.writeGVSpec "conceptlattice_1" $ BOGL.bogl_query BOGL.q1
 --
--- writeGVSpec "cl_3" $ queryFromKnownToGoal bogl_concept_graph [let_in] [expr,varEq,decl]
+-- GVSpec.writeGVSpec "cl_3" $ Query.queryFromKnownToGoal BOGL.bogl_concept_graph [BOGL.let_in] [BOGL.expr,BOGL.varEq,BOGL.decl]
 --
 bogl_query :: Query Symbol -> ConceptLattice GrammarDependency Symbol
 bogl_query q = queryGraph bogl_concept_graph q
