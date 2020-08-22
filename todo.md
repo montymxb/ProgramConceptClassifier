@@ -204,7 +204,7 @@
 - We need 'Literal' as a kind of Expr in BoGL
 - I was thinking of how 'Extract into Method/Function' behavior is performed...this would be a way to factor out our examples
   - common feature in most IDEs
-  - oh shit...this sounds like an example guided IDE...or a theory for one anyways
+  - oh...this sounds like an example guided IDE...or a theory for one anyways
   - **A theory for a way of evaluating & refactoring examples to produce conceptually-guided lessons in a targeted language**
 - Need to distinguish optional and required nodes for any node (deps of 2 different types) in our graph
   - an expression can be one or many types (don't need to require all if we want to show it) dashed lines maybe
@@ -262,14 +262,17 @@
 - SECONDLY for the actual BoGL AST, given a program in BoGL that is valid
   - produce a BoGL program that we can use for testing
   - attempt to cgraph it until it works...
+- Seeing that I want to have something more general...
+  - maybe something that
+    - 1 grabs the constructor if there is one
+    - 2 reports the type as well as the constructor
+    - ignores this for all the other types
+    - this is a crawled along the structure, and reported at the end...right...
+- Stopped at setting this up for the BoGL ast...seems kind of not that generic though...tbh...kind of a pain in the butt actually
 
-- Use 'scrap your boilerplate' with Data & Typeable to make this work for a data arbitrary setup...
-  - problem, the traversal doesn't actually do anything...it doesn't go anywhere, it just allows me to traverse a list of elements of arbitrary type...and to apply a function to them...isn't that just Functor anyways
-- test with Grammar
-  - indicates that it doesn't do anything, just 'shows'...
-  - test with a shitty version of A B C that just shows one, and A holds B, and B holds C...should get all 3, if not it's broken
 
-- test with full BoGL AST instead
+## Aug 24th, 2020
+- Continue integrating full BoGL AST into CG
 - Change nodes from simple node into
   - (Env, Expr, Type)
   - Every node is associated with some expression that is a usable example
@@ -277,7 +280,6 @@
   - Each expression is evaluated within the context of an environment, such that we can then determine what can be bound to produce an evaluable result
   - Test it with skipping into a ConceptGraph directly, without mapping from the Grammar...doable right?
   - might be weird with the typeclasses perhaps...eh w/e
-- use the package to integrate with the full BoGL AST (from this repo ideally...so changes are reflected immediately)
 - should allow extracting nodes into a list
 - can use that list to make queries from nodes into the full graph
 - Downsides of doing it this way? The actual AST implementation may show some internal bits that don't make sense to what is seen in a program

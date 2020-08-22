@@ -22,9 +22,11 @@ import GVSpec.GVSpec
 import Data.Data
 import Data.Generics
 import Unsafe.Coerce
+import qualified Data.Set as S
 
 -- bogl items
 import Language.Syntax
+import Language.Types
 
 
 --
@@ -40,13 +42,13 @@ type CNodes = [String]
 type CEdges = [(EdgeName,FromNode,ToNode)]
 class Conceptual a where
   cgraph :: (Typeable a, Data a) => a -> (CNodes,CEdges)
-  cgraph(x) = (concepts(x),_edges(x))
+  cgraph x = (concepts(x),_edges(x))
 
   concepts :: (Typeable a, Data a) => a -> CNodes
-  concepts(x) = [show (typeOf x)]
+  concepts x = [show (typeOf x)]
 
   _edges :: (Typeable a, Data a) => a -> CEdges
-  _edges(x) = [(show (toConstr x), show (typeOf x), "")]
+  _edges x = [(show (toConstr x), show (typeOf x), "")]
 
 -- For testing, that's it
 data C1 = C1c Int
@@ -71,10 +73,39 @@ instance Conceptual B1 where
 a1Val = (A1c (B1c (C1c 5)))
 
 
-
-
 -- Trying with a legitimate BoGL prog
---boglProg ::
+-- Now analyze this program with 'cgraph'...then we can backstep to something simpler
+boglProg :: Game Int
+boglProg = (Game "TestGame" (BoardDef (3,3) (X Itype S.empty)) (InputDef (X Itype S.empty)) [
+  -- val equation...f1 = 5
+  (Val (Sig "f1" (Plain (X Itype S.empty))) (Veq "f1" (I 5)) 11),
+  -- board equation...b1!(1,y) = 0
+  (BVal (Sig "b1" (Plain (X Board S.empty))) [(PosDef "b1" (Index 1) (ForAll "y") (I 0))] 22),
+  -- func equation...f2(x) = x + 10
+  (Val (Sig "f2" (Function (Ft (X Itype S.empty) (X Itype S.empty)))) (Feq "f2" (Pars ["x"]) (Binop Plus (Ref "x") (I 10))) 33)
+  ])
+
+instance Conceptual (Game Int) where
+  concepts g@(Game n bd idef valdefs) = ((show (typeOf g)) : concepts bd) ++ (concepts idef) ++ (concat $ map concepts valdefs)
+
+-- TODO but 'size' and 'piece' should be in here as well when we are using record syntax right?
+instance Conceptual BoardDef where
+  concepts b@(BoardDef (x,y) xt) = ((show (typeOf b)) : concepts xt)
+
+instance Conceptual InputDef where
+  concepts i@(InputDef xt) = (show (typeOf i)) : concepts xt
+
+instance Conceptual (ValDef Int) where
+  concepts v@(Val s e a)  = (show (typeOf v)) : (concepts s) ++ (concepts e)
+  concepts v@(BVal s e a) = (show (typeOf v)) : (concepts s) ++ (concat $ map concepts e)
+
+instance Conceptual Xtype where
+  concepts x@(X b _)  = (show (typeOf x)) : concepts b
+  concepts x@(Tup ls) = (show (typeOf x)) : (concat $ map concepts ls)
+  concepts x@(X b _)  = [show (typeOf x)]
+
+-- TODO needs Sig, Equation, BoardEq, Btype, etc...before it's all done
+-- TODO::> cgraph(boglProg)
 
 
 
