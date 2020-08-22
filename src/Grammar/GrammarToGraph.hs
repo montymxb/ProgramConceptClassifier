@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveDataTypeable #-}
 --
 -- Converts a grammar to a graph
 --
@@ -8,12 +9,13 @@ import Grammar.Symbol
 import Grammar.Rule
 import Grammar.Grammar
 import Data.Set (toList,fromList)
+import Data.Data
 
 
 -- | Defines grammar dependencies we can have
 data GrammarDependency =
   LanguageDependency  -- ^ language dependency
-  deriving (Ord,Eq)
+  deriving (Ord,Eq,Data,Typeable)
 
 
 instance Show GrammarDependency where

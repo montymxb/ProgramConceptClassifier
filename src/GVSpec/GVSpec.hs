@@ -4,7 +4,7 @@
 -- Handles produces Graph Viz files from various types
 --
 
-module GVSpec.GVSpec (GVData,convertToGVSpec,writeGVSpec) where
+module GVSpec.GVSpec (GVData,convertToGVSpec,writeGVSpec,ShowGV) where
 
 import Grammar.Symbol
 import ConceptGraph.Concept
@@ -19,8 +19,9 @@ type Node2Data = String
 
 type GVData = ([String],[(EdgeData,Node1Data,Node2Data)])
 
--- TODO work on the typeclass!
---class GVSpec
+-- class for showing the GV Spec of an instance of 'a'
+class ShowGV a where
+  showGV :: a -> String
 
 -- | Convert names of symbols into safer characters
 cn :: String -> String

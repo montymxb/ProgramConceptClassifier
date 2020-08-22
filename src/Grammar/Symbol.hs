@@ -1,9 +1,11 @@
+{-# LANGUAGE DeriveDataTypeable #-}
 --
 -- Symbol in a grammar
 --
 
 module Grammar.Symbol (Symbol(Terminal,NonTerminal),terminal,nonterminal,symbolsToExamples) where
 
+import Data.Data
 
 -- name of this symbol
 type SymbolName = String
@@ -17,7 +19,7 @@ type Explanation = String
 data Symbol =
   Terminal SymbolName [Explanation]   | -- ^ terminal symbol
   NonTerminal SymbolName [Explanation]  -- ^ non-terminal symbol
-  deriving (Eq,Ord)
+  deriving (Eq,Ord,Data,Typeable)
 
 instance Show Symbol where
   show (Terminal sn _) = sn

@@ -193,8 +193,8 @@
 - P is **a larger program** than P' if |P| > |P'|
 - Any concept C in P represents a **language level (LL)** of P, where LL is a sub-graph starting at C
 - Let K be the set of all known concepts by a student in S
-- P is said to be **known** if S(P) is a subset of K
-- P is said to be **partially known** if S(P) is not a subset of K, and the intersection of S(P) and K has a size >= 1
+- P is said to be **known** if C(P) is a subset of K
+- P is said to be **partially known** if C(P) is not a subset of K, and the intersection of C(P) and K has a size >= 1
   - if the intersection produces an empty set, P is said to be **unknown**
 - (???) A program is an **introductory example** if a program can be divided into three sub-programs, P1, P2, P3, where P1 is known (and P1 is not the empty program) and P2 is unknown, and P3 is a valid program (including the empty program), and they order P1 -> P2 -> P3 in P
 
@@ -240,20 +240,47 @@
 - integrate stack to build a package out of this
 
 
+## Aug 20th, 2020
+- scrap using special show...for now
+- Build in Spiel-Lang into your project, so you have access to it
+- use BoGL's stack package to pull in it's AST directly from here...w/out having to interact with it directly, yep!
 
-## Aug 16th, 2020
-> Change from 'show' to 'showGV', and implement a special GVSpec type class that we can use instead (better practice)
-  - then show can be whatever it wants to be
+
+## Aug 21st, 2020
+- Attempted work with SYB, spent a very very very very long time trying to make this work in the context that I was looking for
+  - I was under the impression that you can create a traversable data type such that you can continue to traverse down the data type without having to add anything
+  - It seems that is the case, **but** you have to add in the appropriate Typeclasses, such that the logic for chaining down into different values is feasible
+  - also noted that my own setup did not work when I applied this to it, it just stopped at the first entry...hmmm
+
+## Aug 22nd, 2020
+- Okay, what I want is to be able to
+  - take a starting value
+  - the data type for a syntactic element is the starting Class
+  - the value constructors for that data are the edges that
+- FIRST for a test A B C types...make sure it traverses properly
+  - yeah, that looks okay...
+- SECONDLY for the actual BoGL AST, given a program in BoGL that is valid
+  - produce a BoGL program that we can use for testing
+  - attempt to cgraph it until it works...
 
 - Use 'scrap your boilerplate' with Data & Typeable to make this work for a data arbitrary setup...
+  - problem, the traversal doesn't actually do anything...it doesn't go anywhere, it just allows me to traverse a list of elements of arbitrary type...and to apply a function to them...isn't that just Functor anyways
+- test with Grammar
+  - indicates that it doesn't do anything, just 'shows'...
+  - test with a shitty version of A B C that just shows one, and A holds B, and B holds C...should get all 3, if not it's broken
+
+- test with full BoGL AST instead
+- Change nodes from simple node into
+  - (Env, Expr, Type)
+  - Every node is associated with some expression that is a usable example
+  - Each expression has a given type
+  - Each expression is evaluated within the context of an environment, such that we can then determine what can be bound to produce an evaluable result
   - Test it with skipping into a ConceptGraph directly, without mapping from the Grammar...doable right?
   - might be weird with the typeclasses perhaps...eh w/e
-
-- use BoGL's stack package to pull in it's AST directly from here...w/out having to interact with it directly, yep!
 - use the package to integrate with the full BoGL AST (from this repo ideally...so changes are reflected immediately)
 - should allow extracting nodes into a list
 - can use that list to make queries from nodes into the full graph
-- Downsides of doing it this way? The actual AST implementation may not make sense in relation to the program.
+- Downsides of doing it this way? The actual AST implementation may show some internal bits that don't make sense to what is seen in a program
 
 
 # Additional Notes

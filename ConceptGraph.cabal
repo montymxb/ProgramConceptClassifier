@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 93e4234ddc825bd4084c7a46b6afc8f7da214f8f4882a89edf62ae777b7c2c92
+-- hash: bc929bb3dcf0a32aa50bfc6b31b87f6f58e919dc7aba92639079aedd78d12c5a
 
 name:           ConceptGraph
 version:        0.1.0.0
@@ -37,6 +37,7 @@ library
       Grammar.Symbol
       GVSpec.GVSpec
       Implementations.Arithmetic_Lang
+      Implementations.BOGL_AST_TC
       Implementations.BOGL_Lang
       Implementations.CSforAll
       Lib
@@ -49,6 +50,7 @@ library
       base >=4.7 && <5
     , containers
     , process
+    , syb
   default-language: Haskell2010
 
 executable ConceptGraph-exe
@@ -63,6 +65,7 @@ executable ConceptGraph-exe
     , base >=4.7 && <5
     , containers
     , process
+    , syb
   default-language: Haskell2010
 
 test-suite ConceptGraph-test
@@ -78,4 +81,5 @@ test-suite ConceptGraph-test
     , base >=4.7 && <5
     , containers
     , process
+    , syb
   default-language: Haskell2010

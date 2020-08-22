@@ -1,3 +1,4 @@
+
 --
 -- BOGL_Lang.hs
 --
@@ -284,8 +285,8 @@ positionR = Rule position [
   RHS "2D Position" [oparen,intType,intType,cparen]]
 
 -- | Representation of the BoGL language as a grammar
-bogl_grammar_rep :: Grammar
-bogl_grammar_rep = Grammar "BOGL Lang" [
+grammar :: Grammar
+grammar = Grammar "BOGL Lang" [
   programR,
   bodyR,
   gameDeclR,
@@ -315,7 +316,7 @@ bogl_grammar_rep = Grammar "BOGL Lang" [
 -- GVSpec.writeGVSpec "test1" BOGL.bogl_concept_graph
 --
 bogl_concept_graph :: ConceptGraph GrammarDependency Symbol
-bogl_concept_graph = graph_to_concept_graph (grammar_to_graph bogl_grammar_rep)
+bogl_concept_graph = graph_to_concept_graph (grammar_to_graph grammar)
 
 
 -- | Example Query, from one syntactic element to another
@@ -323,7 +324,6 @@ bogl_concept_graph = graph_to_concept_graph (grammar_to_graph bogl_grammar_rep)
 -- gives all possible paths from program -> name
 q1 :: Query Symbol
 q1 = query let_in decl
-
 
 -- | Takes a query object to perform a query on the BoGL concept graph
 -- Produces a ConceptLattice

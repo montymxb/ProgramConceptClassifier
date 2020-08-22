@@ -1,8 +1,11 @@
+{-# LANGUAGE DeriveDataTypeable #-}
 --
 -- Represents a concept in the graph
 --
 
 module ConceptGraph.Concept (Concept(Concept),concept) where
+
+import Data.Data
 
 -- | Name associated with a concept
 type Name = String
@@ -15,7 +18,7 @@ type Description = String
 data Concept a =
   -- conecpt has a name and zero or more descriptions
   Concept a
-  deriving (Eq)
+  deriving (Eq,Data,Typeable)
 
 
 instance (Show a) => Show (Concept a) where

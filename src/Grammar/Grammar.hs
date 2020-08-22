@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveDataTypeable #-}
 --
 -- Representation of a context-free-grammar for a language
 --
@@ -11,10 +12,11 @@ import Grammar.Rule
 import Data.Char
 import Data.Set (toList,fromList)
 import Data.List
+import Data.Data
 
 -- | The name to associate with a representation of a grammar
 type Name = String
 
 -- | Defines a representation of a grammar that can represent a language
 data Grammar = Grammar Name [Rule]
-  deriving (Show)
+  deriving (Show,Data,Typeable)

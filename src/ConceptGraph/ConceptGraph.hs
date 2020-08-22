@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveDataTypeable #-}
 --
 -- Concept Graph describing the relationships amongst
 -- concepts in a given context, with relationships established via
@@ -8,10 +9,12 @@ module ConceptGraph.ConceptGraph (ConceptGraph(ConceptGraph),ConceptLattice) whe
 
 import ConceptGraph.Concept
 import ConceptGraph.ConceptDependency
+import Data.Data
 
 -- | ConceptGraph type, represents a graph with a list of concepts (vertices) and depedencies amongst those concepts (edges)
 data ConceptGraph b a =
   ConceptGraph [Concept a] [ConceptDependency b a]
+  deriving (Data,Typeable)
 
 -- | Concept lattice is a special kind of graph
 type ConceptLattice b a = ConceptGraph b a
