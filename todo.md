@@ -272,14 +272,33 @@
 
 
 ## Aug 24th, 2020
-- Continue integrating full BoGL AST into CG
+- https://neilmitchell.blogspot.com/2013/10/haskell-type-graphs-with-uniplate-and.html (helpful for Uniplate instead of SYB)
+- take advantage of the 'universe' function in Uniplate (https://wiki.haskell.org/Uniplate)
+  - can traverse a given type, but gets stuck when trying to jump into the next type...
+  - okay, so we can only flatten and browse a tree structure all of the same data type, jumping into another one breaks it...
+  - using this, skip the values we don't care about, and continue digging into those that we do care about
+- run these steps
+  - 1. Hook in the typeclass instances for conceptualizing all aspects of the BoGL syntax
+    - little issue is enumerating over fields...this will work for record syntax, but what about non-record syntax? Try things out in T2
+    - if record syntax present (i.e not the empty list), try to access those elements?
+    - had a thought while walking over, I cannot create a 'list' of fields, because the types are different, however a tuple of fields would be possible
+  - 2. each type is the node name
+  - 3. each constructor name is the edge name between the high type and the low type
+    - *working on finishing the edge encodings, so we can see how things look*, graph is kind of a mess as well...
+
+## Aug 25th, 2020
+4. Verify this works in a general sense w/ the program below
+  - working on it...a little overly complex, don't need a set yet, but need to cleanup the output, because some things are incomplete
+  - go back over types that you'll be working on again, they need to be complete!!!
+5. Then start to hook this into the type checker
+  - take advantage of the setup from the AST
 - Change nodes from simple node into
-  - (Env, Expr, Type)
-  - Every node is associated with some expression that is a usable example
-  - Each expression has a given type
-  - Each expression is evaluated within the context of an environment, such that we can then determine what can be bound to produce an evaluable result
-  - Test it with skipping into a ConceptGraph directly, without mapping from the Grammar...doable right?
-  - might be weird with the typeclasses perhaps...eh w/e
+- (Env, Expr, Type)
+- Every node is associated with some expression that is a usable example
+- Each expression has a given type
+- Each expression is evaluated within the context of an environment, such that we can then determine what can be bound to produce an evaluable result
+- Test it with skipping into a ConceptGraph directly, without mapping from the Grammar...doable right?
+- might be weird with the typeclasses perhaps...eh w/e
 - should allow extracting nodes into a list
 - can use that list to make queries from nodes into the full graph
 - Downsides of doing it this way? The actual AST implementation may show some internal bits that don't make sense to what is seen in a program

@@ -24,16 +24,14 @@ import Data.Generics
 import Unsafe.Coerce
 import qualified Data.Set as S
 
+import Data.Generics.Uniplate.Data
+
 -- bogl items
 import Language.Syntax
 import Language.Types
 
 
 --
--- TODO Continue with this general approach to make this work with the concept graph
--- Once that looks good, go ahead and hook it into BoGL itself
---
-
 -- Going to just setup a conceptual typeclass, that works like show, but just gives details about the concepts, and their relationships
 type EdgeName = String
 type FromNode = String
@@ -41,24 +39,21 @@ type ToNode = String
 type CNodes = [String]
 type CEdges = [(EdgeName,FromNode,ToNode)]
 class Conceptual a where
-  cgraph :: (Typeable a, Data a) => a -> (CNodes,CEdges)
+  cgraph :: (Typeable a, Data a, Eq a) => a -> (CNodes,CEdges)
   cgraph x = (concepts(x),_edges(x))
 
-  concepts :: (Typeable a, Data a) => a -> CNodes
-  concepts x = [show (typeOf x)]
+  concepts :: (Typeable a, Data a, Eq a) => a -> CNodes
+  -- isAlgebraic
+  concepts c = concatMap (\x -> case (isAlgType (dataTypeOf x)) of
+                            True  -> [show (typeOf x)]
+                            False -> []
+                         ) $ universe c
 
-  _edges :: (Typeable a, Data a) => a -> CEdges
-  _edges x = [(show (toConstr x), show (typeOf x), "")]
+  _edges :: (Typeable a, Data a, Eq a) => a -> CEdges
+  -- default is not good enough, that's the problem...need to show the edge name as well!
+  _edges x = [(" [label=\"" ++ (show (toConstr x)) ++ "\";]", show (typeOf x), "Concept")]
 
--- For testing, that's it
-data C1 = C1c Int
-  deriving(Data,Typeable,Conceptual)
-data B1 = B1c C1
-  deriving(Data,Typeable)
-data A1 = A1c B1
-  deriving(Data,Typeable)
-
-
+{-
 instance Conceptual A1 where
   concepts a@(A1c x) = show (typeOf a) : concepts x
   _edges a@(A1c x) = (show (toConstr a), show (typeOf a), show (typeOf x)) : _edges x
@@ -71,6 +66,76 @@ instance Conceptual B1 where
 --  show (C1c _) = "C1"
 
 a1Val = (A1c (B1c (C1c 5)))
+-}
+
+-- Builds an edge from X -> Y
+getEdge :: (Data a, Typeable a, Data b, Typeable b) =>  a -> b -> (EdgeName,FromNode,ToNode)
+getEdge x y = (show (toConstr x), show (typeOf x), show (typeOf y))
+
+instance Conceptual Int where
+  concepts i = ["Int"]
+  _edges i = []
+
+instance (Data a, Eq a, Conceptual a) => Conceptual (Game a) where
+  concepts g@(Game n b i v) = (show (typeOf g)) : (concepts b) ++ (concepts i) ++ (concatMap concepts v)
+  _edges g@(Game n b i v) = [getEdge g b, getEdge g i, getEdge g v] ++ _edges b ++ _edges i ++ concatMap _edges v
+instance Conceptual Signature where
+  concepts s@(Sig n t) = (show (typeOf s)) : (concepts t)
+  _edges s@(Sig n t) = [getEdge s t] ++ _edges t
+instance Conceptual Parlist where
+  concepts p@(Pars nl) = [(show (typeOf p))]
+instance Conceptual BoardDef where
+  concepts b@(BoardDef s p) = (show (typeOf b)) : (concepts p)
+  _edges b@(BoardDef s p) = [getEdge b p] ++ _edges p
+instance Conceptual InputDef where
+  concepts i@(InputDef it) = (show (typeOf i)) : (concepts it)
+  _edges i@(InputDef it) = [getEdge i it] ++ _edges it
+instance (Data a, Eq a, Conceptual a) => Conceptual (ValDef a) where
+  concepts v@(Val s eq v2) = (show (typeOf v)) : (concepts s) ++ (concepts eq) ++ (concepts v2)
+  concepts v@(BVal s eqs v2) = (show (typeOf v)) : (concepts s) ++ (concatMap concepts eqs) ++ (concepts v2)
+  _edges v@(Val s eq v2) = [getEdge v s, getEdge v eq, getEdge v v2] ++ _edges s ++ _edges eq ++ _edges v2
+  _edges v@(BVal s eqs v2) = map (getEdge v) eqs ++ [getEdge v s, getEdge v v2] ++ _edges s ++ _edges v2 ++ concatMap _edges eqs
+instance (Data a, Eq a, Conceptual a) => Conceptual (Equation a) where
+  concepts e@(Veq n e2) = (show (typeOf e)) : (concepts e2)
+  concepts e@(Feq n pl e2) = (show (typeOf e)) : (concepts pl) ++ (concepts e2)
+  _edges e@(Veq n e2) = [getEdge e e2] ++ _edges e2
+  _edges e@(Feq n pl e2) = [getEdge e pl, getEdge e e2] ++ _edges pl ++ _edges e2
+instance (Data a, Eq a, Conceptual a) => Conceptual (BoardEq a) where
+  concepts e@(PosDef n x y b) = (show (typeOf e)) : (concepts x) ++ (concepts y) ++ (concepts b)
+  _edges e@(PosDef n x y b) = [getEdge e x, getEdge e y, getEdge e b] ++ _edges x ++ _edges y ++ _edges b
+instance Conceptual Pos where
+instance (Data a, Eq a, Conceptual a) => Conceptual (Expr a) where
+  concepts t@(Tuple el) = (show (typeOf t)) : (concatMap concepts el)
+  concepts t@(App n e) = (show (typeOf t)) : (concepts e)
+  concepts t@(Binop o e1 e2) = (show (typeOf t)) : (concepts o) ++ (concepts e1) ++ (concepts e2)
+  concepts t@(Let n e1 e2) = (show (typeOf t)) : (concepts e1) ++ (concepts e2)
+  concepts t@(While e1 e2 nl e3) = (show (typeOf t)) : (concepts e1) ++ (concepts e2) ++ (concepts e3)
+  concepts t@(If e1 e2 e3) = (show (typeOf t)) : (concepts e1) ++ (concepts e2) ++ (concepts e3)
+  concepts t@(Annotation i e) = (show (typeOf t)) : (concepts i) ++ (concepts e)
+  concepts t = [(show (typeOf t))]
+  _edges t@(Tuple el) = (map (getEdge t) el) ++ (concatMap _edges el)
+  _edges t@(App n e) = [getEdge t e] ++ _edges e
+  _edges t@(Binop o e1 e2) = [getEdge t o, getEdge t e1, getEdge t e2] ++ _edges o ++ _edges e1 ++ _edges e2
+  _edges t@(Let n e1 e2) = [getEdge t e1, getEdge t e2] ++ _edges e1 ++ _edges e2
+  _edges t@(While e1 e2 nl e3) = [getEdge t e1, getEdge t e2, getEdge t e3] ++ _edges e1 ++ _edges e2 ++ _edges e3
+  _edges t@(If e1 e2 e3) = [getEdge t e1, getEdge t e2, getEdge t e3] ++ _edges e1 ++ _edges e2 ++ _edges e3
+  _edges t@(Annotation i e) = [getEdge t i, getEdge t e] ++ _edges i ++ _edges e
+  _edges t = []
+instance Conceptual Op where
+instance Conceptual Btype where
+instance Conceptual Xtype where
+  concepts x@(X bt s) = (show (typeOf x)) : (concepts bt)
+  concepts x@(Tup xtl) = (show (typeOf x)) : (concatMap concepts xtl)
+  _edges x@(X bt s) = [getEdge x bt] ++ _edges bt
+  _edges x@(Tup xtl) = map (getEdge x) xtl ++ concatMap _edges xtl
+instance Conceptual Ftype where
+  concepts f@(Ft x1 x2) = (show (typeOf f)) : (concepts x1) ++ (concepts x2)
+  _edges f@(Ft x1 x2) = [getEdge f x1, getEdge f x2] ++ _edges x1 ++ _edges x2
+instance Conceptual Type where
+  concepts p@(Plain x1) = (show (typeOf p)) : (concepts x1)
+  concepts p@(Function f1) = (show (typeOf p)) : (concepts f1)
+  _edges p@(Plain x1) = [getEdge p x1] ++ _edges x1
+  _edges p@(Function f1) = [getEdge p f1] ++ _edges f1
 
 
 -- Trying with a legitimate BoGL prog
@@ -85,72 +150,7 @@ boglProg = (Game "TestGame" (BoardDef (3,3) (X Itype S.empty)) (InputDef (X Ityp
   (Val (Sig "f2" (Function (Ft (X Itype S.empty) (X Itype S.empty)))) (Feq "f2" (Pars ["x"]) (Binop Plus (Ref "x") (I 10))) 33)
   ])
 
-instance Conceptual (Game Int) where
-  concepts g@(Game n bd idef valdefs) = ((show (typeOf g)) : concepts bd) ++ (concepts idef) ++ (concat $ map concepts valdefs)
-
--- TODO but 'size' and 'piece' should be in here as well when we are using record syntax right?
-instance Conceptual BoardDef where
-  concepts b@(BoardDef (x,y) xt) = ((show (typeOf b)) : concepts xt)
-
-instance Conceptual InputDef where
-  concepts i@(InputDef xt) = (show (typeOf i)) : concepts xt
-
-instance Conceptual (ValDef Int) where
-  concepts v@(Val s e a)  = (show (typeOf v)) : (concepts s) ++ (concepts e)
-  concepts v@(BVal s e a) = (show (typeOf v)) : (concepts s) ++ (concat $ map concepts e)
-
-instance Conceptual Xtype where
-  concepts x@(X b _)  = (show (typeOf x)) : concepts b
-  concepts x@(Tup ls) = (show (typeOf x)) : (concat $ map concepts ls)
-  concepts x@(X b _)  = [show (typeOf x)]
-
--- TODO needs Sig, Equation, BoardEq, Btype, etc...before it's all done
--- TODO::> cgraph(boglProg)
-
-
-
-
--- A version of Data.Generics.listify which doesn't recurse into sublists of type [b]
-listifyWholeLists :: (Typeable b, Data b, Show b) => ([b] -> Bool) -> GenericQ [[b]]
-listifyWholeLists blp = flip (synthesize id (.) (mkQ id (\bl _ -> if blp bl then (bl:) else id))) []
-
---
-
-{- | C tags the type that is actually parameterized, so to avoid touching the
-Int when a ~ Int:
-
-> data T a = T Int a
-
-by changing the type (not representation) to:
-
-> x :: T Int (C Int)
--}
-newtype C a = C a deriving (Data,Typeable)
-
--- Generic Fmap over all nodes in a data type
--- BOGL.fmapData show [BOGL.grammar :: Grammar]
--- BOGL.fmapData printFromConstructor
-
--- for BoGL this will work but ONLY on a program that actually uses it's values...
--- instead...we want one for the entire possible prog, and then one for the actual prog
--- i.e. one to compare against, and one to use to evaluate a program
---
--- as the function to fmapData...apply itself in such a way as to print and apply itself to all sub values
-
-fmapData :: forall t a b. (Typeable a, Data (t (C a)), Data (t a)) => (a -> b) -> t a -> t b
-fmapData f input = uc . everywhere (mkT $ \(x::C a) -> uc (f (uc x))) $ (uc input :: t (C a))
-                   where uc = unsafeCoerce
-
-
--- TODO, working on printing out the entire AST from a consturctor alone...
-fapp :: (Data a, Typeable a, Show a) => a -> [String]
-fapp x =  let typ = dataTypeOf (x) in
-          --let constrs = dataTypeConstrs typ in
-          (show typ) : [(show x)]--concat (fmapData fapp [x])
-                         --map show constrs ++ [(show $ map constrFields constrs)]
-
--- .. try out on the 'Grammar' datatype
--- TODO remove
-testthis :: (Typeable a, Data a) => a -> [String]
-testthis item = let constrs = (gmapQ (\d -> toConstr d) item) in
-                map show constrs -- ++ concatMap (\(D d) -> testthis d) constrs -- ++ (concat (map testthis constrs))
+-- concept graph in pure BoGL
+-- GVSpec.writeGVSpec "astgraph" boglGraph
+boglGraph :: ConceptGraph String String
+boglGraph = graph_to_concept_graph $ cgraph boglProg

@@ -24,6 +24,9 @@ dependencies:
 - containers
 - process
 - syb
+- template-haskell
+- uniplate
+- haskell-src-exts
 
 library:
   source-dirs: src

@@ -57,7 +57,7 @@ printGVSpec ([], ((ee,s1,s2):ls2)) = let r1 = cn s1 in
                                   r1 ++ " -> " ++ r2 ++ "" ++ ee ++ ";\n" ++ printGVSpec ([],ls2)
 printGVSpec ((s:ls1), ls2) = let sr = rstrip s in
                              let rr = cn sr in
-                             rr ++ " [label=\"" ++ sr ++ "\"];\n" ++ printGVSpec (ls1,ls2)
+                             rr ++ " [label=" ++ sr ++ "];\n" ++ printGVSpec (ls1,ls2)
 
 convertToGVSpec :: (Show a, Show b) => ConceptGraph a b -> String
 -- TODO use the '_' (the dep type) to decide how to graph the edge...
