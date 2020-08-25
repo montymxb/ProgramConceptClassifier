@@ -41,6 +41,10 @@ cn (c:ls) = case c of
               '+' -> ("Pluss"++(cn ls))
               '%' -> ("Modd"++(cn ls))
               '/' -> ("Divi"++(cn ls))
+              '\"'-> (cn ls)
+              ' ' -> ("_"++(cn ls))
+              '[' -> ("List_"++(cn ls))
+              ']' -> (cn ls)
               _   -> (c:cn ls)
 
 rstrip :: String -> String
@@ -48,16 +52,28 @@ rstrip x = case reverse x of
             ('\n':ls) -> reverse ls
             _         -> x
 
+qtrim :: String -> String
+qtrim x = case x of
+            ('"':ls) -> case reverse ls of
+                          ('"':ls2) -> reverse ls2
+                          _         -> ls
+            _        -> x
 
 printGVSpec :: GVData -> String
 printGVSpec ([],[]) = "\n}"
 -- TODO use this edge 'ee' to add some extra data to the edge type?
+-- print edges
 printGVSpec ([], ((ee,s1,s2):ls2)) = let r1 = cn s1 in
                                   let r2 = cn s2 in
-                                  r1 ++ " -> " ++ r2 ++ "" ++ ee ++ ";\n" ++ printGVSpec ([],ls2)
+                                  r1 ++ "\t->\t" ++ r2 ++ "\t" ++ printLabel ee ++ "\n" ++ printGVSpec ([],ls2) -- ee ++ ";\n"
+-- print vertices
 printGVSpec ((s:ls1), ls2) = let sr = rstrip s in
                              let rr = cn sr in
-                             rr ++ " [label=" ++ sr ++ "];\n" ++ printGVSpec (ls1,ls2)
+                             rr ++ "\t" ++ printLabel sr ++ "\n" ++ printGVSpec (ls1,ls2)
+
+
+printLabel :: String -> String
+printLabel l = " [label=\"" ++ qtrim(rstrip l) ++ "\"];"
 
 convertToGVSpec :: (Show a, Show b) => ConceptGraph a b -> String
 -- TODO use the '_' (the dep type) to decide how to graph the edge...

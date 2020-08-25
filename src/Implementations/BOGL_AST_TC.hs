@@ -1,5 +1,5 @@
 {-# OPTIONS -fglasgow-exts #-}
-{-# LANGUAGE DeriveDataTypeable, ScopedTypeVariables, FlexibleContexts, DeriveAnyClass, DeriveGeneric #-}
+{-# LANGUAGE DeriveDataTypeable, StandaloneDeriving #-}
 --
 -- BOGL_AST_TC.hs
 -- WIP...work space until this is cleaned up
@@ -11,10 +11,7 @@
 
 module Implementations.BOGL_AST_TC where
 
-import Grammar.Symbol
-import Grammar.Rule
 import Grammar.Grammar
-import Grammar.GrammarToGraph
 import ConceptGraph.GraphToConceptGraph
 import ConceptGraph.ConceptGraph
 import Query.Query
@@ -43,45 +40,62 @@ class Conceptual a where
   cgraph x = (concepts(x),_edges(x))
 
   concepts :: (Typeable a, Data a, Eq a) => a -> CNodes
-  -- isAlgebraic
+  -- is unused...
   concepts c = concatMap (\x -> case (isAlgType (dataTypeOf x)) of
                             True  -> [show (typeOf x)]
                             False -> []
                          ) $ universe c
 
   _edges :: (Typeable a, Data a, Eq a) => a -> CEdges
-  -- default is not good enough, that's the problem...need to show the edge name as well!
-  _edges x = [(" [label=\"" ++ (show (toConstr x)) ++ "\";]", show (typeOf x), "Concept")]
-
-{-
-instance Conceptual A1 where
-  concepts a@(A1c x) = show (typeOf a) : concepts x
-  _edges a@(A1c x) = (show (toConstr a), show (typeOf a), show (typeOf x)) : _edges x
-
-instance Conceptual B1 where
-  concepts b@(B1c x) = show (typeOf b) : concepts x
-  _edges a@(B1c x) = (show (toConstr a), show (typeOf a), show (typeOf x)) : _edges x
-
---instance Show C1 where
---  show (C1c _) = "C1"
-
-a1Val = (A1c (B1c (C1c 5)))
--}
+  -- default is acceptable for now, everything ties into a 'concept'
+  _edges x = [(show (toConstr x), show (typeOf x), "Concept")]
 
 -- Builds an edge from X -> Y
 getEdge :: (Data a, Typeable a, Data b, Typeable b) =>  a -> b -> (EdgeName,FromNode,ToNode)
 getEdge x y = (show (toConstr x), show (typeOf x), show (typeOf y))
 
 instance Conceptual Int where
-  concepts i = ["Int"]
-  _edges i = []
+  concepts x = [show (typeOf x)]
+  _edges x = [("prim", show (typeOf x), "Concept")]
+
+instance Conceptual Double where
+  concepts x = [show (typeOf x)]
+  _edges x = [("prim", show (typeOf x), "Concept")]
+
+instance Conceptual Float where
+  concepts x = [show (typeOf x)]
+  _edges x = [("prim", show (typeOf x), "Concept")]
+
+instance Conceptual Word where
+  concepts x = [show (typeOf x)]
+  _edges x = [("prim", show (typeOf x), "Concept")]
+
+instance Conceptual Bool where
+  concepts x = [show (typeOf x)]
+  _edges x = [("prim", show (typeOf x), "Concept")]
+
+instance Conceptual Char where
+  concepts x = ["Char"]
+  _edges x = [("prim", show (typeOf x), "Concept")]
+
+-- TODO some issues with [Char] being mapped to essentially nothing
+-- should go [Char] -> Char -> Concept
+-- but instead goes [Char] -> ... nothing
+-- and Char is stranded, ... -> Char -> ..., needs to follow properly
+-- partly stranded from the name of a game, which is also a string...look at that
+-- Problem is that '[Char]' doesn't appear on the LHS of any rule for a list of characters
+instance (Data a, Eq a, Conceptual a) => Conceptual [a] where
+  concepts x = (show (typeOf x)) : concatMap concepts x
+  _edges []       = [] -- nothing...
+  -- we want to map from list constructor to 'i' for every item in the list
+  _edges x@(i:ls) = map (\z -> (show (toConstr x), show (typeOf x), show (typeOf z))) (i:ls) ++ concatMap _edges x
 
 instance (Data a, Eq a, Conceptual a) => Conceptual (Game a) where
-  concepts g@(Game n b i v) = (show (typeOf g)) : (concepts b) ++ (concepts i) ++ (concatMap concepts v)
-  _edges g@(Game n b i v) = [getEdge g b, getEdge g i, getEdge g v] ++ _edges b ++ _edges i ++ concatMap _edges v
+  concepts g@(Game n b i v) = (show (typeOf g)) : (concepts n) ++ (concepts b) ++ (concepts i) ++ (concepts v)
+  _edges g@(Game n b i v) = [getEdge g n, getEdge g b, getEdge g i, getEdge g v] ++ _edges n ++ _edges b ++ _edges i ++ (_edges v)
 instance Conceptual Signature where
-  concepts s@(Sig n t) = (show (typeOf s)) : (concepts t)
-  _edges s@(Sig n t) = [getEdge s t] ++ _edges t
+  concepts s@(Sig n t) = (show (typeOf s)) : (concepts t) ++ (concepts n)
+  _edges s@(Sig n t) = [getEdge s t, getEdge s n] ++ _edges t
 instance Conceptual Parlist where
   concepts p@(Pars nl) = [(show (typeOf p))]
 instance Conceptual BoardDef where
@@ -104,7 +118,14 @@ instance (Data a, Eq a, Conceptual a) => Conceptual (BoardEq a) where
   concepts e@(PosDef n x y b) = (show (typeOf e)) : (concepts x) ++ (concepts y) ++ (concepts b)
   _edges e@(PosDef n x y b) = [getEdge e x, getEdge e y, getEdge e b] ++ _edges x ++ _edges y ++ _edges b
 instance Conceptual Pos where
+  concepts e@(Index i) = [show (typeOf e)]
+  concepts e@(ForAll n) = [show (typeOf e)]
+  _edges e@(Index i) = [getEdge e i]
+  _edges e@(ForAll n) = [getEdge e n]
 instance (Data a, Eq a, Conceptual a) => Conceptual (Expr a) where
+  --concepts t@(I i) = (show (typeOf t))
+  --concepts t@(B i) = (show (typeOf t))
+  --concepts t@(Ref i) = (show (typeOf t))
   concepts t@(Tuple el) = (show (typeOf t)) : (concatMap concepts el)
   concepts t@(App n e) = (show (typeOf t)) : (concepts e)
   concepts t@(Binop o e1 e2) = (show (typeOf t)) : (concepts o) ++ (concepts e1) ++ (concepts e2)
@@ -112,6 +133,7 @@ instance (Data a, Eq a, Conceptual a) => Conceptual (Expr a) where
   concepts t@(While e1 e2 nl e3) = (show (typeOf t)) : (concepts e1) ++ (concepts e2) ++ (concepts e3)
   concepts t@(If e1 e2 e3) = (show (typeOf t)) : (concepts e1) ++ (concepts e2) ++ (concepts e3)
   concepts t@(Annotation i e) = (show (typeOf t)) : (concepts i) ++ (concepts e)
+  --concepts t@(HE n) = (show (typeOf t))
   concepts t = [(show (typeOf t))]
   _edges t@(Tuple el) = (map (getEdge t) el) ++ (concatMap _edges el)
   _edges t@(App n e) = [getEdge t e] ++ _edges e
@@ -120,7 +142,7 @@ instance (Data a, Eq a, Conceptual a) => Conceptual (Expr a) where
   _edges t@(While e1 e2 nl e3) = [getEdge t e1, getEdge t e2, getEdge t e3] ++ _edges e1 ++ _edges e2 ++ _edges e3
   _edges t@(If e1 e2 e3) = [getEdge t e1, getEdge t e2, getEdge t e3] ++ _edges e1 ++ _edges e2 ++ _edges e3
   _edges t@(Annotation i e) = [getEdge t i, getEdge t e] ++ _edges i ++ _edges e
-  _edges t = []
+  _edges t = [(show (toConstr t), show (typeOf t), "Concept")]
 instance Conceptual Op where
 instance Conceptual Btype where
 instance Conceptual Xtype where
@@ -136,6 +158,30 @@ instance Conceptual Type where
   concepts p@(Function f1) = (show (typeOf p)) : (concepts f1)
   _edges p@(Plain x1) = [getEdge p x1] ++ _edges x1
   _edges p@(Function f1) = [getEdge p f1] ++ _edges f1
+
+
+--
+-- Allows automatically deriving typeclass instances for the pre-existing data types we want to work with
+--
+deriving instance (Eq a) => Eq (Game a)
+deriving instance Eq BoardDef
+deriving instance Eq InputDef
+
+deriving instance (Typeable a, Data a) => Data (Game a)
+deriving instance Data BoardDef
+deriving instance Data InputDef
+deriving instance (Typeable a, Data a) => Data (ValDef a)
+deriving instance Data Type
+deriving instance Data Xtype
+deriving instance Data Signature
+deriving instance (Typeable a, Data a) => Data (Equation a)
+deriving instance (Typeable a, Data a) => Data (BoardEq a)
+deriving instance (Typeable a, Data a) => Data (Expr a)
+deriving instance Data Parlist
+deriving instance Data Pos
+deriving instance Data Op
+deriving instance Data Btype
+deriving instance Data Ftype
 
 
 -- Trying with a legitimate BoGL prog

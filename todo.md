@@ -287,11 +287,25 @@
     - *working on finishing the edge encodings, so we can see how things look*, graph is kind of a mess as well...
 
 ## Aug 25th, 2020
-4. Verify this works in a general sense w/ the program below
-  - working on it...a little overly complex, don't need a set yet, but need to cleanup the output, because some things are incomplete
-  - go back over types that you'll be working on again, they need to be complete!!!
-5. Then start to hook this into the type checker
+- Verify this works in a general sense w/ the program below (working on it now)
+  - Fix so that names of graphs use 'safe ids'
+    - for vertex ids: should remove quotes, and spaces, replace w/ underscores
+    - labels look 'ok' for vertices
+    - nodes for edges should also be 'safe', remove quotes & spaces
+    - edge labels broken, need fixing
+    - fix up analyzing of lists...think I can fix that up actually
+    - some exprs don't finish, double check all types, make sure everything is defined properly
+    - Need to fix how Lists of elements are evaluated conceptually
+      - this should be done by either:
+        - skipping the list, relating the underlying concept directly
+        - including the list as the type, and then running in the type, like "List Int"
+          - this would be better...
+
+## Aug 26th, 2020
+- cleanup some warnings...
+- start to hook this (the AST graphing tool) into the type checker
   - take advantage of the setup from the AST
+  - shouldn't have to change anything to make it work with BoGL
 - Change nodes from simple node into
 - (Env, Expr, Type)
 - Every node is associated with some expression that is a usable example
