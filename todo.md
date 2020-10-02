@@ -1,4 +1,4 @@
-# Research Progress
+# Research Progress on Concept Graph (Lattice)
 - produced a visual DAG for BoGL specifically, but for a simpler version of BoGL
 - produce a general description of a CFG to represent language dependencies (derived from the grammar)
 - updated with notes from last meeting
@@ -303,11 +303,57 @@
 
 ## Aug 26th, 2020
 - cleanup some warnings...
+- worked on the haddock integration to set things up with doc generation for things
+
+
+## Aug 27th, 2020
+- finish up the haddock PR
+  - cleanup warnings
+  - integrate automatic doc generation and publication on the gh-pages website
+
+
+## Aug 28th, 2020
+- sit down and investigate the typechecker thoroughly, refresh your conceptual understanding of this particular implementation
+- use this understanding to go write out a brief explanation of how I intend to use it (did so under the research notes)
+- formalized some of the important details on this same date (but in the meeting notes record instead)
+- decided to cool my heels in regards to actual implementation, the BoGL typechecker is about to undergo a change, best to wait
+
+
+## Aug 31st, 2020 (Mon)
+- look up information on typechecker theory
+- look up research on typecheckers
+- [Research] Concept of a Knowledge Graph might be helpful (?) for student items
+- [Research?] Clocked typed theory has some odd elements that may be of interest...possibly
+- [CSforAll] Talks about using an online-functional language, O-Caml, w/ automatic grading, may be of interest to us (https://dl-acm-org.ezproxy.proxy.library.oregonstate.edu/doi/10.1145/3341719)
+- [CSforAll] Decomposition for teaching, https://dl-acm-org.ezproxy.proxy.library.oregonstate.edu/doi/epdf/10.1145/3279720.3279736
+
+## Sept 1st, 2020 (Tue)
+- Helpful paper on concept lattices: https://www-sciencedirect-com.ezproxy.proxy.library.oregonstate.edu/science/article/pii/S0304397516306806?via%3Dihub#br0290
+    - especially Definition 8 (Section 2.2)
+- Sat down and worked through some ideas on paper, in particular with regards to how I should show 'types' vs. 'representations'
+  - turns out this is the wrong idea, as I'm worrying about the actual Haskell type & representations, which is not what we are actually working with
+  - this should be akin to a grammar rep, and so it should preserve the same structure we would do by hand (and so the constructor names need their own nodes as well, since they are essentially productions on their own)
+- so need to ADD in the constructors as their own nodes, NOT as separate edges...
+- In addition, I'm thinking of using the TC expanded environment as a way to use a 'program as a proof of a concept' (loosely worded at the moment)
+  - Needs to be revised conceptually, and in terms of how it is stated, and to make it work a bit better
+  - But, now I just need to dial in the specifics of how I want to do this
+  - Can still use Known -> Unknown, and in addition I can potentially discard what I was doing before...or not? we'll see as we go (research...)
+
+## Sept 2nd, 2020 (Wed) (LAST)
+- Fixing up things, cleaning up the repos...
+- Formalize some of these specs in pseudo paper...should document your research, and you can chop it up later as you go
+
+
+## Sept 16th, 2020 (Wed)
+- Go back over and review items
+
+## Sept 16th-24th, 2020 (Thu)
+- From before, the Constructor names shouldn't be the edges, they should be their own nodes as well...
 - start to hook this (the AST graphing tool) into the type checker
   - take advantage of the setup from the AST
-  - shouldn't have to change anything to make it work with BoGL
+  - shouldn't have to change anything to make it work with BoGL (ehhh?)
 - Change nodes from simple node into
-- (Env, Expr, Type)
+  - (Env, Expr, Type)
 - Every node is associated with some expression that is a usable example
 - Each expression has a given type
 - Each expression is evaluated within the context of an environment, such that we can then determine what can be bound to produce an evaluable result
@@ -316,6 +362,24 @@
 - should allow extracting nodes into a list
 - can use that list to make queries from nodes into the full graph
 - Downsides of doing it this way? The actual AST implementation may show some internal bits that don't make sense to what is seen in a program
+
+
+## Sept 25th, 2020 (Fri)
+- (observation) Record my observations/results in this format from here on out, so I can have something for my thesis and such
+  - (obs) or like this
+- Verify, I already skipped the grammar directly and reference the AST of the language itself, right? (pretty sure that's what I last did)
+- Constructor names should be their own nodes, fix this
+- consolidate the existing implementation, prune, will help me situate
+- verify a node can be an abstract 'thing', such as (Env,Expr,Type)
+  - could be int, and such, this will allow us to take our system a bit further...proposing a general classification for a formalizable tree of concepts
+- make a separate directory, and fill it in with the bones of a thesis...will help to see what I need to fill things in
+  - a trial, if I were to write now, what would I be missing, what am I showing...I will need 100+ pages of material...it's going to take a long-long-long-long time if completely full, right?
+- Start theorizing how to tap into the typechecked tree produced by the typechecker in BoGL
+- Next step, actually tap into the typechecked tree, and record my results
+
+
+## Oct. 2nd, 2020 (Fri)
+- Verify 
 
 
 # Additional Notes
