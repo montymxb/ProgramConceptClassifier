@@ -397,7 +397,7 @@
 - Next step, actually tap into the typechecked tree, and record my results (not yet...)
 
 
-## Next (Sun, Oct. 11th)
+## Sun, Oct. 11th
 - Write in an Abstract Syntax standin for BoGL based on Alex's new changes (with consideration to the existing designs)
 - Write in a new test module that taps into this Abstract Syntax
 - Write in 3 programs directly in the abstract syntax as an AST (checked!)
@@ -414,16 +414,40 @@
   - if they are, consider this acceptable, and add it to the known list
   - if NOT, report out of order error, and indicate the item that is out of order...
   - 30 more mins on this and then cut it out...
+- Undo the '*' thing, that doesn't help
+- Remove duplicate nodes in the CG
+
+## Mon, Oct. 12th
+- Fixing Cycles
+  - 2 functions
+  - 1st maps all concepts over the 2nd
+  - 2nd accumulates the visited nodes by making a traversal, and then removes the visited edge, and sets the new tgt as the target of that edge
+    - this fans out, and so it does this for ALL matches
+    - if any match adds a redundant node, that edge forms a cycle, return it, skip it, and continue crawling
+    - at the end no cycles == [], but anything returned should be removed, and the next concept is mapped over it again
+- Verify that all concepts can be traced back to 'Concept', if not report an error
+- Fix stranded concepts
+  - Tup, While, Cond, BTuple, BBoard
+  - fixes broke a lot..
+- Improve printing of concept data (change from a => String), for showing isKnown information
+- Was interesting to see that BBoard is a BType, which a board includes, and so a board can be defined in terms of a Board, but that means that BBoard is lesser than board...
 
 ## Current
-- Remove duplicate nodes in the CG
-- Undo the '*' thing, that doesn't help
-- Clean the graph by removing self-referencing edges, now allowed
-- Improve printing of concept data
+- Look at rules below, I'm pretty sure if a concept is known it can be assumed that all concepts underneath it are known as well
+  - can be qualified as Known vs. Understood?
+  - Known concepts are just themselves
+  - Understood concepts implicitly include all sub-concepts
+  - Combine these two lists...that would be nice to do, and then run the knownCheck on this
+- Clean up the directory from prior work...lots of leftover stuff...but keep for history or documentation as needed
 - Verify that the order that the ConceptGraph is built is the proper order to follow (most likely this will need some rectifying, but so far it seems good!)
-- Remove edges that form circular references (i.e) edges that go BACK to a previous node in a given run, if so, just pop that edge and continue to analyze
-
 - Use my tool to determine how to improve the order of things (be re-ordering)
+  - Be able to tag elements of an AST with their respective orderings....
+    - new data type (a,[String]), where 'a' is an AST element, and [String] is the associated concept tags
+    - then we can recrawl the AST, and see how things are organized
+    - when an AST element is encountered that is not 'known' yet, do one of 2 things
+      - search the following elements to see if any sub-element(s) includes the necessary deps, and recommend they be moved upwards
+        - but also do not introduce further conceptual mis-orderings
+      - if nothing found, recommend the addition of AST elements containing those concepts above the given concept
 - Use my tool to at least be able to analyze and potentially pick apart sub-parts
 - begin designing how the final tool will work, and by the characteristics that might help define what the final system will look like
 - Look up related work for refactoring research, and add this to my related works section!

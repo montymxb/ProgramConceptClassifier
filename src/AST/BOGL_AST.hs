@@ -1,5 +1,4 @@
-{-# OPTIONS -fglasgow-exts #-}
-{-# LANGUAGE DeriveDataTypeable, StandaloneDeriving #-}
+{-# LANGUAGE DeriveDataTypeable, StandaloneDeriving, ConstrainedClassMethods #-}
 --
 -- BOGL_P1
 --
@@ -15,6 +14,10 @@ import Data.Data
 import Data.Generics
 import Unsafe.Coerce
 import qualified Data.Set as S
+import Data.Set (toList,fromList)
+import Data.List
+
+import Debug.Trace
 
 import ConceptGraph.Concept
 import ConceptGraph.ConceptDependency
@@ -222,7 +225,55 @@ p4 =
 --
 -- Going to just setup a conceptual typeclass, that works like show, but just gives details about the concepts, and their relationships
 --
-toConstr' x = "*" ++ show (toConstr x)
+toConstr' x = show (toConstr x)
+
+-- | Removes duplicates from a list, whilst preserving order
+_makeUnique :: (Eq a) => [a] -> [a]
+_makeUnique [] = []
+_makeUnique (x:ls) | elem x ls = _makeUnique ls -- drop, already present
+                   | otherwise = x : _makeUnique ls-- keep it
+
+makeUnique :: (Eq a) => [a] -> [a]
+makeUnique = reverse . _makeUnique . reverse
+
+
+getAllEdgesFor :: (Eq a,Eq b) => a -> [(b,a,a)] -> [(b,a,a)]
+getAllEdgesFor n ls = filter (\(_,from,_) -> from == n) ls
+
+identifyCycles :: (Eq a, Eq b) => [a] -> [(b,a,a)] -> [(b,a,a)]
+identifyCycles visited edges = filter (\(_,_,x) -> elem x visited) edges
+
+findCycles :: (Eq a, Eq b) => a -> [a] -> [(b,a,a)] -> [(b,a,a)]
+findCycles _ _ [] = []
+findCycles n visited ls = let edges = getAllEdgesFor n ls in           -- get all edges that start w/ 'n'
+                                     let cycles = identifyCycles visited edges in -- foreach edge, if the 'to' element is in visited, it forms a cycle, skip it and return that cycle
+                                     let goodEdges = edges \\ cycles in           -- get the good edges that do not form cycles
+                                     let results = concatMap (\(_,_,b) -> findCycles b (n:visited) ls) goodEdges in -- reapply this check from all of those edges that do not form cycles
+                                     cycles ++ results -- returns the results of this check and any other checks combined
+                                     -- stops when there are no more edges to traverse (should end eventually)
+
+-- remove cycles
+removeCycles :: (Eq a, Eq b) => a -> [(b,a,a)] -> [(b,a,a)]
+removeCycles _ [] = []
+removeCycles n lsa@(s@(_,a,c):ls) = filter (\x -> not (elem x cycleEdges)) lsa where  -- only returns edges that do not form cycles
+  cycleEdges = findCycles n [] lsa
+
+unbox :: String -> String
+unbox [] = []
+unbox ('[':x) = if reverse x !! 0 == ']' then init x else x
+unbox x  = x
+
+quote :: String -> String
+quote s = '\'' : s ++ "'"
+
+-- Verifies every edge ends leads to Concept
+verifyLattice :: (Show b,Eq b) => [(b,String,String)] -> [(b,String,String)] -> (Bool,String)
+verifyLattice [] _ = (True,"")
+verifyLattice (x@(_,a,b):ls) ls2 | b /= "Concept" = let edges = getAllEdgesFor (unbox b) ls2 in
+                               case edges of
+                                 [] -> (False,"\n\nIn Lattice, " ++ quote b ++ " does not connect to any other node. It should be pointing to 'Concept' to complete the lattice.\n\nThis can be fixed by adding 'ebase s', where 's' is the element in question, and append this to the existing edge list.\n\n")
+                                 els-> verifyLattice ls ls2 -- continue
+                                 | otherwise =  verifyLattice ls ls2-- skip to the next entry, if any
 
 type EdgeName = String
 type FromNode = String
@@ -231,7 +282,13 @@ type CNodes = [String]
 type CEdges = [(EdgeName,FromNode,ToNode)]
 class Conceptual a where
   cgraph :: (Typeable a, Data a, Eq a) => a -> (CNodes,CEdges)
-  cgraph x = (concepts(x),_edges(x))
+  cgraph x = let uniqueConcepts = (makeUnique . concepts) x in
+             let uniqueEdges = (makeUnique . _edges) x in
+             let reducedEdges = foldl (\tot x -> removeCycles x tot) uniqueEdges uniqueConcepts in
+             let verifyResult = verifyLattice reducedEdges reducedEdges in
+             case (verifyResult) of
+               (True,_)    -> (uniqueConcepts, reducedEdges)
+               (False,msg) -> error ("Unable to verify lattice with error: " ++ msg)
 
   concepts :: (Typeable a, Data a, Eq a) => a -> CNodes
   concepts c = [show (typeOf c), toConstr' c, "Concept"]
@@ -355,9 +412,9 @@ instance Conceptual BType where
   concepts s@(BUName a) = c1 s a
   concepts s@(BTuple a) = c1 s a
   _edges s@(BInt a)     = e1 s [a]
-  _edges s@(BBoard a)   = e1 s [a]
-  _edges s@(BUName x)   = e1 s [x]
-  _edges s@(BTuple ls)  = e1 s ls
+  _edges s@(BBoard a)   = e1 s [a] ++ ebase s
+  _edges s@(BUName a)   = e1 s [a]
+  _edges s@(BTuple ls)  = e1 s ls ++ ebase s
 
 
 instance Conceptual FType where
@@ -439,12 +496,12 @@ instance Conceptual Expr where
   _edges s@(IVal a) = e1 s [a]
   _edges s@(SVal a) = e1 s [a]
   _edges s@(Ref a) = e1 s [a]
-  _edges s@(Tup a) = e1 s a
+  _edges s@(Tup a) = e1 s a ++ ebase s
   _edges s@(App a b) = e2 s [a] b
   _edges s@(BinOp a b c) = e3 s [a] [b] [c]
   _edges s@(Let a b c) = e3 s [a] [b] [c]
-  _edges s@(Cond a b c) = e3 s [a] [b] [c]
-  _edges s@(While a b) = e2 s [a] [b]
+  _edges s@(Cond a b c) = e3 s [a] [b] [c] ++ ebase s
+  _edges s@(While a b) = e2 s [a] [b] ++ ebase s
 
 instance Conceptual BinOp where
   concepts s = cbase s
@@ -464,12 +521,13 @@ boglGraph2_p3 = graph_to_concept_graph $ cgraph p3
 boglGraph2_p4 :: ConceptGraph String String
 boglGraph2_p4 = graph_to_concept_graph $ cgraph p4
 
+-- Produces graphs of programs 1 - 4
 graphBOGL2 :: IO ()
 graphBOGL2 = do
-  GVSpec.writeGVSpec "bogl2_p1" boglGraph2_p1
-  GVSpec.writeGVSpec "bogl2_p2" boglGraph2_p2
-  GVSpec.writeGVSpec "bogl2_p3" boglGraph2_p3
-  GVSpec.writeGVSpec "bogl2_p4" boglGraph2_p4
+  GVSpec.writeGVSpec "bogl4_p1" boglGraph2_p1
+  GVSpec.writeGVSpec "bogl4_p2" boglGraph2_p2
+  GVSpec.writeGVSpec "bogl4_p3" boglGraph2_p3
+  GVSpec.writeGVSpec "bogl4_p4" boglGraph2_p4
   return ()
 
 
@@ -485,30 +543,32 @@ deps _ _ []     = []
 deps c@(Concept c1) k ((_,frm,to):ls) | c1 == frm && not (elem (Concept to) k) = ((Concept to) : deps (Concept to) k ls) ++ deps c k ls -- only add deps that we don't already know
                                     | otherwise = deps c k ls
 
-
--- extracts the wrapped concept
-extract :: (Show a) => [Concept a] -> [String]
-extract [] = []
-extract ((Concept x):ls) = show x : (extract ls)
-
 -- represents an order check result
-data OrderCheck = OK
-  | OutOfOrder String
+data KnownCheck = OK
+  | Unknown String
   deriving (Show)
 
-isKnown :: (Conceptual a, Eq a, Show a) => Known a -> ConceptGraph b a -> OrderCheck
+unconcept :: Concept a -> a
+unconcept (Concept a) = a
+
+isKnown :: Known String -> ConceptGraph b String -> KnownCheck
 isKnown _ (ConceptGraph [] _)        = OK  -- nothing is required to understand nothing
-isKnown [] (ConceptGraph _ _)        = OutOfOrder "If nothing is known, then nothing can be known besides nothing"
-isKnown k (ConceptGraph (a:ls) cds)  = let d = deps a k cds in -- get deps
+isKnown [] (ConceptGraph _ _)        = Unknown "If nothing is known, then nothing can be known besides nothing"
+isKnown k (ConceptGraph (a:ls) cds)  = let d = makeUnique (deps a k cds) in -- get deps
                                          let knownChecks = map (\x -> elem x k) d in -- check which deps we know
                                          let allKnown = all (\x -> x) knownChecks in -- verify we know all the deps
                                          case allKnown of
                                            True   -> isKnown (a:k) (ConceptGraph ls cds) -- check the next concept, adding 'a' to the known list
-                                           False  -> OutOfOrder $ "Concept " ++ (show a) ++ " was determined to be unknown with regards to deps:\n" ++ show ((filter (\x -> not(elem x k)) d))
+                                           False  -> Unknown $ "Concept " ++ (quote . unconcept) a ++ " was determined to be unknown with regards to deps:\n" ++ intercalate "\n" (map unconcept ((filter (\x -> not(elem x k)) d)))
 
 -- in order checks
-o1 = map (\x -> (Concept x)) ["Concept","Game","*Game","*UName","UName","Board","*Board","Int","*Int","Input","*Input","BType","*BInt","[Char]"]
-order1 = isKnown o1 boglGraph2_p1
-order2 = isKnown o1 boglGraph2_p2
-order3 = isKnown o1 boglGraph2_p3
-order4 = isKnown o1 boglGraph2_p4
+o1 :: [Concept String]
+o1 = map (\x -> (Concept x)) ["Concept","Game","UName","Board","Int","Input","BType","[Char]","BInt"]
+
+showRez (Unknown s) = putStrLn $ "\n\n" ++ s ++ "\n\n"
+showRez (OK) = putStrLn "\n\nAll concepts known and OK\n\n"
+
+known1 = showRez (isKnown o1 boglGraph2_p1)
+known2 = showRez (isKnown o1 boglGraph2_p2)
+known3 = showRez (isKnown o1 boglGraph2_p3)
+known4 = showRez (isKnown o1 boglGraph2_p4)

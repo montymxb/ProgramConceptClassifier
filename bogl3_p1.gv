@@ -1,0 +1,23 @@
+strict digraph G {
+Game	 [label="Game"];
+UName	 [label="UName"];
+Char	 [label="Char"];
+Concept	 [label="Concept"];
+Board	 [label="Board"];
+Int	 [label="Int"];
+BType	 [label="BType"];
+BInt	 [label="BInt"];
+Input	 [label="Input"];
+Game	->	UName	 [label=""];
+Game	->	Board	 [label=""];
+Game	->	Input	 [label=""];
+UName	->	Char	 [label=""];
+Char	->	Concept	 [label=""];
+Board	->	Int	 [label=""];
+Board	->	BType	 [label=""];
+Int	->	Concept	 [label=""];
+BType	->	BInt	 [label=""];
+BInt	->	Int	 [label=""];
+Input	->	BType	 [label=""];
+
+}
