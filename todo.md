@@ -367,19 +367,69 @@
 ## Sept 25th, 2020 (Fri)
 - (observation) Record my observations/results in this format from here on out, so I can have something for my thesis and such
   - (obs) or like this
-- Verify, I already skipped the grammar directly and reference the AST of the language itself, right? (pretty sure that's what I last did)
-- Constructor names should be their own nodes, fix this
-- consolidate the existing implementation, prune, will help me situate
-- verify a node can be an abstract 'thing', such as (Env,Expr,Type)
-  - could be int, and such, this will allow us to take our system a bit further...proposing a general classification for a formalizable tree of concepts
-- make a separate directory, and fill it in with the bones of a thesis...will help to see what I need to fill things in
-  - a trial, if I were to write now, what would I be missing, what am I showing...I will need 100+ pages of material...it's going to take a long-long-long-long time if completely full, right?
-- Start theorizing how to tap into the typechecked tree produced by the typechecker in BoGL
-- Next step, actually tap into the typechecked tree, and record my results
 
 
 ## Oct. 2nd, 2020 (Fri)
-- Verify 
+- Fix up so that this thing works (against updated BoGL)
+  - (obs) Fixed it up
+- Verify, I already skipped the grammar directly and reference the AST of the language itself, right? (pretty sure that's what I last did)
+  - (obs) Yes, this works
+- Re-familizarize myself with how to generate my list from BoGL
+- THEN, Constructor names should be their own nodes, fix this
+  - put down constructors as generating their own nodes, rather than named edges...
+  - need additional edge connecting a type to it's own constructor...this can be programmed in automatically..I think?
+- The constructor for lists should be it's own node
+- Primitive should be a node
+- Expr SourcePos should go to a node named 'I', NOT just an edge named 'I'
+- BoardDef should NOT refer to itself by an edge (has to do with the type and constructor having the same name...)
+- InputDef should not refer to itself, type & constr share a name
+- Binop should NOT refer back to 'Expr SourcePos' (can't fix at the moment...)
+- Add +,-,*,/ operations as well, to get an idea of how things relate (extend existing equation)
+- consolidate the existing implementation, prune, will help me situate
+- verify a node can be an abstract 'thing', such as (Env,Expr,Type)
+  - could be int, and such, this will allow us to take our system a bit further...proposing a general classification for a formalizable tree of concepts
+  - (obs) this is correct
+- make a separate directory, and fill it in with the bones of a thesis...will help to see what I need to fill things in
+  - a trial, if I were to write now, what would I be missing, what am I showing...I will need 100+ pages of material...it's going to take a long-long-long-long time if completely full, right?
+  - (obs) As noted in the last meeting, I should start to describe what 'kind' of system this will be, and how it will work
+- Start theorizing how to tap into the typechecked tree produced by the typechecker in BoGL
+  - (obs) Probably won't be able to...instead I'm going to have to make a separate copy...as much as tapping in directly is nice, the actual AST has artifacts that are not representative of the final language
+- Next step, actually tap into the typechecked tree, and record my results (not yet...)
+
+
+## Next (Sun, Oct. 11th)
+- Write in an Abstract Syntax standin for BoGL based on Alex's new changes (with consideration to the existing designs)
+- Write in a new test module that taps into this Abstract Syntax
+- Write in 3 programs directly in the abstract syntax as an AST (checked!)
+- Generate a ConceptGraph on the results of the tool
+- Verify this can be used to analyze programs 1-4
+- (obs) The layout of this thing is a bit of a mess as compared to the other items...
+- Dip back into the TOODs in the file itself, make corrections
+- Compare the old graph vs. the new graph of a program (where it's actually straight up TicTacToe)
+- Use my tool to determine whether or not the programs are in/out of order
+  - isInOrder ...
+  - start with a fixed 'Known' list
+  - start with an unknown list of all unique Concepts
+  - using the concept graph, for any node that's added, ensure that all nodes it depends on are ALSO known
+  - if they are, consider this acceptable, and add it to the known list
+  - if NOT, report out of order error, and indicate the item that is out of order...
+  - 30 more mins on this and then cut it out...
+
+## Current
+- Remove duplicate nodes in the CG
+- Undo the '*' thing, that doesn't help
+- Clean the graph by removing self-referencing edges, now allowed
+- Improve printing of concept data
+- Verify that the order that the ConceptGraph is built is the proper order to follow (most likely this will need some rectifying, but so far it seems good!)
+- Remove edges that form circular references (i.e) edges that go BACK to a previous node in a given run, if so, just pop that edge and continue to analyze
+
+- Use my tool to determine how to improve the order of things (be re-ordering)
+- Use my tool to at least be able to analyze and potentially pick apart sub-parts
+- begin designing how the final tool will work, and by the characteristics that might help define what the final system will look like
+- Look up related work for refactoring research, and add this to my related works section!
+
+
+
 
 
 # Additional Notes

@@ -43,7 +43,7 @@ cn (c:ls) = case c of
               '/' -> ("Divi"++(cn ls))
               '\"'-> (cn ls)
               ' ' -> ("_"++(cn ls))
-              '[' -> ("List_"++(cn ls))
+              '[' -> (cn ls) -- used to factor in the list, now we will ignore it!
               ']' -> (cn ls)
               _   -> (c:cn ls)
 

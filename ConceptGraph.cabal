@@ -1,10 +1,10 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.31.2.
+-- This file has been generated from package.yaml by hpack version 0.33.0.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: d9d469db80e363845307e0f3d96bff97cb4006ea797373b554364302e135c86e
+-- hash: f684678ceece2148225303103b5bd8e2f6be7d7d107c836b02f1fffdb9188332
 
 name:           ConceptGraph
 version:        0.1.0.0
@@ -27,6 +27,8 @@ source-repository head
 
 library
   exposed-modules:
+      AbstractSyntax.BOGL
+      AST.BOGL_AST
       ConceptGraph.Concept
       ConceptGraph.ConceptDependency
       ConceptGraph.ConceptGraph
