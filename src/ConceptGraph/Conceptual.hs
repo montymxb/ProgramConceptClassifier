@@ -266,7 +266,7 @@ produceDiffs _ [] = []
 produceDiffs knowns ((ConceptGraph concepts deps):ls) = [concepts \\ knowns] ++ (produceDiffs (_makeUnique (knowns ++ concepts)) ls)
 
 -- Calculates the std deviation of the size of the unique sets of concepts introduced in each example
-stdDeviation :: [[Concept String]] -> Float
+stdDeviation :: [[a]] -> Float
 stdDeviation ls = let len = fromIntegral (length ls) in
                   let s1 = (foldl (\ss x -> (fromIntegral (length x)) + ss) (0.0 :: Float) ls) in
                   let xmean = s1 / len in
