@@ -458,11 +458,9 @@
 - (Obs), perhaps, rather than trying to 'fix' things continually, this is indicative of the overhead required to be able to write even a simple program, and suggests a minimum level of understanding to be able to write a program. This would be the smallest set of examples required to be able to know how to write any program in the given language. Such prior understanding is critical to getting a foothold, but not covered by this then? You can't analyze anything other than a program here.
 - Simplify the example program to make all kinds of statements...
 - *(Obs) A depth first search of the concept graph produced leads to an ordering of the concepts in the order that they were introduced*. But the setup won't allow for certain recursive defs (like Statement1 back to Statement0, even though this is valid...)*
-- (Obs), we can understand how the graph is expanded over time by comparing the results of understanding concepts from one program to another, So the knowns as the result of working with one program can be used as the knowns of another program. It can be literally stated that knowning the conepts involved in program 1 will be pre-requisites for program 2, but another program X could also fill this gap to the same extent, more or less...
+- (Obs), we can understand how the graph is expanded over time by comparing the results of understanding concepts from one program to another, So the knowns as the result of working with one program can be used as the knowns of another program. It can be literally stated that knowing the concepts involved in program 1 will be pre-requisites for program 2, but another program X could also fill this gap to the same extent, more or less...
 - Setup the list approach for the BoGL examples
 - (Obs) Don't have refactorings yet, but I do have ways to accumulate knowledge of concepts over time through a list of programs...along with independently assessing the programs too for how they are laid out
-
-##> Current
 - Would be nice to have a 'show' instance or something for each of these program types that produces the concrete syntax from the abstract syntax?
 - Use my tool to determine how to improve the order of things (by re-ordering)
   - In particular, experiment with insertions to help teach what's being given
@@ -477,6 +475,11 @@
       - search the following elements to see if any sub-element(s) includes the necessary deps, and recommend they be moved upwards
         - but also do not introduce further conceptual mis-orderings
       - if nothing found, recommend the addition of AST elements containing those concepts above the given concept
+
+##> Current
+- Produced via standard deviations of the lengths of the novel concepts introduced by permutations of a list of programs
+  - something that is, in fact, conceptually ordered...interesting
+
 - Use my tool to at least be able to analyze and potentially pick apart sub-parts
 - begin designing how the final tool will work, and by the characteristics that might help define what the final system will look like
 - Look up related work for refactoring research, and add this to my related works section!

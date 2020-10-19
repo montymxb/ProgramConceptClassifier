@@ -311,7 +311,7 @@ p4 =
 -- a function that returns the value given as is
 p5 :: Game
 p5 = (Game
-  (UName "TicTacToe")
+  (UName "P5_Identity")
   []
   (Board 1 1 (BInt x_x))
   (Input (BInt x_x))
@@ -450,3 +450,31 @@ knowns = _knowns 0 o1 (produceGraphs progs)
 
 showDiffs :: [[Concept String]]
 showDiffs = produceDiffs o1 (produceGraphs progs)
+
+ordStdDev :: Float
+ordStdDev = stdDeviation showDiffs
+
+allStdDevs :: (Conceptual a, Data a, Eq a) => [a] -> (Float,[a])
+allStdDevs progs =  let f = (produceDiffs o1) . produceGraphs in
+                    let progPermutations = permutations progs in
+                    let stdDevs = map (stdDeviation . f) progPermutations in
+                    let m = minimum stdDevs in
+                    let i = elemIndex m stdDevs in
+                    case i of
+                      Just index -> (m,progPermutations !! index)
+                      Nothing    -> (m,[])
+
+sortList :: (Conceptual a, Data a, Eq a) => [a] -> (a -> String) -> (Float,[String])
+sortList pl f = let rr = allStdDevs pl in
+              (fst rr, map f (snd $ rr))
+
+gameName :: Game -> String
+gameName (Game (UName n) _ _ _ _) = n
+
+sortList1 :: (Float,[String])
+sortList1 = let pl = [p1,p2,p5,p3,p4] in
+            sortList pl gameName
+
+sortList2 :: (Float,[String])
+sortList2 = let pl = [p3,p4,p5,p1,p2] in
+            sortList pl gameName

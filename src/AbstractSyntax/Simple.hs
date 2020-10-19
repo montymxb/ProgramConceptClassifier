@@ -13,6 +13,7 @@ import ConceptGraph.GraphToConceptGraph
 import ConceptGraph.ConceptGraph
 import GVSpec.GVSpec as GVSpec
 import Data.Data
+import Data.List
 
 import ConceptGraph.Concept
 
@@ -107,3 +108,31 @@ knowns = _knowns 0 o1 (produceGraphs progs)
 
 showDiffs :: [[Concept String]]
 showDiffs = produceDiffs o1 (produceGraphs progs)
+
+ordStdDev :: Float
+ordStdDev = stdDeviation showDiffs
+
+sortList :: (Conceptual a, Data a, Eq a) => [a] -> (a -> String) -> (Float,[String])
+sortList pl f = let rr = allStdDevs pl in
+              (fst rr, map f (snd $ rr))
+
+allStdDevs :: (Conceptual a, Data a, Eq a) => [a] -> (Float,[a])
+allStdDevs progs =  let f = (produceDiffs o1) . produceGraphs in
+                    let progPermutations = permutations progs in
+                    let stdDevs = map (stdDeviation . f) progPermutations in
+                    let m = minimum stdDevs in
+                    let i = elemIndex m stdDevs in
+                    case i of
+                      Just index -> (m,progPermutations !! index)
+                      Nothing    -> (m,[])
+
+simpleName :: Simple -> String
+simpleName x = show x
+
+sortList1 :: (Float,[String])
+sortList1 = let pl = progs in
+            sortList pl simpleName
+
+--sortList2 :: (Float,[String])
+--sortList2 = let pl = [p3,p4,p5,p1,p2] in
+--            sortList pl simpleName
