@@ -18,14 +18,14 @@ data LName = LName String
 data UName = UName String
   deriving (Show,Data,Eq)
 
--- base type
+-- base types in the language
 data BType = BInt Int
   | BBoard Board
   | BUName UName
   | BTuple [BType] -- k >= 2
   deriving (Show,Data,Eq)
 
--- function type
+-- function type. All BoGL functions are uncurried, straight up A -> B
 data FType = FType BType BType
   deriving (Show,Data,Eq)
 
@@ -93,6 +93,7 @@ data Expr = IVal Int
   | While Expr Expr       -- while loop
   deriving (Show,Data,Eq)
 
+-- Binary Operations that can be performed, used with the expressions listed above ^^
 data BinOp = Plus
   | Minus
   | Times

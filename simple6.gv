@@ -1,0 +1,21 @@
+strict digraph G {
+Simple	 [label="Simple"];
+S0	 [label="S0"];
+Statement	 [label="Statement"];
+Statement3	 [label="Statement3"];
+Statement1	 [label="Statement1"];
+Statement0	 [label="Statement0"];
+Int	 [label="Int"];
+Concept	 [label="Concept"];
+Simple	->	S0	 [label=""];
+S0	->	Statement	 [label=""];
+Statement	->	Statement3	 [label=""];
+Statement	->	Statement1	 [label=""];
+Statement	->	Statement0	 [label=""];
+Statement0	->	Int	 [label=""];
+Int	->	Concept	 [label=""];
+Statement1	->	Concept	 [label=""];
+Statement3	->	Concept	 [label=""];
+S0	->	Concept	 [label=""];
+
+}

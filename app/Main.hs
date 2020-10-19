@@ -9,8 +9,8 @@ import Lib
 --import Implementations.T2 as T2
 
 import AbstractSyntax.BOGL
-import AST.BOGL_AST
-import GVSpec.GVSpec as GVSpec
+import AbstractSyntax.Simple as Simple
+import AST.BOGL_AST as BOGL
 
 main :: IO ()
 main = someFunc

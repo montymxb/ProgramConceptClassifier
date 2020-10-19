@@ -1,0 +1,7 @@
+strict digraph G {
+Simple	 [label="Simple"];
+S0	 [label="S0"];
+Simple	->	S0	 [label=""];
+S0	->	Concept	 [label=""];
+
+}

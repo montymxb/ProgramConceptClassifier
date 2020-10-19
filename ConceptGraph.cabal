@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: f684678ceece2148225303103b5bd8e2f6be7d7d107c836b02f1fffdb9188332
+-- hash: 390c75bfeaaf13448ad8fc4eb999b0c66d4d8cca5dff4c7309987388028051fa
 
 name:           ConceptGraph
 version:        0.1.0.0
@@ -28,10 +28,12 @@ source-repository head
 library
   exposed-modules:
       AbstractSyntax.BOGL
+      AbstractSyntax.Simple
       AST.BOGL_AST
       ConceptGraph.Concept
       ConceptGraph.ConceptDependency
       ConceptGraph.ConceptGraph
+      ConceptGraph.Conceptual
       ConceptGraph.GraphToConceptGraph
       Grammar.Grammar
       Grammar.GrammarToGraph

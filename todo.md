@@ -432,15 +432,44 @@
 - Improve printing of concept data (change from a => String), for showing isKnown information
 - Was interesting to see that BBoard is a BType, which a board includes, and so a board can be defined in terms of a Board, but that means that BBoard is lesser than board...
 
-## Current
+## Oct. 18th, 2020
+- Research points
+  - "knowledge discovery", or "knowledge processing" keeps coming up, this is likely to be of interest
+  - not sure if I really understood how to setup via Formal Concept Analysis properly, verify my implementation is correct to this theory
+  - refactoring based on the patterns for knowledge discovery is not something I have literally seen, to conceptually introduce aspects of programs
 - Look at rules below, I'm pretty sure if a concept is known it can be assumed that all concepts underneath it are known as well
   - can be qualified as Known vs. Understood?
   - Known concepts are just themselves
   - Understood concepts implicitly include all sub-concepts
   - Combine these two lists...that would be nice to do, and then run the knownCheck on this
-- Clean up the directory from prior work...lots of leftover stuff...but keep for history or documentation as needed
+  - leaving it alone for now...
+- Clean up prior work a bit, document parts that are undocumented
+- Verify that if A is unknown, but B is known, then A can be found out as well (no gap...)
+  - I 'think' this is being preserved...but check it with the simple program first...
+- *(Obs) Along the way of my work I have noticed that the set of concepts produced is in the same order as they are first discovered. This has some interesting implications.*
+   - 1st) Programs produce their own known sets that could be used as knowns to evaluate subsequent programs, and to compare directly whether they are advancing too quickly or not (an additional pedagogical tool). As in 'after this program you will know A,B,C'.
+     - In turn this can be used to evaluate pacing to some degree? Possibly
+   - 2nd) These sets can directly be evaluated for a relative ordering to determine whether they are in order or not, and what concepts are out of order
+   - 3rd) Far fetched, but was thinking of a type system kinda thing that could be formulated as an expanding concept lattice (or knowledge graph). Each program is responsible for proving it's own elements that are not previously known. Test of organization perhaps? Hmmm...or getting back some warnings or something...this particular idea needs further thought
+   - 4th) The idea of conceptually significant statements comes up, which are ones which introduce novel concepts, and this is how we would be able to tag things in order to suggest addressing them. This is where we have to consider refactoring...
 - Verify that the order that the ConceptGraph is built is the proper order to follow (most likely this will need some rectifying, but so far it seems good!)
-- Use my tool to determine how to improve the order of things (be re-ordering)
+- run the 'isKnown' checker on the Simple program, assert that Actual meets Expected
+  - no, it does not, 'Simple' is on known but does NOT work?
+- (Obs), perhaps, rather than trying to 'fix' things continually, this is indicative of the overhead required to be able to write even a simple program, and suggests a minimum level of understanding to be able to write a program. This would be the smallest set of examples required to be able to know how to write any program in the given language. Such prior understanding is critical to getting a foothold, but not covered by this then? You can't analyze anything other than a program here.
+- Simplify the example program to make all kinds of statements...
+- *(Obs) A depth first search of the concept graph produced leads to an ordering of the concepts in the order that they were introduced*. But the setup won't allow for certain recursive defs (like Statement1 back to Statement0, even though this is valid...)*
+- (Obs), we can understand how the graph is expanded over time by comparing the results of understanding concepts from one program to another, So the knowns as the result of working with one program can be used as the knowns of another program. It can be literally stated that knowning the conepts involved in program 1 will be pre-requisites for program 2, but another program X could also fill this gap to the same extent, more or less...
+- Setup the list approach for the BoGL examples
+- (Obs) Don't have refactorings yet, but I do have ways to accumulate knowledge of concepts over time through a list of programs...along with independently assessing the programs too for how they are laid out
+
+##> Current
+- Would be nice to have a 'show' instance or something for each of these program types that produces the concrete syntax from the abstract syntax?
+- Use my tool to determine how to improve the order of things (by re-ordering)
+  - In particular, experiment with insertions to help teach what's being given
+    - objectives to maximize are those we associate with good examples
+      - teach good habits
+      - minimize unnecessary addons
+      - teach the goals in question, and do not go past them
   - Be able to tag elements of an AST with their respective orderings....
     - new data type (a,[String]), where 'a' is an AST element, and [String] is the associated concept tags
     - then we can recrawl the AST, and see how things are organized
@@ -453,6 +482,15 @@
 - Look up related work for refactoring research, and add this to my related works section!
 
 
+
+- (from TODOs, more relevant here) Work on thesis/research
+    - had an idea of maxing/mining some quality of the ordering...
+    - had an idea of the 'program as a series of lets' in haskell
+        - i.e. you have to order it so that the thing is used AFTER it is declared
+        - concepts can only be used after they are defined basically, or introduced in an acceptable context
+        - can't co-introduce
+        - can't reverse introduce
+        - must introduce in such as a way that no other following program could introduce that concept as novel...
 
 
 
