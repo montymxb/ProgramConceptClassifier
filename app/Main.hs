@@ -16,10 +16,11 @@ import ProgramDatabase.BoglPrograms
 main :: IO ()
 main = someFunc
 
-test :: IO ()
-test = do
+test :: Query -> IO ()
+test qq = do
   putStrLn "\n\n==Query Examples==\n\n"
 
+  {-
   let q = (FindOneExact ["Game"])
   putStrLn $ show q ++ " produces...\n"
   putStrLn $ present $ runProgQuery q
@@ -73,13 +74,20 @@ test = do
   putStrLn $ present $ runProgQuery q
   let c9 = (ihtml q ["Addition","Multiplication"] (present $ runProgQuery q))
   putStrLn "========================="
+  -}
 
-  let q = (FindInOrder ["Game","Addition","Value","If Then Else","Let Expression","Function"])
+  let q = (FindOneExact ["Game"])
   putStrLn $ show q ++ " produces...\n"
   putStrLn $ present $ runProgQuery q
   let c10 = (ihtml q ["Game","Addition","Value","If Then Else","Let Expression","Function"] (present $ runProgQuery q))
   putStrLn "========================="
 
-  writeFile "Suggestions.html" (html $ (lhtml concepts) ++ c1 ++ c2 ++ c3 ++ c4 ++ c5 ++ c6 ++ c7 ++ c8 ++ c9 ++ c10)
+  putStrLn $ show qq ++ " produces...\n"
+  putStrLn $ present $ runProgQuery qq
+  let c11 = (ihtml qq [] (present $ runProgQuery qq))
+
+  writeFile "Suggestions.html" (html $ (lhtml concepts) ++ c10 ++ c11)
+
+  --writeFile "Suggestions.html" (html $ (lhtml concepts) ++ c1 ++ c2 ++ c3 ++ c4 ++ c5 ++ c6 ++ c7 ++ c8 ++ c9 ++ c10)
 
   return ()

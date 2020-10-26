@@ -60,7 +60,7 @@ c_assign = "Assigning a value to a Position"
 c_manyeqs = "Many Board Equations"
 
 -- list of concepts (this is hand-drawn this time around)
-concepts = [c_manyeqs,c_assign,c_posvar,c_poslit,c_pos,c_get,c_app,c_ref,c_if,c_neq,c_leq,c_geq,c_le,c_ge,c_eq,c_paren,c_let,c_mod,c_div,c_mult,c_sub,c_add,c_def,c_decl,c_input,c_param,c_fun,c_val,c_ext,c_array,c_board,c_tup,c_bool,c_int,c_set,c_sym,c_typ]
+concepts = [c_game,c_manyeqs,c_assign,c_posvar,c_poslit,c_pos,c_get,c_app,c_ref,c_if,c_neq,c_leq,c_geq,c_le,c_ge,c_eq,c_paren,c_let,c_mod,c_div,c_mult,c_sub,c_add,c_def,c_decl,c_input,c_param,c_fun,c_val,c_ext,c_array,c_board,c_tup,c_bool,c_int,c_set,c_sym,c_typ]
 
 --
 -- Program Concept Pairings
@@ -76,8 +76,8 @@ b = [("type T1 = {X}",[c_typ,c_sym]),
       ("type T4 = Int & {Empty}", [c_typ,c_int,c_sym,c_set,c_ext])]
 
 -- board decls
-c = [("type Board = Array(1,1) of Int", [c_typ,c_board,c_array,c_int,c_tup]),
-  ("type Board = Array(1,1) of Bool", [c_typ,c_board,c_array,c_bool,c_tup]),
+c = [("type Board = Array(1,1) of Int", [c_typ,c_board,c_array,c_int]),
+  ("type Board = Array(1,1) of Bool", [c_typ,c_board,c_array,c_bool]),
   ("type Board = Array(1,1) of T2", [c_typ,c_board,c_array])]
 
 -- input decls
@@ -153,7 +153,8 @@ allProgramParts = concat [a,b,c,i,v,be,f]
 -- takes a list of concepts, produces a list of tuples of ([Statement],[Concepts])
 -- produce all permutations of items, using at 1st just the one, then the 2nd, and so on
 
-
+-- names of the queries to use
+queryNames = ["FindOneExact","FindAllExact","FindOneContaining","FindAllContaining","FindOneAny","FindAllAny","FindInOrder","FindAllOrders"]
 
 -- basic query type
 type Concept = String
@@ -231,7 +232,7 @@ html :: String -> String
 html s = topFrame ++ s ++ bottomFrame
 
 lhtml :: [String] -> String
-lhtml ls = "<div class='concept-list'>" ++ (foldl (\s x -> s ++ "<div class='button'>"++ x ++"</div>") "" ls) ++ "</div>"
+lhtml ls = "<div class='concept-list'>" ++ (foldl (\s x -> s ++ "<div class='button'>"++ x ++"</div>") "" ls) ++ "<br/><br/>" ++ (foldl (\s x -> s ++ "<div class='qbutton'>"++ x ++"</div>") "" queryNames) ++ "<textarea id='query-field' placeholder=''></textarea></div>"
 
 ihtml :: Query -> [String] -> String -> String
 ihtml q ls s = "<div class='query'><div class='query-name'>" ++ show q ++ "</div><div class='tray'>" ++ buttons ls ++ "</div><div class='bogl-code'>" ++ s ++ "</div></div>"
