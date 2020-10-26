@@ -475,12 +475,18 @@
       - search the following elements to see if any sub-element(s) includes the necessary deps, and recommend they be moved upwards
         - but also do not introduce further conceptual mis-orderings
       - if nothing found, recommend the addition of AST elements containing those concepts above the given concept
+- Produced via standard deviations of the lengths of the novel concepts introduced by permutations of a list of programs
+    - something that is, in fact, conceptually ordered...interesting
 
 ##> Current
-- Produced via standard deviations of the lengths of the novel concepts introduced by permutations of a list of programs
-  - something that is, in fact, conceptually ordered...interesting
+- Write up 3 example programs
+- Write up a data type to represent a queryable example
+- Write up a data type to represent a database of examples
 
-- Use my tool to at least be able to analyze and potentially pick apart sub-parts
+- Produce database of BoGL programs...trying to go as piece-wise as possible for every little aspect...
+  - just txt files in repo
+    - needs tagging for concepts...
+  - Produce query system that allows
 - begin designing how the final tool will work, and by the characteristics that might help define what the final system will look like
 - Look up related work for refactoring research, and add this to my related works section!
 

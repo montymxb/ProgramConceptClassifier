@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 390c75bfeaaf13448ad8fc4eb999b0c66d4d8cca5dff4c7309987388028051fa
+-- hash: 4ef77332df939c72a45049c2b314547e4bd36dd9389b986960d3947b4cdb5d4c
 
 name:           ConceptGraph
 version:        0.1.0.0
@@ -46,6 +46,8 @@ library
       Implementations.CSforAll
       Implementations.T2
       Lib
+      ProgramDatabase.BoglPrograms
+      ProgramDatabase.Database
       Query.Query
   other-modules:
       Paths_ConceptGraph

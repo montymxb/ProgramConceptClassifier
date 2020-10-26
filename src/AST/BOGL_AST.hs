@@ -323,7 +323,7 @@ p5 = (Game
 
 
 progs :: [Game]
-progs = [p1,p2,p5,p3,p4]
+progs = [p1,p2,p3,p4,p5]
 
 
 instance Conceptual LName where
