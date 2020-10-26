@@ -131,11 +131,11 @@ v = [
   ("v : Int\nv = 5\nv2 : Int\nv2 = v", [c_val,c_int,c_decl,c_def,c_ref])]
 
 -- board equations
-be = [("b : Board\bb!(1,1) = 1", [c_val,c_board,c_get,c_pos,c_int,c_assign,c_poslit]),
-  ("b : Board\bb!(x,1) = 1", [c_val,c_board,c_get,c_pos,c_int,c_assign,c_posvar,c_poslit]),
-  ("b : Board\bb!(1,y) = 1", [c_val,c_board,c_get,c_pos,c_int,c_assign,c_posvar,c_poslit]),
-  ("b : Board\bb!(x,y) = 1", [c_val,c_board,c_get,c_pos,c_int,c_assign,c_posvar]),
-  ("b : Board\bb!(x,y) = 1\nb!(1,1) = 0", [c_val,c_board,c_get,c_pos,c_int,c_assign,c_posvar,c_poslit,c_manyeqs])]
+be = [("b : Board\nb!(1,1) = 1", [c_val,c_board,c_get,c_pos,c_int,c_assign,c_poslit]),
+  ("b : Board\nb!(x,1) = 1", [c_val,c_board,c_get,c_pos,c_int,c_assign,c_posvar,c_poslit]),
+  ("b : Board\nb!(1,y) = 1", [c_val,c_board,c_get,c_pos,c_int,c_assign,c_posvar,c_poslit]),
+  ("b : Board\nb!(x,y) = 1", [c_val,c_board,c_get,c_pos,c_int,c_assign,c_posvar]),
+  ("b : Board\nb!(x,y) = 1\nb!(1,1) = 0", [c_val,c_board,c_get,c_pos,c_int,c_assign,c_posvar,c_poslit,c_manyeqs])]
 
 -- function defs
 f = [("f : Int -> Int\nf(x) = x", [c_fun,c_param,c_int,c_decl,c_def,c_ref]),
