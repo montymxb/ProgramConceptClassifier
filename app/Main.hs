@@ -76,17 +76,19 @@ test qq = do
   putStrLn "========================="
   -}
 
+  {-
   let q = (FindOneExact ["Game"])
   putStrLn $ show q ++ " produces...\n"
   putStrLn $ present $ runProgQuery q
   let c10 = (ihtml q ["Game","Addition","Value","If Then Else","Let Expression","Function"] (present $ runProgQuery q))
   putStrLn "========================="
+  -}
 
   putStrLn $ show qq ++ " produces...\n"
   putStrLn $ present $ runProgQuery qq
   let c11 = (ihtml qq [] (present $ runProgQuery qq))
 
-  writeFile "Suggestions.html" (html $ (lhtml concepts) ++ c10 ++ c11)
+  writeFile "Suggestions.html" (html $ (lhtml concepts) ++ c11)
 
   --writeFile "Suggestions.html" (html $ (lhtml concepts) ++ c1 ++ c2 ++ c3 ++ c4 ++ c5 ++ c6 ++ c7 ++ c8 ++ c9 ++ c10)
 

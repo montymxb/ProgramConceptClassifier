@@ -6,12 +6,19 @@ html {
   line-height: 1.25;
 }
 
-#query-field {
+#query-field,#program-decomp {
   display: block;
   border-radius: 8px;
   width: 100%;
   min-height: 25px;
   font-size: 16px;
+  resize: both;
+}
+
+#decomposition {
+  width: 100%;
+  padding: 8px;
+  margin: 16px 0;
 }
 
 .concept-list {
@@ -39,7 +46,7 @@ html {
   background: #fafafa;
 }
 
-.button,.qbutton {
+.button,.qbutton,#use-all {
   display: inline-block;
   margin: 4px;
   padding: 4px;
@@ -49,7 +56,7 @@ html {
   text-align: center;
 }
 
-.button:hover {
+.button:hover,#use-all:hover {
   cursor: pointer;
 }
 

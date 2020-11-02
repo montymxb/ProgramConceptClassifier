@@ -199,7 +199,7 @@ queryProgs (c:ls) progs = let found = find (\(_,cls) -> elem c cls) progs in
                           case found of
                             (Just f) -> let progs2 = filter (\x -> x /= f) progs in
                                         f : queryProgs ls progs2
-                            Nothing  -> error $ "Could not find concept " ++ (show c) ++ "!"
+                            Nothing  -> queryProgs ls progs -- skip to the next one error $ "Could not find concept " ++ (show c) ++ "!"
 
 -- 1.) Filter out concepts that have no significance to this topic?
 --generateAll concepts progs =
@@ -232,7 +232,7 @@ html :: String -> String
 html s = topFrame ++ s ++ bottomFrame
 
 lhtml :: [String] -> String
-lhtml ls = "<div class='concept-list'>" ++ (foldl (\s x -> s ++ "<div class='button'>"++ x ++"</div>") "" ls) ++ "<br/><br/>" ++ (foldl (\s x -> s ++ "<div class='qbutton'>"++ x ++"</div>") "" queryNames) ++ "<textarea id='query-field' placeholder=''></textarea></div>"
+lhtml ls = "<textarea id='program-decomp' placeholder='Enter a program here.'></textarea><div id='decomposition'></div><div class='concept-list'>" ++ (foldl (\s x -> s ++ "<div class='button'>"++ x ++"</div>") "" ls) ++ "<br/><br/>" ++ (foldl (\s x -> s ++ "<div class='qbutton'>"++ x ++"</div>") "" queryNames) ++ "<textarea id='query-field' placeholder=''></textarea></div>"
 
 ihtml :: Query -> [String] -> String -> String
 ihtml q ls s = "<div class='query'><div class='query-name'>" ++ show q ++ "</div><div class='tray'>" ++ buttons ls ++ "</div><div class='bogl-code'>" ++ s ++ "</div></div>"

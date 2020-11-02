@@ -478,16 +478,39 @@
 - Produced via standard deviations of the lengths of the novel concepts introduced by permutations of a list of programs
     - something that is, in fact, conceptually ordered...interesting
 
-##> Current
+## Oct. 25th-26th, 2020
 - Write up 3 example programs
 - Write up a data type to represent a queryable example
 - Write up a data type to represent a database of examples
-
 - Produce database of BoGL programs...trying to go as piece-wise as possible for every little aspect...
   - just txt files in repo
     - needs tagging for concepts...
   - Produce query system that allows
 - begin designing how the final tool will work, and by the characteristics that might help define what the final system will look like
+- (Obs) This work was reflected on positively! The visual representation was quite popular with Martin, and provides a meaningful context to what it means to decompose programs
+- (Obs) The formalized approach from before has certain failings and strict limitations that prevent it being practically usable in this context
+  - For all the work done there, it appears to be that the representation of the grammar to host the AST within is insufficient to express decompositions via.
+  - RegEx seems to work much better
+
+
+## Nov. 1st, 2020
+
+##> Current
+- Reflect on these notes from the meeting
+  - game implicit
+  - type defs
+  - vertical list of groups
+  - top is types, type defs, base types, etc.
+  - then board types
+  - then input types
+  - then board defs
+  - val defs
+  - func defs
+  - constraint on types
+  - more detail on the orderings for the concepts
+- Cleanup JS, and Haskell codebases equivalently
+- Look to consolidate CSS, JS, HTML, Haskell respectively to clear up details
+- Take pictures of this early setup, and write down my observations, reasonings, basis, and etc. detailing EVERYTHING is very critical otherwise we can't prove our work...
 - Look up related work for refactoring research, and add this to my related works section!
 
 

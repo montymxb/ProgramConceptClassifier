@@ -1,25 +1,13 @@
-<!DOCTYPE html><html><head><meta charset='utf-8'><title>Test Page</title><link href="css/site.css" type="text/css" rel="stylesheet"/></head><body><div class='concept-list'><div class='button'>Game</div><div class='button'>Many Board Equations</div><div class='button'>Assigning a value to a Position</div><div class='button'>Position Variable</div><div class='button'>Position Literal</div><div class='button'>X and Y Position</div><div class='button'>Get</div><div class='button'>Func Application</div><div class='button'>Reference</div><div class='button'>If Then Else</div><div class='button'>Non Equality</div><div class='button'>Less Than Equal To</div><div class='button'>Greater Than Equal To</div><div class='button'>Less Than</div><div class='button'>Greater Than</div><div class='button'>Equality</div><div class='button'>Parentheses (Order of Operations)</div><div class='button'>Let Expression</div><div class='button'>Modulo</div><div class='button'>Division</div><div class='button'>Multiplication</div><div class='button'>Subtraction</div><div class='button'>Addition</div><div class='button'>Definition</div><div class='button'>Declaration</div><div class='button'>Input</div><div class='button'>Parameter</div><div class='button'>Function</div><div class='button'>Value</div><div class='button'>Extended Type</div><div class='button'>Array</div><div class='button'>Board</div><div class='button'>Tuple</div><div class='button'>Bool</div><div class='button'>Int</div><div class='button'>Set</div><div class='button'>Symbol</div><div class='button'>Type</div><br/><br/><div class='qbutton'>FindOneExact</div><div class='qbutton'>FindAllExact</div><div class='qbutton'>FindOneContaining</div><div class='qbutton'>FindAllContaining</div><div class='qbutton'>FindOneAny</div><div class='qbutton'>FindAllAny</div><div class='qbutton'>FindInOrder</div><div class='qbutton'>FindAllOrders</div><textarea id='query-field' placeholder=''></textarea></div><div class='query'><div class='query-name'>FindOneExact ["Game"]</div><div class='tray'><div class='button'>Game</div><div class='button'>Addition</div><div class='button'>Value</div><div class='button'>If Then Else</div><div class='button'>Let Expression</div><div class='button'>Function</div></div><div class='bogl-code'>--Game, 
+<!DOCTYPE html><html><head><meta charset='utf-8'><title>Test Page</title><link href="css/site.css" type="text/css" rel="stylesheet"/></head><body><textarea id='program-decomp' placeholder='Enter a program here.'></textarea><div id='decomposition'></div><div class='concept-list'><div class='button'>Game</div><div class='button'>Many Board Equations</div><div class='button'>Assigning a value to a Position</div><div class='button'>Position Variable</div><div class='button'>Position Literal</div><div class='button'>X and Y Position</div><div class='button'>Get</div><div class='button'>Func Application</div><div class='button'>Reference</div><div class='button'>If Then Else</div><div class='button'>Non Equality</div><div class='button'>Less Than Equal To</div><div class='button'>Greater Than Equal To</div><div class='button'>Less Than</div><div class='button'>Greater Than</div><div class='button'>Equality</div><div class='button'>Parentheses (Order of Operations)</div><div class='button'>Let Expression</div><div class='button'>Modulo</div><div class='button'>Division</div><div class='button'>Multiplication</div><div class='button'>Subtraction</div><div class='button'>Addition</div><div class='button'>Definition</div><div class='button'>Declaration</div><div class='button'>Input</div><div class='button'>Parameter</div><div class='button'>Function</div><div class='button'>Value</div><div class='button'>Extended Type</div><div class='button'>Array</div><div class='button'>Board</div><div class='button'>Tuple</div><div class='button'>Bool</div><div class='button'>Int</div><div class='button'>Set</div><div class='button'>Symbol</div><div class='button'>Type</div><br/><br/><div class='qbutton'>FindOneExact</div><div class='qbutton'>FindAllExact</div><div class='qbutton'>FindOneContaining</div><div class='qbutton'>FindAllContaining</div><div class='qbutton'>FindOneAny</div><div class='qbutton'>FindAllAny</div><div class='qbutton'>FindInOrder</div><div class='qbutton'>FindAllOrders</div><textarea id='query-field' placeholder=''></textarea></div><div class='query'><div class='query-name'>FindInOrder ["Game","Symbol","Type","Set"]</div><div class='tray'></div><div class='bogl-code'>--Game, 
 game Example
 
-</div></div><div class='query'><div class='query-name'>FindAllAny ["X and Y Position"]</div><div class='tray'></div><div class='bogl-code'>--Value, Board, Get, X and Y Position, Int, Assigning a value to a Position, Position Literal, 
-b : Board
-b!(1,1) = 1
+--Type, Symbol, 
+type T1 = {X}
 
---Value, Board, Get, X and Y Position, Int, Assigning a value to a Position, Position Variable, Position Literal, 
-b : Board
-b!(x,1) = 1
+--Type, Symbol, Set, 
+type T2 = {X,Y}
 
---Value, Board, Get, X and Y Position, Int, Assigning a value to a Position, Position Variable, Position Literal, 
-b : Board
-b!(1,y) = 1
-
---Value, Board, Get, X and Y Position, Int, Assigning a value to a Position, Position Variable, 
-b : Board
-b!(x,y) = 1
-
---Value, Board, Get, X and Y Position, Int, Assigning a value to a Position, Position Variable, Position Literal, Many Board Equations, 
-b : Board
-b!(x,y) = 1
-b!(1,1) = 0
+--Type, Int, Symbol, Set, Extended Type, 
+type T4 = Int & {Empty}
 
 </div></div></body><script src='js/site.js' async></script></html>
