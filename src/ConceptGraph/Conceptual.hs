@@ -75,6 +75,34 @@ type FromNode = String
 type ToNode = String
 type CNodes = [String]
 type CEdges = [(EdgeName,FromNode,ToNode)]
+
+-- dep type
+data Dep = And | Or
+  deriving Show
+
+--- TODO new additions
+class Graphable a where
+  -- produce graph dependencies from Data type
+  dependencies :: Data a => a -> [(String,String,String)]
+  dependencies val =
+                  let tn = show $ typeOf val in -- 1. get type name
+                  -- 2. get constructor name
+                  let cn = if isAlgType (dataTypeOf val) then show $ toConstr val else "Concept" in
+                  -- 3. same for subterms
+                  let subs = concat $ gmapQ (\d -> dependencies d) val in
+                  -- 4. connect this constructor to the sub concepts (ANDs)
+                  let relate = map (\(_,x,_) -> (And,cn,x)) subs in
+                  -- produce single OR from type -> constr, and add on the other deps
+                  (Or,tn,cn) : (relate ++ subs)
+
+  -- build concept lattice
+  conceptLattice :: Data a => a -> ([(Dep,String,String)], [String])
+  conceptLattice val = let deps = dependencies val in
+                       let concepts = uniqueConcepts deps in
+                       (deps,concepts) where
+                         uniqueConcepts ls = S.toList $ S.fromList $ concatMap (\(_,c1,c2) -> [c1,c2]) ls
+
+{-
 class Conceptual a where
   cgraph :: (Typeable a, Data a, Eq a) => a -> (CNodes,CEdges)
   cgraph x = let uniqueConcepts = (makeUnique . concepts) x in
@@ -95,9 +123,9 @@ class Conceptual a where
   -- Builds an edge from X -> Y
   getEdges :: (Data a, Typeable a) => String -> a -> [(EdgeName,FromNode,ToNode)]
   getEdges cname a = [("",cname,show (typeOf a))]
+-}
 
-
-
+{-
 instance (Data a, Eq a, Conceptual a) => Conceptual [a] where
   concepts x = concatMap concepts x
 
@@ -106,12 +134,13 @@ instance (Data a, Eq a, Conceptual a) => Conceptual [a] where
 
   getEdges cname [] = []
   getEdges cname ls = map (\y -> ("",cname,show (typeOf y))) (ls)
-
+-}
 
 -- Self edge
-selfEdge :: (Data a, Typeable a) => a -> (EdgeName,FromNode,ToNode)
-selfEdge x = ("",show (typeOf x), toConstr' x)
+--selfEdge :: (Data a, Typeable a) => a -> (EdgeName,FromNode,ToNode)
+--selfEdge x = ("",show (typeOf x), toConstr' x)
 
+{-
 instance Conceptual Int where
   concepts _ = ["Int","Concept"]
   _edges _ = [("","Int","Concept")]
@@ -135,15 +164,17 @@ instance Conceptual Bool where
 instance Conceptual Char where
   concepts _ = ["Char","Concept"]
   _edges _ = [("", "Char", "Concept")]
+-}
 
-ccs :: (Typeable a, Data a) => a -> CNodes
-ccs s = [(show (typeOf s)),toConstr' s]
+--ccs :: (Typeable a, Data a) => a -> CNodes
+--ccs s = [(show (typeOf s)),toConstr' s]
 
 --
 -- The following functions are defined such that no data constructor in the target language has more parameters than any of the following
 -- Allows us to more generally parse the language.
 --
 
+{-
 c0 :: (Data a, Typeable a) => a -> CNodes
 c0 a = ccs a
 
@@ -168,12 +199,14 @@ c4 a b c d e = c0 a ++ cb b ++ cb c ++ cb d ++ cb e
 
 c5 :: (Data a, Typeable a, Data b, Typeable b, Conceptual b, Eq b, Data c, Typeable c, Eq c, Conceptual c, Eq d, Data d, Typeable d, Conceptual d, Eq e, Data e, Typeable e, Conceptual e, Eq f, Data f, Typeable f, Conceptual f) => a -> b -> c -> d -> e -> f -> CNodes
 c5 a b c d e f = c0 a ++ cb b ++ cb c ++ cb d ++ cb e ++ cb f
+-}
 
 --
 -- The following functions are defined such that no data constructor in the target language has more parameters than any of the following
 -- Allows us to more generally parse the language.
 --
 
+{-
 -- basing edge
 ebase :: (Data a, Typeable a) => a -> CEdges
 ebase a = [("",show (typeOf a),toConstr' a),("",toConstr' a,"Concept")]
@@ -200,6 +233,7 @@ e4 a b c d e = [selfEdge a] ++ (getEdges cname b) ++ (getEdges cname c) ++ (getE
 e5 :: (Conceptual a, Data a, Typeable a, Data b, Typeable b, Conceptual b, Eq b, Data c, Typeable c, Eq c, Conceptual c, Eq d, Data d, Typeable d, Conceptual d, Eq e, Data e, Typeable e, Conceptual e, Eq f, Data f, Typeable f, Conceptual f) => a -> b -> c -> d -> e -> f -> CEdges
 e5 a b c d e f = [selfEdge a] ++ (getEdges cname b) ++ (getEdges cname c) ++ (getEdges cname d) ++ (getEdges cname e) ++ (getEdges cname f) ++ _edges b ++ _edges c ++ _edges d ++ _edges e ++ _edges f where
   cname = toConstr' a
+-}
 
 --
 -- Order Checking
@@ -246,6 +280,13 @@ _graphSimpleProgs [] _ = return ()
 _graphSimpleProgs (x:ls) i = do
   GVSpec.writeGVSpec ("simple" ++ (show i)) x
   _graphSimpleProgs ls (i+1)
+
+-- write it as a reduce
+_graphSimpleProgsWithName :: [ConceptGraph EdgeName String] -> Int -> String -> IO ()
+_graphSimpleProgsWithName [] _ n = return ()
+_graphSimpleProgsWithName (x:ls) i n = do
+  GVSpec.writeGVSpec (n ++ (show i)) x
+  _graphSimpleProgsWithName ls (i+1) n
 
 -- | Shows the result of whether a program is known
 showRez :: KnownCheck -> IO ()

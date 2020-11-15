@@ -325,7 +325,7 @@ p5 = (Game
 progs :: [Game]
 progs = [p1,p2,p3,p4,p5]
 
-
+{-
 instance Conceptual LName where
   concepts s@(LName a) = c1 s a
   _edges s@(LName a)   = e1 s [a]
@@ -435,10 +435,201 @@ instance Conceptual Expr where
 instance Conceptual BinOp where
   concepts s = cbase s
   _edges s = ebase s
+-}
 
 -- Produces graphs of programs 1 - 4
 graphBoglProgs :: IO ()
 graphBoglProgs = _graphSimpleProgs (produceGraphs progs) 0
+
+graphEntireLattice :: IO ()
+graphEntireLattice = _graphSimpleProgsWithName [(graph_to_concept_graph entireLattice)] 0 "FullLattice"
+
+-- graph of entire lattice
+entireLattice :: ([String],[(String,String,String)])
+entireLattice = ([
+  "LName",
+  "UName",
+  "BType",
+  "BInt",
+  "BBoard",
+  "BUName",
+  "BTuple",
+  "FType",
+  "EType",
+  "XType",
+  "X_EType",
+  "X_ExtEType",
+  "X_ExtName",
+  "Game",
+  "TypeOrValDef",
+  "TOV_TypeAssign",
+  "TOV_ValDef",
+  "Board",
+  "Input",
+  "TypeAssign",
+  "TypeAssignXType",
+  "TypeAssignBType",
+  "ValDef",
+  "Signature",
+  "BSig",
+  "FSig",
+  "Equation",
+  "ValEquation",
+  "FuncEquation",
+  "BoardEquation",
+  "Pos",
+  "NamePos",
+  "IntPos",
+  "Expr",
+  "IVal",
+  "SVal",
+  "Ref",
+  "Tup",
+  "App",
+  "BinOp",
+  "Let",
+  "Cond",
+  "While",
+  "Plus",
+  "Minus",
+  "Times",
+  "Div",
+  "Less",
+  "LessEq",
+  "Eq",
+  "GreaterEq",
+  "Greater",
+  "NotEq",
+  "Get",
+  "Int",
+  "BBool",
+  "Bool",
+  "Array",
+  "Concept"
+  ], [
+  ("","LName","Concept"),
+  ("","UName","Concept"),
+  ("","BType","BInt"),
+  ("","BInt","Int"),
+  ("","BType","BBool"),
+  ("","BBool","Bool"),
+  ("","Int","Concept"),
+  ("","BType","BInt"),
+
+  ("","BType","BBoard"),
+  ("","BBoard","Board"),
+  ("","BType","BUName"),
+  ("","BUName","UName"),
+  ("","BType","BTuple"),
+  ("","BTuple","Concept"), -- list of items?
+
+  ("","FType","BType"),
+
+  ("","EType","UName"),
+
+  ("","XType","X_EType"),
+  ("","X_EType","EType"),
+  ("","XType","X_ExtEType"),
+  ("","X_ExtEType","BType"),
+  ("","X_ExtEType","EType"),
+  ("","XType","X_ExtName"),
+  ("","X_ExtName","BType"),
+  ("","X_ExtName","UName"),
+
+  ("","Game","UName"),
+  ("","Game","TypeOrValDef"),
+  ("","Game","Board"),
+  ("","Game","Input"),
+  ("","Game","ValDef"),
+
+  ("","TypeOrValDef","TOV_TypeAssign"),
+  ("","TypeOrValDef","TOV_ValDef"),
+  ("","TOV_TypeAssign","TypeAssign"),
+  ("","TOV_ValDef","ValDef"),
+
+  ("","Board","Array"),
+  ("","Array","Concept"),
+
+  ("","Input","BType"),
+
+  ("","TypeAssign","TypeAssignXType"),
+  ("","TypeAssign","TypeAssignBType"),
+  ("","TypeAssignXType","UName"),
+  ("","TypeAssignXType","XType"),
+  ("","TypeAssignBType","UName"),
+  ("","TypeAssignBType","BType"),
+
+  ("","ValDef","Signature"),
+  ("","ValDef","Equation"),
+
+  ("","Signature","BSig"),
+  ("","Signature","FSig"),
+  ("","BSig","LName"),
+  ("","BSig","BType"),
+  ("","FSig","LName"),
+  ("","FSig","FType"),
+
+  ("","Equation","ValEquation"),
+  ("","Equation","FuncEquation"),
+  ("","Equation","BoardEquation"),
+  ("","ValEquation","LName"),
+  ("","ValEquation","Expr"),
+  ("","FuncEquation","LName"),
+  ("","FuncEquation","Expr"),
+  ("","BoardEquation","LName"),
+  ("","BoardEquation","Pos"),
+  ("","BoardEquation","Expr"),
+
+  ("","Pos","NamePos"),
+  ("","Pos","IntPos"),
+  ("","NamePos","LName"),
+  ("","IntPos","Int"),
+
+  ("","Expr","IVal"),
+  ("","Expr","SVal"),
+  ("","Expr","Ref"),
+  ("","Expr","Tup"),
+  ("","Expr","App"),
+  ("","Expr","BinOp"),
+  ("","Expr","Let"),
+  ("","Expr","Cond"),
+  ("","Expr","While"),
+
+  ("","IVal","Int"),
+  ("","SVal","UName"),
+  ("","Ref","LName"),
+  ("","Tup","Concept"),
+  ("","App","LName"),
+  ("","Let","LName"),
+  ("","Cond","Bool"),
+  ("","Bool","Concept"),
+  ("","While","Concept"),
+
+  ("","BinOp","Plus"),
+  ("","BinOp","Minus"),
+  ("","BinOp","Times"),
+  ("","BinOp","Div"),
+  ("","BinOp","Less"),
+  ("","BinOp","LessEq"),
+  ("","BinOp","Eq"),
+  ("","BinOp","GreaterEq"),
+  ("","BinOp","Greater"),
+  ("","BinOp","NotEq"),
+  ("","BinOp","Get"),
+
+  ("","Plus","Concept"),
+  ("","Minus","Concept"),
+  ("","Times","Concept"),
+  ("","Div","Concept"),
+  ("","Less","Concept"),
+  ("","LessEq","Concept"),
+  ("","Eq","Concept"),
+  ("","GreaterEq","Concept"),
+  ("","Greater","Concept"),
+  ("","NotEq","Concept"),
+  ("","Get","Concept")
+
+  ])
 
 -- in order checks
 o1 :: [Concept String]

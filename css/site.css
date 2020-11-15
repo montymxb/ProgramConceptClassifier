@@ -6,12 +6,23 @@ html {
   line-height: 1.25;
 }
 
-#query-field,#program-decomp {
+#program-decomp {
+  display: block;
+  border-radius: 8px;
+  width: 100%;
+  min-height: 250px;
+  font-size: 16px;
+  border-radius: 0;
+  resize: both;
+}
+
+#query-field {
   display: block;
   border-radius: 8px;
   width: 100%;
   min-height: 25px;
   font-size: 16px;
+  border-radius: 0;
   resize: both;
 }
 
@@ -68,4 +79,16 @@ html {
   color: #fff;
   background: #000;
   transition: 0.3s;
+}
+
+.grouping {
+  padding: 8px;
+  margin: 0 8px;
+}
+
+.grouping .groupName {
+  font-weight: 800;
+  border-radius: 8px;
+  padding: 8px;
+  display: block;
 }

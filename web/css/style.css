@@ -1,0 +1,89 @@
+body {
+  padding: 0;
+  margin: 0;
+  font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+#content {
+  padding: 0;
+  margin: 0 auto;
+  max-width: 1000px;
+  background: #eee;
+}
+
+#concepts,#constraints {
+  min-height: 100px;
+  border: 1px #000;
+  border-style: none none solid none;
+}
+
+.split-pane {
+  background: #fff;
+  /*background: rgb(29,31,33);*/
+  overflow: hidden;
+}
+
+.split-pane .left,.split-pane .right {
+  width: 49.9%;
+  margin: 0;
+  padding: 0;
+  display: inline-block;
+  min-height: 80vh;
+  overflow: scroll;
+  background: rgb(29,31,33);
+}
+
+.split-pane .left {
+  float: left;
+  border-style: none solid none none;
+  border-color: #fff;
+  border-width: 1px;
+}
+
+.split-pane .right {
+  float: right;
+}
+
+.split-pane div div {
+  padding: 4px;
+  color: #aaa;
+  font-family: Courier-New, monospace;
+  /*line-height: 1.25;*/
+}
+
+.concept,.constraint {
+  padding: 4px;
+  margin: 4px;
+  border-radius: 8px;
+  box-shadow: none;
+  background: #fff;
+  transition: 0.3s;
+  display: inline-block;
+  border: 1px solid #000;
+  width: 100px;
+  text-align: center;
+}
+
+.concept:hover,.constraint:hover {
+  background: #000;
+  color: #fff;
+  cursor: pointer;
+}
+
+
+.selected {
+  background: #000;
+  color: #fff;
+}
+
+
+.tree-branch {
+  margin-left: 64px;
+  border-style: none none none solid;
+  border-width: 1px;
+  border-color: #aaa;
+}
+
+.highlight {
+  color: #0f0;
+}

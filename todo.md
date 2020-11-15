@@ -494,27 +494,44 @@
 
 
 ## Nov. 1st, 2020
+- game implicit, remove it from the list of explicit things to build up off of, everything needs a game
 
-##> Current
-- Reflect on these notes from the meeting
-  - game implicit
-  - type defs
-  - vertical list of groups
-  - top is types, type defs, base types, etc.
-  - then board types
-  - then input types
-  - then board defs
-  - val defs
-  - func defs
-  - constraint on types
-  - more detail on the orderings for the concepts
-- Cleanup JS, and Haskell codebases equivalently
-- Look to consolidate CSS, JS, HTML, Haskell respectively to clear up details
-- Take pictures of this early setup, and write down my observations, reasonings, basis, and etc. detailing EVERYTHING is very critical otherwise we can't prove our work...
+## Nov. 3rd, 2020
+- fixed up the UI a bit, but not too much
+
+## Nov. 6th, 2020 (Friday)
+- clean up the UI so I have a clean program on the left, decomp on the right (transformations go Left -> Right)
+- akin to my thesis notes, write up
+
+## Nov. 8th, 2020 (Sunday)
+- Debate, keep doing this in haskell, or skip to JS purely????
+  - go over haskell first, and decide what needs to be done below (easier to work on existing, or write something else...)
+  - For this version, I'm going to implement in JS (not permanent, but it will make prototyping faster, instead of writing both)
+- 1. Write up a brief wrapper page w/ 4 sections
+  - top, concepts, empty to start
+  - 2nd top, query params
+  - 50/50 split
+    - left side, program
+    - right side decomposition
+
+## Nov. 13th, 2020 (Fri)
+- oh thank god I figured out how to generically traverse data structures...
+
+## Nov. 15th, 2020 (Sun)
+
+### Current >
+- write in the better way to traverse the data structure, rather than my hacky approach
+0. Need a way to programmatically establish a GROUND TRUTH from the Abstract Syntax (ideally, w/out a program...somehow)
+  - rushing is what makes the devil in the details thrive
+  - do a simple 1 data printer, see how it works in theory...
+1. write converter from BoGL AST -> Simplified AST (mine)
+2. write structure for DB of programs that will be queried on, and put some in
+3. write query system, takes positive & negative constraints, returns set(s) of snippets that satisfies the constraints (simple query language for this, don't get fancy, just define what it does and doesn't do by it's structurally)
+    - like SELECT * FROM ...
+4. produce an interface for passing in programs, being given constraint controls, and requesting the query to be produced in turn
+- Write a one sheet description of the system, anything over 1 page is crap, has to be clearly simple...
+  - force yourself to simplify everything to it's raw essential nature
 - Look up related work for refactoring research, and add this to my related works section!
-
-
-
 - (from TODOs, more relevant here) Work on thesis/research
     - had an idea of maxing/mining some quality of the ordering...
     - had an idea of the 'program as a series of lets' in haskell
@@ -523,52 +540,3 @@
         - can't co-introduce
         - can't reverse introduce
         - must introduce in such as a way that no other following program could introduce that concept as novel...
-
-
-
-# Additional Notes
-
-## Rules for the Arithmetic Language
-1. Produce a representation that captures the grammatical structure of the language
-  - representation uses symbols that represent distinct syntactic elements in the language (this could use clarification towards the process)
-  - NTs are determined as symbols that show up on the LHS of any rule
-  - Ts are any symbols that do not show up as the LHS of any rule
-2. For a given program, produce an equivalent representation in the grammar produced in step 1
-3. For N programs, do the same
-4. Compare the...
-
-## What makes good teaching material in English?
-- Limited use of grammar (nothing fancy)
-- Limited length of material (nothing exhausting)
-- Restricted scope to something relevant (nothing boring)
-
-## What makes bad teaching material in English?
-- Using concepts to base learning on that a student doesn't know of (students are unprepared)
-- Teaching concepts in an arbitrary fashion (lack of structure)
-- Missing concepts that will be needed later on (missing important details)
-- Misleading students in terms of what they are expecting (failed expectations)
-
-## Breaking down Good/Bad Examples
-- Good examples serve a goal
-- Good examples are concise
-- Good examples use what a student has learned or already knows
-- Good examples teach or reiterate unfamiliar concepts
-and
-- Bad examples do not serve a goal
-- Bad examples are not concise
-- Bad examples do not use what a student already knows
-- Bad examples teach or reiterate familiar concepts
-
-## As a formalized set of rules
-- For a given set of language dependencies (grammar) L, a subset of these that the student understands U, a subset of these that the student does not understand N, and a goal subset the student wishes to learn G.
-  - L, U, N, G
-- For an example written in this language, deduce the language dependencies present in the example by matching it to the equivalent grammatical representation
-- This example is a good example if it
-  - uses previous dependencies the student understands (if any)
-  - introduces new dependencies the student does not understand that
-    - are goals
-    - are dependencies of goals
-- This example is the 'simplest' example if there is no other way to write a program that introduces the same new dependencies using fewer known dependencies
-  - This is highly contingent on whether the student actually understands what they say they do
-
-So, good examples are segments along a structured path, from a given knowledge base (or recently acquired bit(s) of knowledge), such that they allow a student to stretch a little bit further towards a goal.

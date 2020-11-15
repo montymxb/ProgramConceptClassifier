@@ -11,63 +11,127 @@ import ProgramDatabase.Database
 --
 -- Concepts
 --
-c_game = "Game"
+--c_game = "Game"
+
+-- type categories
+type TypeCategory = (String,[String])
+
+c_val = "Value Equation"
+c_fun = "Function Equation"
+
 c_typ = "Type"
 c_sym = "Symbol"
 c_set = "Set"
 
 c_int = "Int"
 c_bool = "Bool"
-c_tup = "Tuple"
+c_tuple = "Tuple"
 
 c_board = "Board"
 c_array = "Array"
+
 c_ext = "Extended Type"
+c_extbase = "Ext. Base"
+c_extset = "Ext. Set"
 
-c_val = "Value"
-c_fun = "Function"
-c_param = "Parameter"
-c_input  = "Input"
+c_pos = "X and Y Position"
 
-c_decl = "Declaration"
-c_def  = "Definition"
+c_input = "Input"
+c_boarddef = "Board Def"
+
+c_get = "Get"
+c_posvar = "Position Variable"
+c_poslit = "Position Literal"
+c_assign = "Assigning a value to a Position"
+c_manyeqs = "Many Board Equations"
+c_valtopos = "Assigning a value to a Position"
 
 c_add = "Addition"
 c_sub = "Subtraction"
 c_mult = "Multiplication"
 c_div = "Division"
 c_mod = "Modulo"
-c_let = "Let Expression"
-c_paren = "Parentheses (Order of Operations)"
-c_eq = "Equality"
 
+c_eq = "Equality"
+c_neq = "Non Equality"
 c_ge = "Greater Than"
 c_le = "Less Than"
 c_geq = "Greater Than Equal To"
 c_leq = "Less Than Equal To"
 
-c_neq = "Non Equality"
-
+c_paren = "Parentheses (Order of Ops)"
 c_if = "If Then Else"
+c_let = "Let Expression"
 c_ref = "Reference"
 c_app = "Func Application"
+c_while = "While"
 
-c_get = "Get"
-c_pos = "X and Y Position"
-c_poslit = "Position Literal"
-c_posvar = "Position Variable"
-c_assign = "Assigning a value to a Position"
-c_manyeqs = "Many Board Equations"
+concepts = [
+  ("Type",  [
+      c_typ,
+      c_int,
+      c_bool,
+      c_sym,
+      c_tuple,
+      c_set]),
 
--- list of concepts (this is hand-drawn this time around)
-concepts = [c_game,c_manyeqs,c_assign,c_posvar,c_poslit,c_pos,c_get,c_app,c_ref,c_if,c_neq,c_leq,c_geq,c_le,c_ge,c_eq,c_paren,c_let,c_mod,c_div,c_mult,c_sub,c_add,c_def,c_decl,c_input,c_param,c_fun,c_val,c_ext,c_array,c_board,c_tup,c_bool,c_int,c_set,c_sym,c_typ]
+  ("Extended Types", [
+      c_ext,
+      c_extbase,
+      c_extset]),
+
+  ("Board", [
+      c_board,
+      c_array,
+      c_pos]),
+
+  ("Input", [
+      c_input]),
+
+  ("Board Def", [
+      c_boarddef,
+      c_get,
+      c_posvar,
+      c_poslit,
+      c_valtopos,
+      c_manyeqs]),
+
+  ("Integer Expressions", [
+      c_add,
+      c_sub,
+      c_mult,
+      c_div,
+      c_mod]),
+
+  ("Boolean Expressions", [
+      c_eq,
+      c_neq,
+      c_ge,
+      c_le,
+      c_geq,
+      c_leq]),
+
+  ("General Expressions", [
+      c_paren,
+      c_if,
+      c_let,
+      c_ref,
+      c_while]),
+
+  ("Value Defs",[
+      c_val]),
+
+  ("Func Defs",[
+      c_fun,
+      c_app])
+  ]
 
 --
 -- Program Concept Pairings
 --
 
 -- game decl
-a = [("game Example",[c_game])]
+a = [("game Example",[])]
 
 -- type decls
 b = [("type T1 = {X}",[c_typ,c_sym]),
@@ -88,47 +152,47 @@ i = [("type Input = Int", [c_typ,c_input,c_int]),
 -- value defs
 v = [
   -- int stuff
-  ("v : Int\nv = 1", [c_val,c_int,c_decl,c_def]),
-  ("v : Int\nv = 1 + 1", [c_val,c_int,c_decl,c_def,c_add]),
-  ("v : Int\nv = 5 - 2", [c_val,c_int,c_decl,c_def,c_sub]),
-  ("v : Int\nv = 2 * 2", [c_val,c_int,c_decl,c_def,c_mult]),
-  ("v : Int\nv = 6 / 3", [c_val,c_int,c_decl,c_def,c_div]),
-  ("v : Int\nv = 10 % 3", [c_val,c_int,c_decl,c_def,c_mod]),
-  ("v : Int\nv = 5 + 2 * 3", [c_val,c_int,c_decl,c_def,c_add,c_mult]),
-  ("v : Int\nv = (5 + 2) * 3", [c_val,c_int,c_decl,c_def,c_add,c_mult,c_paren]),
-  ("v : Int\nv = let x = 32 in x", [c_val,c_int,c_decl,c_def,c_let]),
-  ("v : Int\nv = let x = 1 in let y = 4 in x + y", [c_val,c_int,c_decl,c_def,c_let,c_add]),
-  ("v : Int\nv = let x = 2 in let y = 4 in x * y", [c_val,c_int,c_decl,c_def,c_let,c_mult]),
+  ("v : Int\nv = 1", [c_val,c_int]),
+  ("v : Int\nv = 1 + 1", [c_val,c_int,c_add]),
+  ("v : Int\nv = 5 - 2", [c_val,c_int,c_sub]),
+  ("v : Int\nv = 2 * 2", [c_val,c_int,c_mult]),
+  ("v : Int\nv = 6 / 3", [c_val,c_int,c_div]),
+  ("v : Int\nv = 10 % 3", [c_val,c_int,c_mod]),
+  ("v : Int\nv = 5 + 2 * 3", [c_val,c_int,c_add,c_mult]),
+  ("v : Int\nv = (5 + 2) * 3", [c_val,c_int,c_add,c_mult,c_paren]),
+  ("v : Int\nv = let x = 32 in x", [c_val,c_int,c_let]),
+  ("v : Int\nv = let x = 1 in let y = 4 in x + y", [c_val,c_int,c_let,c_add]),
+  ("v : Int\nv = let x = 2 in let y = 4 in x * y", [c_val,c_int,c_let,c_mult]),
 
   -- bool stuff
-  ("v : Bool\nv = True", [c_val,c_bool,c_decl,c_def]),
-  ("v : Bool\nv = False", [c_val,c_bool,c_decl,c_def]),
-  ("v : Bool\nv = if True then True else False", [c_val,c_bool,c_decl,c_def,c_if]),
-  ("v : Bool\nv = if False then True else False", [c_val,c_bool,c_decl,c_def,c_if]),
-  ("v : Int\nv = if True then 1 else 0", [c_val,c_bool,c_int,c_decl,c_def,c_if]),
-  ("v : Int\nv = if False then 1 else 0", [c_val,c_bool,c_int,c_decl,c_def,c_if]),
-  ("v : Bool\nv = 1 == 1", [c_val,c_bool,c_int,c_decl,c_def,c_int,c_eq]),
-  ("v : Bool\nv = 1 /= 1", [c_val,c_bool,c_int,c_decl,c_def,c_int,c_neq]),
-  ("v : Bool\nv = 5 > 4", [c_val,c_bool,c_int,c_decl,c_def,c_int,c_ge]),
-  ("v : Bool\nv = 5 < 4", [c_val,c_bool,c_int,c_decl,c_def,c_int,c_le]),
-  ("v : Bool\nv = 5 >= 4", [c_val,c_bool,c_int,c_decl,c_def,c_int,c_geq]),
-  ("v : Bool\nv = 5 <= 4", [c_val,c_bool,c_int,c_decl,c_def,c_int,c_leq]),
-  ("v : Bool\nv = 5-4 < 4+2", [c_val,c_bool,c_int,c_decl,c_def,c_int,c_ge,c_sub,c_add]),
-  ("v : Bool\nv = 5-4 > 4+2", [c_val,c_bool,c_int,c_decl,c_def,c_int,c_le,c_sub,c_add]),
-  ("v : Bool\nv = if 1==1 then True else False", [c_val,c_bool,c_int,c_decl,c_def,c_if,c_eq]),
-  ("v : Bool\nv = if 1==0 then True else False", [c_val,c_bool,c_int,c_decl,c_def,c_if,c_eq]),
-  ("v : Bool\nv = if 1/=1 then True else False", [c_val,c_bool,c_int,c_decl,c_def,c_if,c_neq]),
-  ("v : Bool\nv = if 1/=0 then True else False", [c_val,c_bool,c_int,c_decl,c_def,c_if,c_neq]),
+  ("v : Bool\nv = True", [c_val,c_bool]),
+  ("v : Bool\nv = False", [c_val,c_bool]),
+  ("v : Bool\nv = if True then True else False", [c_val,c_bool,c_if]),
+  ("v : Bool\nv = if False then True else False", [c_val,c_bool,c_if]),
+  ("v : Int\nv = if True then 1 else 0", [c_val,c_bool,c_int,c_if]),
+  ("v : Int\nv = if False then 1 else 0", [c_val,c_bool,c_int,c_if]),
+  ("v : Bool\nv = 1 == 1", [c_val,c_bool,c_int,c_int,c_eq]),
+  ("v : Bool\nv = 1 /= 1", [c_val,c_bool,c_int,c_int,c_neq]),
+  ("v : Bool\nv = 5 > 4", [c_val,c_bool,c_int,c_int,c_ge]),
+  ("v : Bool\nv = 5 < 4", [c_val,c_bool,c_int,c_int,c_le]),
+  ("v : Bool\nv = 5 >= 4", [c_val,c_bool,c_int,c_int,c_geq]),
+  ("v : Bool\nv = 5 <= 4", [c_val,c_bool,c_int,c_int,c_leq]),
+  ("v : Bool\nv = 5-4 < 4+2", [c_val,c_bool,c_int,c_int,c_ge,c_sub,c_add]),
+  ("v : Bool\nv = 5-4 > 4+2", [c_val,c_bool,c_int,c_int,c_le,c_sub,c_add]),
+  ("v : Bool\nv = if 1==1 then True else False", [c_val,c_bool,c_int,c_if,c_eq]),
+  ("v : Bool\nv = if 1==0 then True else False", [c_val,c_bool,c_int,c_if,c_eq]),
+  ("v : Bool\nv = if 1/=1 then True else False", [c_val,c_bool,c_int,c_if,c_neq]),
+  ("v : Bool\nv = if 1/=0 then True else False", [c_val,c_bool,c_int,c_if,c_neq]),
 
-  ("v : Bool\nv = let x = 5 in if x+1 > 5 then True else False", [c_val,c_bool,c_int,c_decl,c_def,c_if,c_let,c_ge]),
+  ("v : Bool\nv = let x = 5 in if x+1 > 5 then True else False", [c_val,c_bool,c_int,c_if,c_let,c_ge]),
 
   -- symbol stuff
-  ("v : T2\nv = X", [c_val,c_typ,c_sym,c_decl,c_def]),
-  ("v : T2\nv = let r = X in r", [c_val,c_typ,c_sym,c_decl,c_def,c_let]),
-  ("v : T2\nv = if True then X else Y", [c_val,c_typ,c_sym,c_decl,c_def,c_if]),
+  ("v : T2\nv = X", [c_val,c_typ,c_sym]),
+  ("v : T2\nv = let r = X in r", [c_val,c_typ,c_sym,c_let]),
+  ("v : T2\nv = if True then X else Y", [c_val,c_typ,c_sym,c_if]),
 
   -- referencing other equations
-  ("v : Int\nv = 5\nv2 : Int\nv2 = v", [c_val,c_int,c_decl,c_def,c_ref])]
+  ("v : Int\nv = 5\nv2 : Int\nv2 = v", [c_val,c_int,c_ref])]
 
 -- board equations
 be = [("b : Board\nb!(1,1) = 1", [c_val,c_board,c_get,c_pos,c_int,c_assign,c_poslit]),
@@ -138,13 +202,13 @@ be = [("b : Board\nb!(1,1) = 1", [c_val,c_board,c_get,c_pos,c_int,c_assign,c_pos
   ("b : Board\nb!(x,y) = 1\nb!(1,1) = 0", [c_val,c_board,c_get,c_pos,c_int,c_assign,c_posvar,c_poslit,c_manyeqs])]
 
 -- function defs
-f = [("f : Int -> Int\nf(x) = x", [c_fun,c_param,c_int,c_decl,c_def,c_ref]),
-  ("f : Int -> Int\nf(x) = x+1", [c_fun,c_param,c_int,c_decl,c_def,c_ref,c_add]),
-  ("f : Int -> Bool\nf(x) = x == 0", [c_fun,c_param,c_int,c_bool,c_decl,c_def,c_ref,c_eq]),
-  ("f : Int -> Bool\nf(x) = if x /= 0 then True else False", [c_fun,c_param,c_int,c_bool,c_decl,c_def,c_ref,c_neq,c_if]),
-  ("f : (Int,Int) -> Int\nf(x,y) = x+y", [c_fun,c_param,c_tup,c_int,c_decl,c_def,c_ref,c_add]),
-  ("f : (Bool,Int) -> Int\nf(x,y) = if x then y else 0", [c_fun,c_param,c_tup,c_int,c_decl,c_def,c_ref,c_bool,c_if]),
-  ("f : (Int,Int,Board) -> Int\nf(x,y,b) = b!(x,y)", [c_fun,c_param,c_tup,c_int,c_board,c_decl,c_def,c_ref,c_get])]
+f = [("f : Int -> Int\nf(x) = x", [c_fun,c_int,c_ref]),
+  ("f : Int -> Int\nf(x) = x+1", [c_fun,c_int,c_ref,c_add]),
+  ("f : Int -> Bool\nf(x) = x == 0", [c_fun,c_int,c_bool,c_ref,c_eq]),
+  ("f : Int -> Bool\nf(x) = if x /= 0 then True else False", [c_fun,c_int,c_bool,c_ref,c_neq,c_if]),
+  ("f : (Int,Int) -> Int\nf(x,y) = x+y", [c_fun,c_tuple,c_int,c_ref,c_add]),
+  ("f : (Bool,Int) -> Int\nf(x,y) = if x then y else 0", [c_fun,c_tuple,c_int,c_ref,c_bool,c_if]),
+  ("f : (Int,Int,Board) -> Int\nf(x,y,b) = b!(x,y)", [c_fun,c_tuple,c_int,c_board,c_ref,c_get])]
 
 -- list of all program pieces we can build with
 allProgramParts :: [(Statement,[Concept])]
@@ -204,7 +268,7 @@ queryProgs (c:ls) progs = let found = find (\(_,cls) -> elem c cls) progs in
 -- 1.) Filter out concepts that have no significance to this topic?
 --generateAll concepts progs =
 
-topFrame = "<!DOCTYPE html><html><head><meta charset='utf-8'><title>Test Page</title><link href=\"css/site.css\" type=\"text/css\" rel=\"stylesheet\"/></head><body>"
+topFrame = "<!DOCTYPE html><html><head><meta charset='utf-8'><title>Program Decomposition Tool</title><link href=\"css/site.css\" type=\"text/css\" rel=\"stylesheet\"/></head><body>"
 bottomFrame = "</body><script src='js/site.js' async></script></html>"
 
 -- comma separate values
@@ -231,8 +295,12 @@ buttons (c:ls)  = "<div class='button'>" ++ c ++ "</div>" ++ buttons ls
 html :: String -> String
 html s = topFrame ++ s ++ bottomFrame
 
-lhtml :: [String] -> String
-lhtml ls = "<textarea id='program-decomp' placeholder='Enter a program here.'></textarea><div id='decomposition'></div><div class='concept-list'>" ++ (foldl (\s x -> s ++ "<div class='button'>"++ x ++"</div>") "" ls) ++ "<br/><br/>" ++ (foldl (\s x -> s ++ "<div class='qbutton'>"++ x ++"</div>") "" queryNames) ++ "<textarea id='query-field' placeholder=''></textarea></div>"
+htmlButtonGroups :: [(String,[String])] -> String
+htmlButtonGroups ls = foldl (\ss (groupName,ls) -> ss ++ "<div class='grouping'><span class='groupName'>" ++ groupName ++ "</span>" ++ (foldl (\s x -> s ++ "<div class='button'>"++ x ++"</div>") "" ls) ++ "</div>") "" ls
+
+-- construct HTML sections for the program decomposition to be displayed within
+lhtml :: [(String,[String])] -> String
+lhtml ls = "<textarea id='program-decomp' placeholder='Enter a program here.'></textarea><div id='decomposition'></div><div class='concept-list'>" ++ (htmlButtonGroups ls) ++ "<br/><br/>" ++ (foldl (\s x -> s ++ "<div class='qbutton'>"++ x ++"</div>") "" queryNames) ++ "<textarea id='query-field' placeholder=''></textarea></div>"
 
 ihtml :: Query -> [String] -> String -> String
 ihtml q ls s = "<div class='query'><div class='query-name'>" ++ show q ++ "</div><div class='tray'>" ++ buttons ls ++ "</div><div class='bogl-code'>" ++ s ++ "</div></div>"
