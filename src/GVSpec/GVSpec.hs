@@ -4,12 +4,8 @@
 -- Handles produces Graph Viz files from various types
 --
 
-module GVSpec.GVSpec (GVData,convertToGVSpec,writeGVSpec,ShowGV) where
+module GVSpec.GVSpec (GVData,convertToGVSpec,writeGVSpec) where
 
-import Grammar.Symbol
-import ConceptGraph.Concept
-import ConceptGraph.ConceptDependency
-import Grammar.GrammarToGraph
 import ConceptGraph.ConceptGraph
 import System.Process
 
@@ -20,8 +16,8 @@ type Node2Data = String
 type GVData = ([String],[(EdgeData,Node1Data,Node2Data)])
 
 -- class for showing the GV Spec of an instance of 'a'
-class ShowGV a where
-  showGV :: a -> String
+--class ShowGV a where
+--  showGV :: a -> String
 
 -- | Convert names of symbols into safer characters
 cn :: String -> String
@@ -43,8 +39,9 @@ cn (c:ls) = case c of
               '/' -> ("Divi"++(cn ls))
               '\"'-> (cn ls)
               ' ' -> ("_"++(cn ls))
-              '[' -> (cn ls) -- used to factor in the list, now we will ignore it!
-              ']' -> (cn ls)
+              '[' -> ("OS" ++ cn ls) -- used to factor in the list, now we will ignore it!
+              ']' -> ("CS" ++ cn ls)
+              ',' -> ("Comma" ++ (cn ls))
               _   -> (c:cn ls)
 
 rstrip :: String -> String
@@ -65,15 +62,18 @@ printGVSpec ([],[]) = "\n}"
 -- print edges
 printGVSpec ([], ((ee,s1,s2):ls2)) = let r1 = cn s1 in
                                   let r2 = cn s2 in
-                                  r1 ++ "\t->\t" ++ r2 ++ "\t" ++ printLabel ee ++ "\n" ++ printGVSpec ([],ls2) -- ee ++ ";\n"
+                                  r1 ++ "\t->\t" ++ r2 ++ "\t" ++ printColor ee ++ "\n" ++ printGVSpec ([],ls2) -- ee ++ ";\n"
 -- print vertices
 printGVSpec ((s:ls1), ls2) = let sr = rstrip s in
                              let rr = cn sr in
                              rr ++ "\t" ++ printLabel sr ++ "\n" ++ printGVSpec (ls1,ls2)
 
 
-printLabel :: String -> String
+printLabel :: String -> String -- "black:invis:black"
 printLabel l = " [label=\"" ++ qtrim(rstrip l) ++ "\"];"
+
+printColor :: String -> String -- "black:invis:black"
+printColor l = " [color=\"" ++ qtrim(rstrip l) ++ "\"];"
 
 convertToGVSpec :: (Show a, Show b) => ConceptGraph a b -> String
 -- TODO use the '_' (the dep type) to decide how to graph the edge...
@@ -82,5 +82,5 @@ convertToGVSpec (ConceptGraph vertices edges) = "strict digraph G {\n" ++ printG
 writeGVSpec :: (Show a, Show b) => String -> ConceptGraph a b -> IO ()
 writeGVSpec name cg = do
   writeFile (name ++ ".gv") $ convertToGVSpec cg
-  system ("dot -Tpng -o"++ name ++".png " ++ name ++".gv")
+  _ <- system ("dot -Tpng -o"++ name ++".png " ++ name ++".gv")
   return ()

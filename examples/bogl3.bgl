@@ -1,0 +1,9 @@
+game P2
+
+type T1 = {E1}
+
+type Board = Array(1,1) of Int
+type Input = Int
+
+f1 : Int
+f1 = 123

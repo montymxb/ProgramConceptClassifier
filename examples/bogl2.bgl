@@ -1,0 +1,13 @@
+game TestGame
+
+type Board = Array(3,3) of Int
+type Input = Int
+
+f1 : Int
+f1 = 5
+
+b1 : Board
+b1!(x,y) = 0
+
+f2 : Int -> Int
+f2(x) = x + 10

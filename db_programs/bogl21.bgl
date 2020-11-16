@@ -1,0 +1,7 @@
+game T
+
+f21_1 : Int -> Int
+f21_1(x) = x
+
+f21_2 : Int -> Int
+f21_2(x) = f21_1(x + 1)

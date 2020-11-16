@@ -11,10 +11,7 @@ import ConceptGraph.ConceptDependency
 import ConceptGraph.GraphToConceptGraph
 import Data.List
 import GVSpec.GVSpec as GVSpec
-
--- Shorthand for showing the constructor used to build value 'x'
-toConstr' :: Data a => a -> String
-toConstr' x = show (toConstr x)
+import Data.Maybe
 
 -- | Removes duplicates from a list, whilst preserving order
 _makeUnique :: (Eq a) => [a] -> [a]
@@ -47,7 +44,7 @@ findCycles n visited ls = let edges = getAllEdgesFor n ls in           -- get al
 -- | Removes cycles in a list of edges with regard to a given concept
 removeCycles :: (Eq a, Eq b) => a -> [(b,a,a)] -> [(b,a,a)]
 removeCycles _ [] = []
-removeCycles n lsa@(s@(_,a,c):ls) = filter (\x -> not (elem x cycleEdges)) lsa where  -- only returns edges that do not form cycles
+removeCycles n lsa = filter (\x -> not (elem x cycleEdges)) lsa where  -- only returns edges that do not form cycles
   cycleEdges = findCycles n [] lsa
 
 -- | Removes 'list' around a type, to focus on the type itself
@@ -64,10 +61,10 @@ quote s = '\'' : s ++ "'"
 -- Verifies every edge ends leads to Concept
 verifyLattice :: (Show b,Eq b) => [(b,String,String)] -> [(b,String,String)] -> (Bool,String)
 verifyLattice [] _ = (True,"")
-verifyLattice (x@(_,a,b):ls) ls2 | b /= "Concept" = let edges = getAllEdgesFor (unbox b) ls2 in
+verifyLattice ((_,_,b):ls) ls2 | b /= "Concept" = let edges = getAllEdgesFor (unbox b) ls2 in
                                case edges of
                                  [] -> (False,"\n\nIn Lattice, " ++ quote b ++ " does not connect to any other node. It should be pointing to 'Concept' to complete the lattice.\n\nThis can be fixed by adding 'ebase s', where 's' is the element in question, and append this to the existing edge list.\n\n")
-                                 els-> verifyLattice ls ls2 -- continue
+                                 _  -> verifyLattice ls ls2 -- continue
                                  | otherwise =  verifyLattice ls ls2-- skip to the next entry, if any
 
 type EdgeName = String
@@ -78,162 +75,96 @@ type CEdges = [(EdgeName,FromNode,ToNode)]
 
 -- dep type
 data Dep = And | Or
-  deriving Show
+  deriving Eq
 
---- TODO new additions
-class Graphable a where
-  -- produce graph dependencies from Data type
-  dependencies :: Data a => a -> [(String,String,String)]
-  dependencies val =
-                  let tn = show $ typeOf val in -- 1. get type name
-                  -- 2. get constructor name
-                  let cn = if isAlgType (dataTypeOf val) then show $ toConstr val else "Concept" in
-                  -- 3. same for subterms
-                  let subs = concat $ gmapQ (\d -> dependencies d) val in
-                  -- 4. connect this constructor to the sub concepts (ANDs)
-                  let relate = map (\(_,x,_) -> (And,cn,x)) subs in
-                  -- produce single OR from type -> constr, and add on the other deps
-                  (Or,tn,cn) : (relate ++ subs)
+instance Show Dep where
+  show And = "orange"
+  show Or = "blue"
 
-  -- build concept lattice
-  conceptLattice :: Data a => a -> ([(Dep,String,String)], [String])
-  conceptLattice val = let deps = dependencies val in
-                       let concepts = uniqueConcepts deps in
-                       (deps,concepts) where
-                         uniqueConcepts ls = S.toList $ S.fromList $ concatMap (\(_,c1,c2) -> [c1,c2]) ls
+-- manual adjustment that can be made to the graph
+data GraphAdjustment = RemoveEdge (Dep,String,String) -- removes an edge
+  | AddEdge (Dep,String,String) -- adds a new edge
+  | RemoveNode String     -- removes an existing node
+  | AddNode String        -- adds a new node
+  | Rename String String  -- renames all nodes w/ edge updates that match From -> To
+  | Pluck String          -- plucks a node, connecting the nodes that had edges going to/from this node
 
-{-
-class Conceptual a where
-  cgraph :: (Typeable a, Data a, Eq a) => a -> (CNodes,CEdges)
-  cgraph x = let uniqueConcepts = (makeUnique . concepts) x in
-             let uniqueEdges = (makeUnique . _edges) x in
-             let reducedEdges = foldl (\tot x -> removeCycles x tot) uniqueEdges uniqueConcepts in
-             let verifyResult = verifyLattice reducedEdges reducedEdges in
-             case (verifyResult) of
-               (True,_)    -> (uniqueConcepts, reducedEdges)
-               (False,msg) -> error ("Unable to verify lattice with error: " ++ msg)
+-- adjusts a graph
+manuallyAdjustGraph :: [GraphAdjustment] -> ConceptGraph Dep String -> ConceptGraph Dep String
+manuallyAdjustGraph [] cg = cg
+manuallyAdjustGraph (a:ls) cg = manuallyAdjustGraph ls (applyAdjustment cg a)
 
-  concepts :: (Typeable a, Data a, Eq a) => a -> CNodes
-  concepts c = [show (typeOf c), toConstr' c, "Concept"]
+makeNewEdges :: [(Dep,String)] -> [(Dep,String)] -> [(Dep,String,String)]
+makeNewEdges [] _ = []
+makeNewEdges ((d1,x):ls) outgoing = (map (\(d2,z) -> (if d1 == And then d1 else d2,x,z)) outgoing) ++ makeNewEdges ls outgoing
 
-  _edges :: (Typeable a, Data a, Eq a) => a -> CEdges
-  -- tie 'a' from type -> constr name -> Concept, assuming this is a base type
-  _edges x = [("",show (typeOf x), toConstr' x),("",toConstr' x, "Concept")]
+applyAdjustment :: ConceptGraph Dep String -> GraphAdjustment -> ConceptGraph Dep String
+applyAdjustment (ConceptGraph nodes deps) (RemoveEdge edge) = ConceptGraph nodes (filter (\x -> x /= edge) deps)
+applyAdjustment (ConceptGraph nodes deps) (AddEdge edge)    = ConceptGraph nodes (edge:deps)
+applyAdjustment (ConceptGraph nodes deps) (RemoveNode node) = ConceptGraph (filter (\(Concept x) -> x /= node) nodes) deps
+applyAdjustment (ConceptGraph nodes deps) (AddNode node)    = ConceptGraph ((Concept node):nodes) deps
+applyAdjustment (ConceptGraph nodes deps) (Rename from to)  = ConceptGraph
+                                                                (map (\(Concept x) -> if x == from then (Concept to) else (Concept x)) nodes)
+                                                                (map (\(d,c1,c2) -> (d, if c1 == from then to else c1, if c2 == from then to else c2)) deps)
+applyAdjustment (ConceptGraph nodes deps) (Pluck n)          = let newNodes = (filter (\(Concept x) -> x /= n) nodes) in                        -- remove this  node
+                                                               let ingoing = map (\(d,c1,_) -> (d,c1)) (filter (\(_,_,c2) -> c2 == n) deps) in  -- find all incoming edges
+                                                               let outgoing = map (\(d,_,c2) -> (d,c2)) (filter (\(_,c1,_) -> c1 == n) deps) in -- get all outgoing edges
+                                                               let newDeps = deps ++ makeNewEdges ingoing outgoing in                           -- add new deps
+                                                               let withoutOrig = (filter (\(d,x,y) -> not(x == n || y == n)) newDeps) in             -- remove the original edges from the new deps
+                                                               ConceptGraph newNodes withoutOrig
 
-  -- Builds an edge from X -> Y
-  getEdges :: (Data a, Typeable a) => String -> a -> [(EdgeName,FromNode,ToNode)]
-  getEdges cname a = [("",cname,show (typeOf a))]
--}
+-- replace tuple & cons instances
+cleanupConcept :: String -> String
+cleanupConcept "(,)" = "Tuple"
+cleanupConcept "(:)" = "Cons"
+cleanupConcept n = n
 
-{-
-instance (Data a, Eq a, Conceptual a) => Conceptual [a] where
-  concepts x = concatMap concepts x
+-- ground a possible leaf to 'Concept', if necessary
+groundConcept :: [(Dep,String,String)] -> String -> Maybe (Dep,String,String)
+groundConcept [] s = Just (And,s,"Concept")
+groundConcept ((_,c1,c2):ls) s | s == c1 && s /= c2 = Nothing
+                               | otherwise = groundConcept ls s
 
-  _edges []   = []
-  _edges ls   = concatMap _edges ls
+correctCons :: [(Dep,String,String)] -> [(Dep,String,String)]
+correctCons [] = []
+correctCons (i@(d,c1,c2):ls) | c1 == "Cons" && c2 !! 0 /= '[' = (d,"[" ++ c2 ++ "]",c2) : (correctCons ls) -- ammend it
+                             | c1 == "Cons" || c2 == "Cons" = correctCons ls -- drop it
+                             | otherwise = i : (correctCons ls)
 
-  getEdges cname [] = []
-  getEdges cname ls = map (\y -> ("",cname,show (typeOf y))) (ls)
--}
+-- produce graph dependencies from Data type
+getGraphDependencies :: Data a => a -> [(Dep,String,String)]
+getGraphDependencies val =
+                let tn = show $ typeOf val in -- 1. get type name
+                -- 2. get constructor name
+                let cn = if isAlgType (dataTypeOf val) then show $ toConstr val else tn in
+                let cn2 = if cn == "[]" then "List" else cn in
+                -- 3. same for subterms
+                let immediateAnds = gmapQ (\d -> (And,cn2,show $ typeOf d)) val in
+                -- run this for sub-terms as well
+                let subs = concat $ gmapQ (\d -> getGraphDependencies d) val in
+                (Or,tn,cn2) : (subs ++ immediateAnds)
 
--- Self edge
---selfEdge :: (Data a, Typeable a) => a -> (EdgeName,FromNode,ToNode)
---selfEdge x = ("",show (typeOf x), toConstr' x)
-
-{-
-instance Conceptual Int where
-  concepts _ = ["Int","Concept"]
-  _edges _ = [("","Int","Concept")]
-
-instance Conceptual Double where
-  concepts _ = ["Double","Concept"]
-  _edges _ = [("", "Double", "Concept")]
-
-instance Conceptual Float where
-  concepts _ = ["Float","Concept"]
-  _edges _ = [("", "Float", "Concept")]
-
-instance Conceptual Word where
-  concepts _ = ["Word","Concept"]
-  _edges _ = [("", "Word", "Concept")]
-
-instance Conceptual Bool where
-  concepts _ = ["Bool","Concept"]
-  _edges _ = [("", "Bool", "Concept")]
-
-instance Conceptual Char where
-  concepts _ = ["Char","Concept"]
-  _edges _ = [("", "Char", "Concept")]
--}
-
---ccs :: (Typeable a, Data a) => a -> CNodes
---ccs s = [(show (typeOf s)),toConstr' s]
-
---
--- The following functions are defined such that no data constructor in the target language has more parameters than any of the following
--- Allows us to more generally parse the language.
---
-
-{-
-c0 :: (Data a, Typeable a) => a -> CNodes
-c0 a = ccs a
-
--- base concept
-cbase :: (Data a, Typeable a) => a -> CNodes
-cbase a = [toConstr' a, "Concept"]
-
-cb :: (Data b, Typeable b, Conceptual b, Eq b) => b -> CNodes
-cb = concepts
-
-c1 :: (Data a, Typeable a, Data b, Typeable b, Conceptual b, Eq b) => a -> b -> CNodes
-c1 a b = c0 a ++ cb b
-
-c2 :: (Data a, Typeable a, Data b, Typeable b, Conceptual b, Eq b, Data c, Typeable c, Eq c, Conceptual c) => a -> b -> c -> CNodes
-c2 a b c = c0 a ++ cb b ++ cb c
-
-c3 :: (Data a, Typeable a, Data b, Typeable b, Conceptual b, Eq b, Data c, Typeable c, Eq c, Conceptual c, Eq d, Data d, Typeable d, Conceptual d) => a -> b -> c -> d -> CNodes
-c3 a b c d = c0 a ++ cb b ++ cb c ++ cb d
-
-c4 :: (Data a, Typeable a, Data b, Typeable b, Conceptual b, Eq b, Data c, Typeable c, Eq c, Conceptual c, Eq d, Data d, Typeable d, Conceptual d, Eq e, Data e, Typeable e, Conceptual e) => a -> b -> c -> d -> e -> CNodes
-c4 a b c d e = c0 a ++ cb b ++ cb c ++ cb d ++ cb e
-
-c5 :: (Data a, Typeable a, Data b, Typeable b, Conceptual b, Eq b, Data c, Typeable c, Eq c, Conceptual c, Eq d, Data d, Typeable d, Conceptual d, Eq e, Data e, Typeable e, Conceptual e, Eq f, Data f, Typeable f, Conceptual f) => a -> b -> c -> d -> e -> f -> CNodes
-c5 a b c d e f = c0 a ++ cb b ++ cb c ++ cb d ++ cb e ++ cb f
--}
-
---
--- The following functions are defined such that no data constructor in the target language has more parameters than any of the following
--- Allows us to more generally parse the language.
---
-
-{-
--- basing edge
-ebase :: (Data a, Typeable a) => a -> CEdges
-ebase a = [("",show (typeOf a),toConstr' a),("",toConstr' a,"Concept")]
-
-e0 :: (Data a, Typeable a) => a -> CEdges
-e0 a = [selfEdge a]
-
-e1 :: (Conceptual a, Data a, Typeable a, Data b, Typeable b, Conceptual b, Eq b) => a -> b -> CEdges
-e1 a b = [selfEdge a] ++ (getEdges cname b) ++ _edges b where
-  cname = toConstr' a
-
-e2 :: (Conceptual a, Data a, Typeable a, Data b, Typeable b, Conceptual b, Eq b, Data c, Typeable c, Eq c, Conceptual c) => a -> b -> c -> CEdges
-e2 a b c = [selfEdge a] ++ (getEdges cname b) ++ (getEdges cname c) ++ _edges b ++ _edges c where
-  cname = toConstr' a
-
-e3 :: (Conceptual a, Data a, Typeable a, Data b, Typeable b, Conceptual b, Eq b, Data c, Typeable c, Eq c, Conceptual c, Eq d, Data d, Typeable d, Conceptual d) => a -> b -> c -> d -> CEdges
-e3 a b c d = [selfEdge a] ++ (getEdges cname b) ++ (getEdges cname c) ++ (getEdges cname d) ++ _edges b ++ _edges c ++ _edges d where
-  cname = toConstr' a
-
-e4 :: (Conceptual a, Data a, Typeable a, Data b, Typeable b, Conceptual b, Eq b, Data c, Typeable c, Eq c, Conceptual c, Eq d, Data d, Typeable d, Conceptual d, Eq e, Data e, Typeable e, Conceptual e) => a -> b -> c -> d -> e -> CEdges
-e4 a b c d e = [selfEdge a] ++ (getEdges cname b) ++ (getEdges cname c) ++ (getEdges cname d) ++ (getEdges cname e) ++ _edges b ++ _edges c ++ _edges d ++ _edges e where
-  cname = toConstr' a
-
-e5 :: (Conceptual a, Data a, Typeable a, Data b, Typeable b, Conceptual b, Eq b, Data c, Typeable c, Eq c, Conceptual c, Eq d, Data d, Typeable d, Conceptual d, Eq e, Data e, Typeable e, Conceptual e, Eq f, Data f, Typeable f, Conceptual f) => a -> b -> c -> d -> e -> f -> CEdges
-e5 a b c d e f = [selfEdge a] ++ (getEdges cname b) ++ (getEdges cname c) ++ (getEdges cname d) ++ (getEdges cname e) ++ (getEdges cname f) ++ _edges b ++ _edges c ++ _edges d ++ _edges e ++ _edges f where
-  cname = toConstr' a
--}
+-- builds a concept graph from a value of a data type
+conceptGraph :: Data a => a -> ConceptGraph Dep String--([String],[(Dep,String,String)])
+conceptGraph val = let edges = getGraphDependencies val in
+                     let concepts = filter (\x -> x /= "Cons") $ "Concept":map cleanupConcept (uniqueConcepts edges) in
+                     let ue = map (\(d,c1,c2) -> (d,cleanupConcept c1,cleanupConcept c2)) (makeUnique edges) in
+                     let uniqueEdges = correctCons ue in
+                     -- remove self edges
+                     -- and ground all concepts
+                     -- remove all edges started by list,
+                     -- add an edge from List -> Concept
+                     let updatedUniqueEdges = (filter (\(_,c1,c2) -> c1 /= c2) $ uniqueEdges ++ catMaybes (map (groundConcept uniqueEdges) concepts)) in
+                     --let reducedEdges = foldl (\tot x -> removeCycles x tot) updatedUniqueEdges concepts in
+                     --let verifyResult = verifyLattice updatedUniqueEdges updatedUniqueEdges in
+                     graph_to_concept_graph (concepts,updatedUniqueEdges)
+                     {-
+                     case verifyResult of
+                       (True,_)     -> graph_to_concept_graph (concepts,reducedEdges)
+                       (False,msg)  -> error ("Unable to verify lattice with error: " ++ msg)
+                     -}
+                     where
+                       uniqueConcepts ls = makeUnique $ concatMap (\(_,c1,c2) -> [c1,c2]) ls
 
 --
 -- Order Checking
@@ -241,7 +172,7 @@ e5 a b c d e f = [selfEdge a] ++ (getEdges cname b) ++ (getEdges cname c) ++ (ge
 type Known a = [Concept a]
 
 -- takes a concept, list of deps, and produces concepts we are dependent on, and those dependent concepts and so forth
-deps :: (Conceptual a, Eq a) => Concept a -> Known a -> [ConceptDependency b a] -> [Concept a]
+deps :: (Data a, Eq a) => Concept a -> Known a -> [ConceptDependency b a] -> [Concept a]
 deps _ _ []     = []
 deps c@(Concept c1) k ((_,frm,to):ls) | c1 == frm && not (elem (Concept to) k) = ((Concept to) : deps (Concept to) k ls) ++ deps c k ls -- only add deps that we don't already know
                                     | otherwise = deps c k ls
@@ -271,11 +202,11 @@ isKnown k (ConceptGraph (a:ls) cds)  =  case elem a k of
               False  -> Unknown $ "Concept " ++ (quote . unconcept) a ++ " was determined to be unknown with regards to dependencies:\n" ++ intercalate "\n" (map unconcept ((filter (\x -> not(elem x k)) d)))
 
 -- | Produce graphs from programs
-produceGraphs :: (Conceptual a, Data a, Eq a) => [a] -> [ConceptGraph EdgeName String]
-produceGraphs = map (graph_to_concept_graph . cgraph)
+produceGraphs :: (Data a, Eq a) => [a] -> [ConceptGraph Dep String]
+produceGraphs = map conceptGraph
 
 -- write it as a reduce
-_graphSimpleProgs :: [ConceptGraph EdgeName String] -> Int -> IO ()
+_graphSimpleProgs :: [ConceptGraph Dep String] -> Int -> IO ()
 _graphSimpleProgs [] _ = return ()
 _graphSimpleProgs (x:ls) i = do
   GVSpec.writeGVSpec ("simple" ++ (show i)) x
@@ -283,10 +214,14 @@ _graphSimpleProgs (x:ls) i = do
 
 -- write it as a reduce
 _graphSimpleProgsWithName :: [ConceptGraph EdgeName String] -> Int -> String -> IO ()
-_graphSimpleProgsWithName [] _ n = return ()
+_graphSimpleProgsWithName [] _ _ = return ()
 _graphSimpleProgsWithName (x:ls) i n = do
   GVSpec.writeGVSpec (n ++ (show i)) x
   _graphSimpleProgsWithName ls (i+1) n
+
+-- Graphs a concept graph
+graphConceptGraph :: ConceptGraph Dep String -> String -> IO ()
+graphConceptGraph cg name = GVSpec.writeGVSpec name cg
 
 -- | Shows the result of whether a program is known
 showRez :: KnownCheck -> IO ()
@@ -294,7 +229,7 @@ showRez (Unknown s) = putStrLn $ "\n\n" ++ s ++ "\n\n"
 showRez OK = putStrLn "\n\nAll concepts known and OK\n\n"
 
 -- | Extract knowns
-_knowns :: Int -> [Concept String] -> [ConceptGraph EdgeName String] -> IO ()
+_knowns :: Int -> [Concept String] -> [ConceptGraph Dep String] -> IO ()
 _knowns _ _ [] = return ()
 _knowns i kl (x:ls) = do
   putStrLn ("For Program " ++ (show i))
@@ -302,9 +237,9 @@ _knowns i kl (x:ls) = do
   _knowns (i+1) kl ls
 
 -- | Produces the concept diffs across a list of programs, and in the order introduced
-produceDiffs :: [Concept String] -> [ConceptGraph EdgeName String] -> [[Concept String]]
+produceDiffs :: [Concept String] -> [ConceptGraph Dep String] -> [[Concept String]]
 produceDiffs _ [] = []
-produceDiffs knowns ((ConceptGraph concepts deps):ls) = [concepts \\ knowns] ++ (produceDiffs (_makeUnique (knowns ++ concepts)) ls)
+produceDiffs knowns ((ConceptGraph concepts _):ls) = [concepts \\ knowns] ++ (produceDiffs (_makeUnique (knowns ++ concepts)) ls)
 
 -- Calculates the std deviation of the size of the unique sets of concepts introduced in each example
 stdDeviation :: [[a]] -> Float

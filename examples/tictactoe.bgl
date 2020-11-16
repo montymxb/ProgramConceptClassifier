@@ -1,0 +1,46 @@
+game TicTacToe
+
+type Player = {X, O}
+type Space = Player & {Empty}
+type Result = Player & {Tie}
+type Position = (Int,Int)
+type T2 = Board & {E2,E3}
+
+type Board = Array (3,3) of Space
+type Input = Position
+
+initialBoard : Board
+initialBoard!(x,y) = Empty
+
+next : Player -> Player
+next(p) = if p == X then O else X
+
+goFirst : Player
+goFirst = X
+
+outcome : (Player, Board) -> Result
+outcome(p, b) = if inARow(3,X,b) then X else
+                if inARow(3,O,b) then O else Tie
+
+threeInARow : Board -> Bool
+threeInARow(b) = or(inARow(3,X,b), inARow(3,O,b))
+
+gameOver : Board -> Bool
+gameOver(b) = or(threeInARow(b), isFull(b))
+
+isValid : (Board,Position) -> Bool
+isValid(b,p) = if b ! p == Empty then True else False
+
+tryMove : (Player,Board) -> (Player, Board)
+tryMove(p,b) = let pos = input in
+                   if isValid(b,pos) then (next(p), place(p,b,pos))
+                                     else (p, b)
+
+loop : (Player,Board) -> (Player ,Board)
+loop(p,b) = while not(gameOver(b)) do tryMove(p,b)
+
+play : (Player,Board) -> Result
+play(a,b) = outcome(loop(a,b))
+
+result : Result
+result = play(goFirst, initialBoard)

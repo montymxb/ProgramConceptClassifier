@@ -1,0 +1,4 @@
+game T
+
+f22 : Int -> Bool
+f22(x) = if x > 0 then True else False

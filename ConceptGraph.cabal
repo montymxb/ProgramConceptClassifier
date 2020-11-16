@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: c2d1b80f67069ecf8b01023d371359455b0442d5324cc331695185c3a4d9c646
+-- hash: 047eca0e0c36fa588bbeac65c6ca95581af60b5bc33ca051d558205bb572ea5a
 
 name:           ConceptGraph
 version:        0.1.0.0
@@ -27,27 +27,17 @@ source-repository head
 
 library
   exposed-modules:
-      AbstractSyntax.BOGL
-      AbstractSyntax.Simple
-      AST.BOGL_AST
+      AbstractSyntax.BOGL_S1
       ConceptGraph.Concept
       ConceptGraph.ConceptDependency
       ConceptGraph.ConceptGraph
       ConceptGraph.Conceptual
       ConceptGraph.GraphToConceptGraph
-      Grammar.Grammar
-      Grammar.GrammarToGraph
-      Grammar.Rule
-      Grammar.Symbol
+      DB.BoglDB
       GVSpec.GVSpec
-      Implementations.Arithmetic_Lang
-      Implementations.BOGL_AST_TC
-      Implementations.BOGL_Lang
-      Implementations.CSforAll
-      Implementations.T2
       Lib
-      ProgramDatabase.BoglPrograms
-      ProgramDatabase.Database
+      Programs.BOGL_R1
+      Programs.BOGL_S1
       Query.Query
   other-modules:
       Paths_ConceptGraph

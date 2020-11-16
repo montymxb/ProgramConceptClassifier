@@ -1,0 +1,4 @@
+game T
+
+mult : (Int,Int) -> Int
+mult(x,y) = x * y

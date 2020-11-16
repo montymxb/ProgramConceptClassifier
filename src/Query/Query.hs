@@ -7,9 +7,7 @@ module Query.Query (Query(Query),Path,query,queryGraph,queryFromKnownToGoal,_que
 import ConceptGraph.Concept
 import ConceptGraph.ConceptGraph
 import ConceptGraph.ConceptDependency
-import Grammar.GrammarToGraph
-
-import Data.List (find,concat)
+import Data.List (find)
 import Control.Monad (join)
 import Data.Set (toList,fromList)
 import Data.Maybe(catMaybes)
@@ -34,7 +32,7 @@ query start end = Query [start] end
 -- | Produces a list of concept dependencies froma list of paths
 getEdgesFromPaths :: b -> [a] -> [ConceptDependency b a]
 getEdgesFromPaths _ []      = [] -- no items
-getEdgesFromPaths _ (p1:[]) = [] -- last item
+getEdgesFromPaths _ (_:[]) = [] -- last item
 getEdgesFromPaths e (p1:(p2:ls)) = ((e,p1,p2) : (getEdgesFromPaths e (p2:ls))) -- dep to add
 
 
@@ -45,10 +43,11 @@ getUniqueVertices xl = map (\x -> Concept x) (toList $ fromList $ (concat xl))
 
 -- | Filters paths for a given concept graph into a concept lattice, using the same concept depencies for all edges
 _filterPathsIntoLattice :: (Eq a, Ord a, Ord b) => (ConceptGraph b a) -> [Maybe (Path a)] -> ConceptLattice b a
-_filterPathsIntoLattice cg@(ConceptGraph _ ((e1,_,_):_)) mpaths = let paths = catMaybes mpaths in
+_filterPathsIntoLattice (ConceptGraph _ ((e1,_,_):_)) mpaths = let paths = catMaybes mpaths in
                   let edges   = toList $ fromList $ concat $ map (getEdgesFromPaths e1) paths in
                   let vertices= getUniqueVertices paths in
                   (ConceptGraph vertices edges)
+_filterPathsIntoLattice _ _ = undefined
 
 
 
@@ -113,13 +112,15 @@ queryGraph cg q = _filterPathsIntoLattice cg (_queryGraph cg q)
 -- | Produces a list of possible paths to a goal concept from a given concept
 _queryGraph :: (Eq a) => ConceptGraph b a -> Query a -> [Maybe (Path a)]
 _queryGraph _ (Query [] _) = [] -- nothing to query
-_queryGraph cg@(ConceptGraph concepts deps) q@(Query sls@(start:ls) end) | find (==(Concept start)) concepts == Nothing = [Nothing] -- node does not exist
+_queryGraph cg@(ConceptGraph concepts deps) q@(Query sls@(start:_) end) | find (==(Concept start)) concepts == Nothing = [Nothing] -- node does not exist
                                                           | start == end = [Just sls] -- goal found, add & stop here
                                                           | start /= end = join (map (_queryGraph cg) (genNextQueries q deps)) -- continue querying from here
+_queryGraph _ _ = undefined
 
 
 -- | Generates a list of next possible queries to perform, if any
 genNextQueries :: (Eq a) => Query a -> [ConceptDependency b a] -> [Query a]
 genNextQueries _ [] = []
-genNextQueries q@(Query sls@(start:sl) end) ((_,c1,c2):ls) | c2 == start =((Query (c1:sls) end):(genNextQueries q ls)) -- gen new query and continue
+genNextQueries q@(Query sls@(start:_) end) ((_,c1,c2):ls) | c2 == start =((Query (c1:sls) end):(genNextQueries q ls)) -- gen new query and continue
                                                                   | c2 /= start = genNextQueries q ls -- skip to next dep
+genNextQueries _ _ = undefined

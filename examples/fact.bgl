@@ -1,0 +1,11 @@
+game Factorial_Example
+
+type T1 = {E1}
+
+type Board = Array(1,1) of Int
+type Input = Int
+
+type T2 = Board & {E2,E3}
+
+fact : Int -> Int
+fact(x) = if x > 1 then x * fact(x-1) else 1

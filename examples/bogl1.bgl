@@ -1,0 +1,4 @@
+game Test
+
+f : Int
+f = 32

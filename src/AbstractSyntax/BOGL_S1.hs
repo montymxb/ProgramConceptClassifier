@@ -1,9 +1,9 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 
-module AbstractSyntax.BOGL where
+module AbstractSyntax.BOGL_S1 where
 
 --
--- BoGL Abstract Syntax representation
+-- Simple BoGL Abstract Syntax representation
 --
 
 import Data.Data
@@ -106,3 +106,5 @@ data BinOp = Plus
   | NotEq
   | Get
   deriving (Show,Data,Eq)
+
+-- maps any concepts encountered to these concepts?

@@ -518,13 +518,18 @@
 - oh thank god I figured out how to generically traverse data structures...
 
 ## Nov. 15th, 2020 (Sun)
+- write in the better way to traverse the data structure, rather than my hacky approach
+- fix LName not grounding out properly, not a focus for now, ignoring the lattice since all we're doing is tying the leaves together, this can be done later if we want to
 
 ### Current >
-- write in the better way to traverse the data structure, rather than my hacky approach
-0. Need a way to programmatically establish a GROUND TRUTH from the Abstract Syntax (ideally, w/out a program...somehow)
-  - rushing is what makes the devil in the details thrive
-  - do a simple 1 data printer, see how it works in theory...
-1. write converter from BoGL AST -> Simplified AST (mine)
+- write a thing that parses ALL the bogl examples in the directory
+- write a new query that takes
+  - a bogl program from a file
+  - a list of known concepts
+  - a list of constraints (2 basic ones to work with)
+    - include, include an extra concept not in the program (possibly)
+    - exclude, exclude a concept in the order returned (work around it)
+    - can write various include/exclude patterns
 2. write structure for DB of programs that will be queried on, and put some in
 3. write query system, takes positive & negative constraints, returns set(s) of snippets that satisfies the constraints (simple query language for this, don't get fancy, just define what it does and doesn't do by it's structurally)
     - like SELECT * FROM ...

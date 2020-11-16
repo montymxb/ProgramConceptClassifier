@@ -3,30 +3,13 @@
 -- BOGL_P1
 --
 
-module AST.BOGL_AST where
-
-import Grammar.Grammar
-import ConceptGraph.GraphToConceptGraph
-import ConceptGraph.ConceptGraph
-import Query.Query
-import GVSpec.GVSpec as GVSpec
+module Programs.BOGL_S1 where
+  
 import Data.Data
-import Data.Generics
-import Unsafe.Coerce
-import qualified Data.Set as S
-import Data.Set (toList,fromList)
 import Data.List
-
 import ConceptGraph.Conceptual
-
-import Debug.Trace
-
 import ConceptGraph.Concept
-import ConceptGraph.ConceptDependency
-
-import Data.Generics.Uniplate.Data
-
-import AbstractSyntax.BOGL
+import AbstractSyntax.BOGL_S1
 
 -- Don't Care Value
 -- This is used to fill in a dummy value when BTypes are used to describe what type synonyms
@@ -325,127 +308,16 @@ p5 = (Game
 progs :: [Game]
 progs = [p1,p2,p3,p4,p5]
 
-{-
-instance Conceptual LName where
-  concepts s@(LName a) = c1 s a
-  _edges s@(LName a)   = e1 s [a]
-
-instance Conceptual UName where
-  concepts s@(UName a) = c1 s a
-  _edges s@(UName a)   = e1 s [a]
-
-
-instance Conceptual BType where
-  concepts s@(BInt a) = c1 s a
-  concepts s@(BBoard a) = c1 s a
-  concepts s@(BUName a) = c1 s a
-  concepts s@(BTuple a) = c1 s a
-  _edges s@(BInt a)     = e1 s [a]
-  _edges s@(BBoard a)   = e1 s [a] ++ ebase s
-  _edges s@(BUName a)   = e1 s [a]
-  _edges s@(BTuple ls)  = e1 s ls ++ ebase s
-
-
-instance Conceptual FType where
-  concepts s@(FType a b) = c2 s a b
-  _edges s@(FType a b)   = e2 s [a] [b]
-
-instance Conceptual EType where
-  concepts s@(EType ls) = c1 s ls
-  _edges s@(EType ls) = e1 s ls
-
-
-instance Conceptual XType where
-  concepts s@(X_EType a) = c1 s a
-  concepts s@(X_ExtEType a b) = c2 s a b
-  concepts s@(X_ExtName a b) = c2 s a b
-  _edges s@(X_EType a) = e1 s [a]
-  _edges s@(X_ExtEType a b) = e2 s [a] [b]
-  _edges s@(X_ExtName a b) = e2 s [a] [b]
-
-
-instance Conceptual Game where
-  concepts s@(Game a ls b c ls2) = c5 s a ls b c ls2
-  _edges s@(Game a ls b c ls2) = e5 s [a] ls [b] [c] ls2
-
-instance Conceptual TypeOrValDef where
-  concepts s@(TOV_TypeAssign a) = c1 s a
-  concepts s@(TOV_ValDef a) = c1 s a
-  _edges s@(TOV_TypeAssign a) = e1 s [a]
-  _edges s@(TOV_ValDef a) = e1 s [a]
-
-instance Conceptual Board where
-  concepts s@(Board a b c) = c3 s a b c
-  _edges s@(Board a b c) = e3 s [a] [b] [c]
-
-instance Conceptual Input where
-  concepts s@(Input a) = c1 s a
-  _edges s@(Input a) = e1 s [a]
-
-instance Conceptual TypeAssign where
-  concepts s@(TypeAssignXType a b) = c2 s a b
-  concepts s@(TypeAssignBType a b) = c2 s a b
-  _edges s@(TypeAssignXType a b) = e2 s [a] [b]
-  _edges s@(TypeAssignBType a b) = e2 s [a] [b]
-
-instance Conceptual ValDef where
-  concepts s@(ValDef a b) = c2 s a b
-  _edges s@(ValDef a b) = e2 s [a] [b]
-
-instance Conceptual Signature where
-  concepts s@(BSig a b) = c2 s a b
-  concepts s@(FSig a b) = c2 s a b
-  _edges s@(BSig a b) = e2 s [a] [b]
-  _edges s@(FSig a b) = e2 s [a] [b]
-
-instance Conceptual Equation where
-  concepts s@(ValEquation a b) = c2 s a b
-  concepts s@(FuncEquation a b c) = c3 s a b c
-  concepts s@(BoardEquation a b c d) = c4 s a b c d
-  _edges s@(ValEquation a b) = e2 s [a] [b]
-  _edges s@(FuncEquation a b c) = e3 s [a] b [c]
-  _edges s@(BoardEquation a b c d) = e4 s [a] [b] [c] [d]
-
-instance Conceptual Pos where
-  concepts s@(NamePos a) = c1 s a
-  concepts s@(IntPos a) = c1 s a
-  _edges s@(NamePos a) = e1 s [a]
-  _edges s@(IntPos a) = e1 s [a]
-
-instance Conceptual Expr where
-  concepts s@(IVal a) = c1 s a
-  concepts s@(SVal a) = c1 s a
-  concepts s@(Ref a) = c1 s a
-  concepts s@(Tup a) = c1 s a
-  concepts s@(App a b) = c2 s a b
-  concepts s@(BinOp a b c) = c3 s a b c
-  concepts s@(Let a b c) = c3 s a b c
-  concepts s@(Cond a b c) = c3 s a b c
-  concepts s@(While a b) = c2 s a b
-  _edges s@(IVal a) = e1 s [a]
-  _edges s@(SVal a) = e1 s [a]
-  _edges s@(Ref a) = e1 s [a]
-  _edges s@(Tup a) = e1 s a ++ ebase s
-  _edges s@(App a b) = e2 s [a] b
-  _edges s@(BinOp a b c) = e3 s [a] [b] [c]
-  _edges s@(Let a b c) = e3 s [a] [b] [c]
-  _edges s@(Cond a b c) = e3 s [a] [b] [c] ++ ebase s
-  _edges s@(While a b) = e2 s [a] [b] ++ ebase s
-
-instance Conceptual BinOp where
-  concepts s = cbase s
-  _edges s = ebase s
--}
-
 -- Produces graphs of programs 1 - 4
 graphBoglProgs :: IO ()
 graphBoglProgs = _graphSimpleProgs (produceGraphs progs) 0
 
+{-
 graphEntireLattice :: IO ()
 graphEntireLattice = _graphSimpleProgsWithName [(graph_to_concept_graph entireLattice)] 0 "FullLattice"
 
 -- graph of entire lattice
-entireLattice :: ([String],[(String,String,String)])
+entireLattice :: ([String],[(Dep,String,String)])
 entireLattice = ([
   "LName",
   "UName",
@@ -630,6 +502,7 @@ entireLattice = ([
   ("","Get","Concept")
 
   ])
+  -}
 
 -- in order checks
 o1 :: [Concept String]
@@ -645,9 +518,9 @@ showDiffs = produceDiffs o1 (produceGraphs progs)
 ordStdDev :: Float
 ordStdDev = stdDeviation showDiffs
 
-allStdDevs :: (Conceptual a, Data a, Eq a) => [a] -> (Float,[a])
-allStdDevs progs =  let f = (produceDiffs o1) . produceGraphs in
-                    let progPermutations = permutations progs in
+allStdDevs :: (Data a, Eq a) => [a] -> (Float,[a])
+allStdDevs pgs =  let f = (produceDiffs o1) . produceGraphs in
+                    let progPermutations = permutations pgs in
                     let stdDevs = map (stdDeviation . f) progPermutations in
                     let m = minimum stdDevs in
                     let i = elemIndex m stdDevs in
@@ -655,7 +528,7 @@ allStdDevs progs =  let f = (produceDiffs o1) . produceGraphs in
                       Just index -> (m,progPermutations !! index)
                       Nothing    -> (m,[])
 
-sortList :: (Conceptual a, Data a, Eq a) => [a] -> (a -> String) -> (Float,[String])
+sortList :: (Data a, Eq a) => [a] -> (a -> String) -> (Float,[String])
 sortList pl f = let rr = allStdDevs pl in
               (fst rr, map f (snd $ rr))
 

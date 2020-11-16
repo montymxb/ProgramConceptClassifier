@@ -1,0 +1,4 @@
+game T
+
+div : (Int,Int) -> Int
+div(x,y) = x / y

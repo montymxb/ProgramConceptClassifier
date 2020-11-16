@@ -1,0 +1,5 @@
+game T
+
+f28 : Int
+f28 = let x = 100 in
+      while x > 50 do x / 2
