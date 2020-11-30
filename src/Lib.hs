@@ -4,8 +4,8 @@ import Programs.BOGL_S1 as BoglProgsS1
 import Programs.BOGL_R1 as BoglProgsR1
 import ConceptGraph.Conceptual
 import Data.Data
-import DB.BoglDB
 import Parser.Parser
+import ConceptGraph.ManualConcepts as MC
 
 adjustments :: [GraphAdjustment]
 adjustments = [Rename "Btype" "Base Type",
@@ -36,6 +36,10 @@ simp5 = graphConcepts BoglProgsS1.p5 "simp5"
 
 real1 :: IO ()
 real1 = graphConcepts BoglProgsR1.boglProg "real1"
+
+-- manual concept graph
+manual1 :: IO ()
+manual1 = graphConcepts MC.conceptDepGraph "manual1"
 
 all1 :: IO ()
 all1 = do

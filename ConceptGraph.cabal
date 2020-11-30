@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 047eca0e0c36fa588bbeac65c6ca95581af60b5bc33ca051d558205bb572ea5a
+-- hash: cef050be050a429cc19fb2b5273b00c239e02d2af49601778231122abc279d55
 
 name:           ConceptGraph
 version:        0.1.0.0
@@ -33,6 +33,7 @@ library
       ConceptGraph.ConceptGraph
       ConceptGraph.Conceptual
       ConceptGraph.GraphToConceptGraph
+      ConceptGraph.ManualConcepts
       DB.BoglDB
       GVSpec.GVSpec
       Lib

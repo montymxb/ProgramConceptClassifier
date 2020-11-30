@@ -521,8 +521,9 @@
 - write in the better way to traverse the data structure, rather than my hacky approach
 - fix LName not grounding out properly, not a focus for now, ignoring the lattice since all we're doing is tying the leaves together, this can be done later if we want to
 
-### Current >
-- write a thing that parses ALL the bogl examples in the directory
+## Nov. 20ish, 2020 (That entire week)
+- going back over Martin's emailed example, priority over the following
+- write a thing that parses ALL examples in a directory
 - write a new query that takes
   - a bogl program from a file
   - a list of known concepts
@@ -545,3 +546,8 @@
         - can't co-introduce
         - can't reverse introduce
         - must introduce in such as a way that no other following program could introduce that concept as novel...
+
+## Nov. 29th, 2020
+- focused on creating manual mapping of all relevant BoGL concepts, dropped some, and added others
+- now associate a way to ground these concepts into a program, (big fold...)
+- removed some and added others, I'll settle for this to discuss in our next meeting, it would be good to have a solid basis for the concepts and the relationships that we choose to recognize
