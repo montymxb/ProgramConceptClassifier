@@ -4,6 +4,7 @@ module AbstractSyntax.BOGL_S1 where
 
 --
 -- Simple BoGL Abstract Syntax representation
+-- TODO, not what we want
 --
 
 import Data.Data

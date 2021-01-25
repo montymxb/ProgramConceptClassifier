@@ -5,7 +5,7 @@
 -- a grammar's rule set
 --
 
-module ConceptGraph.ConceptGraph (ConceptGraph(ConceptGraph),ConceptLattice) where
+module ConceptGraph.ConceptGraph (ConceptGraph(ConceptGraph),ConceptLattice,concepts,edges) where
 
 import ConceptGraph.Concept
 import ConceptGraph.ConceptDependency
@@ -21,3 +21,9 @@ type ConceptLattice b a = ConceptGraph b a
 
 instance (Show b, Show a) => Show (ConceptGraph b a) where
   show (ConceptGraph concepts deps) = "\n" ++ show concepts ++ "\n\n" ++ show deps
+
+concepts :: ConceptGraph b a -> [a]
+concepts (ConceptGraph c _) = map (\(Concept x) -> x) c
+
+edges :: ConceptGraph b a -> [ConceptDependency b a]
+edges (ConceptGraph _ e) = e

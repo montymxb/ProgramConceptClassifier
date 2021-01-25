@@ -1,21 +1,18 @@
 module Main where
 
+import Programs.BOGL_R1
+import ConceptGraph.Conceptual
+import ConceptGraph.ConceptGraph
+import ConceptGraph.ManualConcepts as MC
+
+import P2021.R32
+import P2021.Bogl_Specifics
+
 main :: IO ()
-main = return ()
---
--- Tests the query systems
--- > test (FindOneContaining ["Int"])
---
-{-
-test :: Query -> IO ()
-test qq = do
-  putStrLn "\n\n==Query Examples==\n\n"
-
-  putStrLn $ show qq ++ " produces...\n"
-  putStrLn $ present $ runProgQuery qq
-  let c = (ihtml qq [] (present $ runProgQuery qq))
-
-  writeFile "Suggestions.html" (html $ (lhtml concepts) ++ c)
-
-  return ()
-  -}
+main = r32 (FCA
+  OrderByIntents
+  ConceptsByExtents
+  parseBOGLPrograms
+  []
+  []
+  exCP1)

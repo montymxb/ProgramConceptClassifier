@@ -94,7 +94,7 @@ data Concept = Game
   | PositionRow
   | PositionExact
   | Get
-  deriving (Eq,Show,Data)
+  deriving (Eq,Show,Data,Ord)
 
 (-->) :: c -> d -> (c,d)
 c --> d = (c,d)
@@ -112,7 +112,7 @@ conceptDepGraph = [
        Game             --> And [Single BoardType, Single InputType, Single Definition],
 
        -- types
-       Type             --> orDep [IntType,BoolType,SymbolType,TupleType,ExtendedType,BoardType,InputType,Content],
+       --Type             --> orDep [],
        ReturningType    --> andDep [Type],
        AcceptingType    --> andDep [Type],
 
@@ -163,7 +163,7 @@ conceptDepGraph = [
        PositionExact    --> andDep [Expr,Expr],
 
        -- expr
-       Expr             --> orDep [LiteralInt,LiteralBool,LiteralSymbol,BinOp,IfThenElse,Let,Reference,Tuple,FunctionApplication,While,Get],
+       --Expr             --> orDep [LiteralInt,LiteralBool,LiteralSymbol,BinOp,IfThenElse,Let,Reference,Tuple,FunctionApplication,While,Get],
        BinOp            --> orDep [BinOpArithmetic,BinOpConditional],
        BinOpArithmetic  --> orDep [Add,Sub,Mul,Div],
        BinOpConditional --> orDep [LessThan,GreaterThan,Eq,NotEq,LessThanEqualTo,GreaterThanEqualTo],
@@ -176,7 +176,3 @@ conceptDepGraph = [
        Get              --> andDep [Name,Position],
        Position         --> andDep [Tuple]
       ]
-
--- easiest way to ground would be to take a concept lattice from a BoGL program, and directly ground to the concepts by name, rather than analyzing the tree
-grounding :: [(String,String)]
-grounding = undefined

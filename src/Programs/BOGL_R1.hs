@@ -62,6 +62,12 @@ boglProg = (Game "TestGame" (BoardDef (3,3) (X Itype S.empty)) (InputDef (X Ityp
   (Val (Sig "f1" (Plain (X Itype S.empty))) (Veq "f1" (I 5)) dummyPos),
   -- board equation...b1!(1,y) = 0
   (BVal (Sig "b1" (Plain (X Board S.empty))) [(PosDef "b1" (ForAll "x") (ForAll "y") (I 0))] dummyPos),
-  -- func equation...f2(x) = x + 10
+  -- func equation...f2(x) = x + (10 - 5)
   (Val (Sig "f2" (Function (Ft (X Itype S.empty) (X Itype S.empty)))) (Feq "f2" (Pars ["x"]) (Binop Plus (Ref "x") (Binop Minus (I 10) (I 5)))) dummyPos)
+  ])
+
+boglProg2 :: Game SourcePos
+boglProg2 = (Game "TestGame2" (BoardDef (3,3) (X Itype S.empty)) (InputDef (X Itype S.empty)) [
+  -- func equation...double(x) = x * 2
+  (Val (Sig "double" (Function (Ft (X Itype S.empty) (X Itype S.empty)))) (Feq "double" (Pars ["x"]) (Binop Times (Ref "x") (I 2))) dummyPos)
   ])

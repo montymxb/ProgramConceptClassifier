@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: cef050be050a429cc19fb2b5273b00c239e02d2af49601778231122abc279d55
+-- hash: 693b758c709d0f42d565c7446a5b46d7d1959fb26b8abbf7c7792d80d26f529c
 
 name:           ConceptGraph
 version:        0.1.0.0
@@ -37,6 +37,9 @@ library
       DB.BoglDB
       GVSpec.GVSpec
       Lib
+      P2021.Bogl_Specifics
+      P2021.General
+      P2021.R32
       Programs.BOGL_R1
       Programs.BOGL_S1
       Query.Query
@@ -57,6 +60,7 @@ library
 executable ConceptGraph-exe
   main-is: Main.hs
   other-modules:
+      Dec_2020_Old_Main
       Paths_ConceptGraph
   hs-source-dirs:
       app

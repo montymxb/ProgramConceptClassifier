@@ -145,7 +145,7 @@ getGraphDependencies val =
                 (Or,tn,cn2) : (subs ++ immediateAnds)
 
 -- builds a concept graph from a value of a data type
-conceptGraph :: Data a => a -> ConceptGraph Dep String--([String],[(Dep,String,String)])
+conceptGraph :: Data a => a -> ConceptGraph Dep String --([String],[(Dep,String,String)])
 conceptGraph val = let edges = getGraphDependencies val in
                      let concepts = filter (\x -> x /= "Cons") $ "Concept":map cleanupConcept (uniqueConcepts edges) in
                      let ue = map (\(d,c1,c2) -> (d,cleanupConcept c1,cleanupConcept c2)) (makeUnique edges) in
@@ -155,14 +155,12 @@ conceptGraph val = let edges = getGraphDependencies val in
                      -- remove all edges started by list,
                      -- add an edge from List -> Concept
                      let updatedUniqueEdges = (filter (\(_,c1,c2) -> c1 /= c2) $ uniqueEdges ++ catMaybes (map (groundConcept uniqueEdges) concepts)) in
-                     --let reducedEdges = foldl (\tot x -> removeCycles x tot) updatedUniqueEdges concepts in
-                     --let verifyResult = verifyLattice updatedUniqueEdges updatedUniqueEdges in
-                     graph_to_concept_graph (concepts,updatedUniqueEdges)
-                     {-
-                     case verifyResult of
-                       (True,_)     -> graph_to_concept_graph (concepts,reducedEdges)
-                       (False,msg)  -> error ("Unable to verify lattice with error: " ++ msg)
-                     -}
+                     let reducedEdges = foldl (\tot x -> removeCycles x tot) updatedUniqueEdges concepts in --- ???
+                     let verifyResult = verifyLattice updatedUniqueEdges updatedUniqueEdges in --- ???
+                     --graph_to_concept_graph (concepts,updatedUniqueEdges)                   --- ???
+                     case verifyResult of                                                     --- ???
+                       (True,_)     -> graph_to_concept_graph (concepts,reducedEdges)         --- ???
+                       (False,msg)  -> error ("Unable to verify lattice with error: " ++ msg) --- ???
                      where
                        uniqueConcepts ls = makeUnique $ concatMap (\(_,c1,c2) -> [c1,c2]) ls
 
