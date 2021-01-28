@@ -10,6 +10,9 @@ import Data.Either
 import P2021.General
 import qualified Data.Set as S
 import Data.List
+import Data.Matrix
+
+import qualified Debug.Trace as DT
 
 --
 -- BoGL Stuff
@@ -20,6 +23,7 @@ import Language.Syntax (Game)
 import Text.Parsec.Pos
 import qualified Data.Set as DS
 import qualified DB.BoglDB as BDB
+import ConceptGraph.GraphToConceptGraph (graph_to_concept_graph)
 
 -- terms are names in this context, both terminal & nonterminal
 type Term = String
@@ -36,10 +40,10 @@ type Attribute = String
 -- B is the intent: set of all attributes that match to all objects in A
   -- For all 'b' in M. 'b' in B iff (For all 'a' in A. b(a))
 data FormalConcept = FormalConcept ([Object],[Attribute])
-  deriving Eq
+  deriving (Eq,Show)
 
 instance Ord FormalConcept where
-  compare a b = if a == b then EQ else if compareFormalConceptsByIntents a b then LT else GT
+  compare a b = compareFormalConceptsByExtents a b
 
 -- formal context (G,M,I)
 -- G = Set of all objects (programs)
@@ -85,9 +89,8 @@ r32 (FCA ob cb programParser kps gps cps) = do
   -- produce total context
   let totalContext = mkFormalContext (uniqueInSameOrder (knownIntents ++ goalIntents ++ courseIntents))
 
-  -- TODO tmp
+  -- TODO tmp experiment
   --let totalContext = filterGeneralAttributes totalContext_
-
   -- produce Known + Goal context
   --let kgContext = mkFormalContext (uniqueInSameOrder (knownIntents ++ goalIntents))
 
@@ -99,30 +102,34 @@ r32 (FCA ob cb programParser kps gps cps) = do
   -- find the smallest & largest concept in K+G list
   --let smallest = minimum kgConcepts
   --let largest  = maximum kgConcepts
+  -- TODO thinking this filtering can be done by getting the smallest that has the known & largest that has the goal concepts from the universe...that would work right?
+  -- hmmm, need to read some more, but I think I can lay this out pretty clearly
   -- remove all concepts beyond this range of concepts
   --let filteredConcepts = if length kgConcepts > 1 then filter (\x -> x >= smallest && x <= largest) totalConcepts else filter (\x -> x <= largest) totalConcepts
 
-  -- produce a formal context from everything together
-  --let formalContext = mkFormalContext (uniqueInSameOrder (knownIntents ++ goalIntents))
-  -- find formal concepts by objs
-  --let formalConcepts = uniqueInSameOrder $ mkFormalConceptFromIntents formalContext
-  --putStrLn $ (show parsedP1s) ++ (show parsedP2s)
-  --putStrLn "\n\n"
-  --putStrLn $ (show terms1) ++ (show terms2)
-  --putStrLn $ show formalConcepts
   putStrLn $ "Num Course Progs: " ++ (show $ length cps)
   putStrLn $ "Num Course Objects: " ++ (show $ length ((\(x,_,_) -> x) totalContext))
   putStrLn $ "Num Course attributes: " ++ (show $ length ((\(_,x,_) -> x) totalContext))
-  --putStrLn $ "Num K+G Progs: " ++ (show $ length (kps ++ gps))
-  --putStrLn $ "Num K+G Objects: " ++ (show $ length ((\(x,_,_) -> x) kgContext))
-  --putStrLn $ "Num K+G attributes: " ++ (show $ length ((\(_,x,_) -> x) kgContext))
   putStrLn $ "Num Domain Concepts: " ++ (show $ length totalConcepts)
-  --putStrLn $ "Num K+G Concepts: " ++ (show $ length kgConcepts)
-  --putStrLn $ "Num Concepts in K+G Range: " ++ (show $ length filteredConcepts)
-  --putStrLn $ show formalContext
-  --putStrLn $ show $ map (\(FormalConcept (n,_)) -> n) (sort formalConcepts)
-  putStrLn $ showConcepts (sort totalConcepts)
+  putStrLn $ showConcepts (sortBy (getConceptOrdering ob) totalConcepts)
 
+  let fca  = FormalConcept ((\(a,_,_) -> a) totalContext,[])
+  let dps = mkConceptLattice [fca] totalConcepts
+  let nodes = map (\(a,_) -> a) dps
+  let edges = map (\(a,b) -> ("",a,b)) dps
+  let cg = graph_to_concept_graph (nodes,edges)
+  let _ = graphConceptGraph cg "R32_Test_1"
+
+  -- TODO full detailed formal context as a matrix
+  --let (pm,mm,matt) = mkFormalConceptMatrix totalContext
+  --putStrLn $ showMatLegend pm
+  --putStrLn $ showMatLegend mm
+  --putStrLn $ prettyMatrix matt
+  putStrLn $ prettyMatrix (mkFormalConceptMatrixSmall totalContext)
+
+getConceptOrdering :: OrderBy -> (FormalConcept -> FormalConcept -> Ordering)
+getConceptOrdering OrderByIntents = compareFormalConceptsByIntents
+getConceptOrdering OrderByExtents = compareFormalConceptsByExtents
 
 showConcepts :: [FormalConcept] -> String
 showConcepts [] = "\n"
@@ -196,22 +203,65 @@ mkFormalConceptFromIntents fc@(g,m,i) = map (\atr -> FormalConcept (b' [atr] fc,
 
 -- partially ordered by extants
 -- (A1,B1) <= (A2,B2) iff A1 is a subset A2
-compareFormalConceptsByExtents :: FormalConcept -> FormalConcept -> Bool
-compareFormalConceptsByExtents (FormalConcept (a,_)) (FormalConcept (b,_)) = (S.fromList a) `S.isSubsetOf` (S.fromList b)
+compareFormalConceptsByExtents :: FormalConcept -> FormalConcept -> Ordering
+compareFormalConceptsByExtents (FormalConcept (a,_)) (FormalConcept (b,_)) = case (S.fromList a) `S.isSubsetOf` (S.fromList b) of
+                                                                              True -> if a == b then EQ else LT
+                                                                              False-> GT
 
 -- partially ordered by intents (these 2 should be equivalent ways of doing this)
 -- (A1,B1) <= (A2,B2) iff B2 is a subset B1
-compareFormalConceptsByIntents :: FormalConcept -> FormalConcept -> Bool
-compareFormalConceptsByIntents (FormalConcept (_,a)) (FormalConcept (_,b)) = (S.fromList b) `S.isSubsetOf` (S.fromList a)
+compareFormalConceptsByIntents :: FormalConcept -> FormalConcept -> Ordering
+compareFormalConceptsByIntents (FormalConcept (_,a)) (FormalConcept (_,b)) = case (S.fromList b) `S.isSubsetOf` (S.fromList a) of
+                                                                              True -> if a == b then EQ else LT
+                                                                              False-> GT
 
---
+-- a mark can be some mark or no mark
+data Mark = Some String | None
+
+instance Show Mark where
+  show (Some s) = s
+  show None = "."
+
+chooseMatElm :: FormalContext -> (Int,Int) -> Mark
+chooseMatElm (g,m,i) (x,y) = case (x,y) of -- x == 1
+                              (1,1) -> Some ""
+                              -- show attributes
+                              (1,_)  -> Some $ "M" ++ (show (y-1)) --
+                              -- show objects
+                              (_,_) -> Some $ "P" ++ (show (x-1)) -- ++ idName (x-1) -- (old) Some $ show $ g !! (x-2)
+
+showMatLegend :: [(String,String)] -> String
+showMatLegend [] = ""
+showMatLegend ((k,v):ls) = k ++ " -> " ++ v ++ "\n" ++ (showMatLegend ls)
+
+-- builds a 2D matrix
+mkFormalConceptMatrix :: FormalContext -> ([(String,String)],[(String,String)],Matrix Mark)
+mkFormalConceptMatrix (g,m,i) = (map (\x -> ("P" ++ show x, g !! (x-1))) [1..(length g)], map (\y -> ("M" ++ show y, m !! (y-1))) [1..(length m)], matrix ((length g) + 1) ((length m) + 1) (\(x,y) -> if x == 1 || y == 1 then chooseMatElm (g,m,i) (x,y) else let gx = g !! (x-2) in
+                                                                        let my = m !! (y-2) in
+                                                                        case find (\q -> q == (gx,my)) i of
+                                                                          Just _  -> Some "X"
+                                                                          Nothing -> None))
+
+-- builds a 2D matrix
+mkFormalConceptMatrixSmall :: FormalContext -> Matrix Mark
+mkFormalConceptMatrixSmall (g,m,i) = matrix ((length g) - 1) ((length m) - 1) (\(x,y) -> let gx = g !! (x) in
+                                                                             let my = m !! (y) in
+                                                                                case find (\q -> q == (gx,my)) i of
+                                                                                  Just _  -> Some "X"
+                                                                                  Nothing -> None)
 
 -- 5) Function that builds a ConceptLattice from [FormalConcept] using ConceptGraph
--- [FormalConcept] -> ConceptGraph b FormalConcept
-  -- there is an algo in the book somewhere on FCA
-  -- display this once done, giving some arbitrary name to each or display in some other way
+-- this just produces the edges...
+mkConceptLattice :: [FormalConcept] -> [FormalConcept] -> [(String,String)]
+mkConceptLattice [] _ = []
+mkConceptLattice (x:ls) bs = let smallest = filter (\y -> y <= x) bs in -- find all smaller concepts
+                             let maximal = filter (\z -> all (\q -> z >= q) smallest) smallest in -- find largest of these
+                             let edges = map (\z -> (show x,show z)) maximal in -- add edges from x -> maximal items
+                             edges ++ (mkConceptLattice (maximal ++ ls) bs) -- repeat again with these items added
 
 
+
+-- ehh, may not be doing an outer/inner fringe if we're not using KST
 -- 6) Add a function that identifies the outer & inner fringe based on [Known FormalConcept] and the CG
 -- ConceptGraph ... -> [Known FormalConcept]
   -- from here, report the outer & inner fringe, and leave it to the user to proceed separately
@@ -222,6 +272,3 @@ compareFormalConceptsByIntents (FormalConcept (_,a)) (FormalConcept (_,b)) = (S.
 -- 7) Record as (Concept Graph of FCs,[Known FCs])
   -- for practical observation need a way to observe the possible set of paths that will be generated (all possible progressions)
   -- just recursively build this up, should be okay?
-
--- At this point, make sure you have some decent examples, and demonstrate the system, the theory, as well as the reasoning behind it
--- 5-10 minute talk, and a brief overview of how this would work in a browser based system

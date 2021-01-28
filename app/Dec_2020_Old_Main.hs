@@ -11,7 +11,6 @@ import Data.List
 import Language.Syntax (Game)
 import Text.Parsec.Pos
 
-import Debug.Trace
 import qualified Data.Set as DS
 
 import qualified DB.BoglDB as BDB

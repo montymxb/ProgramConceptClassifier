@@ -13,6 +13,6 @@ main = r32 (FCA
   OrderByIntents
   ConceptsByExtents
   parseBOGLPrograms
-  []
-  []
-  exCP1)
+  [] -- ("KNOWN","game S")
+  [] -- ("GOAL","game T\nid : Int -> Int\nid(x) = x")
+  exConcretePrograms)
