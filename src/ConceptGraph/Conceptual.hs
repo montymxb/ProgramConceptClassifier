@@ -221,6 +221,10 @@ _graphSimpleProgsWithName (x:ls) i n = do
 graphConceptGraph :: ConceptGraph Dep String -> String -> IO ()
 graphConceptGraph cg name = GVSpec.writeGVSpec name cg
 
+-- simple cg graph
+graphCG :: ConceptGraph String String -> String -> IO ()
+graphCG cg name = GVSpec.writeGVSpec name cg
+
 -- | Shows the result of whether a program is known
 showRez :: KnownCheck -> IO ()
 showRez (Unknown s) = putStrLn $ "\n\n" ++ s ++ "\n\n"
