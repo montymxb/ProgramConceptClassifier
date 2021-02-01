@@ -70,6 +70,12 @@ instance GV.ShowGV FormalConcept where
 -- I = Subset of (G X M), Relation that links elements of G to elements of M
 type FormalContext = ([Object],[Attribute],[(Object,Attribute)])
 
+contextExtent :: FormalContext -> [Object]
+contextExtent (g,_,_) = g
+
+contextIntent :: FormalContext -> [Attribute]
+contextIntent (_,m,_) = m
+
 -- Ordering for Formal Concepts
 data OrderBy =
   OrderByIntents |
@@ -77,7 +83,8 @@ data OrderBy =
 
 data ConceptsBy =
   ConceptsByIntents |
-  ConceptsByExtents
+  ConceptsByExtents |
+  AllConcepts
 
 type ParsingFunction a = ([ConcreteProgram] -> [(String, a)])
 
@@ -154,7 +161,6 @@ r32 (FCA ob cb programParser kps gps cps) = do
   let totalConcepts = getConceptsFromContext cb totalContext
 
   -- produce Known + Goal concepts from K+G context
-  --let kgConcepts = uniqueInSameOrder $ mkFormalConceptFromIntents kgContext
   -- find the smallest & largest concept in K+G list
   --let smallest = minimum kgConcepts
   --let largest  = maximum kgConcepts
@@ -169,11 +175,6 @@ r32 (FCA ob cb programParser kps gps cps) = do
   putStrLn $ "Num Domain Concepts: " ++ (show $ length totalConcepts)
   putStrLn $ showConcepts (sortBy (getConceptOrdering ob) totalConcepts)
 
-
-
-
-
-
   -- TODO TODO TESTING!
   -- all intents
   let m' = FormalConcept ("",[],(\(_,m,_) -> m) totalContext)
@@ -184,18 +185,18 @@ r32 (FCA ob cb programParser kps gps cps) = do
   --  add & filter out to avoid dups
   let sorted = reverse $ sort $ l2
   -- updates concepts names to C1,C2,...CN
-  let updatedConcepts = updateConceptNames 1 sorted
+  --let updatedConcepts = updateConceptNames 1 sorted
+
+  -- TODO duplicate extents are normal, as intents vary, and already filter them in generating our TOTAL CONCEPT list
   -- removes duplicate extents
-  let tc2' = filterOutDuplicateExtents updatedConcepts updatedConcepts
-  let conceptLattice = mkConceptLattice tc2'
-  --let remapped = remap 1 (uniqueInSameOrder $ (map fst dps) ++ (map snd dps)) dps -- remap formal concepts to ids, C1,C2,C3,etc.
-  --let nodes = uniqueInSameOrder $ (map fst dps) ++ (map snd dps) -- TODO change this to 'map conceptName tc2''
-  --let edges = map (\(a,b) -> ("",a,b)) dps
+  --putStrLn $ "Pre-Dub Extent count is " ++ (show $ length sorted)
+  --let tc2' = filterOutDuplicateExtents sorted sorted
+  --putStrLn $ "TC2' count is " ++ (show $ length tc2')
+
+  let conceptLattice = mkConceptLattice sorted
 
   --let prettyLattice = mapL conceptName conceptLattice
-  --let cg = graph_to_concept_graph conceptLattice
-  --graphCG cg "R32_Test_1"
-  graphConceptLattice "R32_Test_1" (computeConceptExtentLabels $ computeConceptIntentLabels conceptLattice)
+  graphConceptLattice "R32_Test_1" conceptLattice
 
   -- TODO full detailed formal context as a matrix
   --let (pm,mm,matt) = mkFormalConceptMatrix totalContext
@@ -204,6 +205,13 @@ r32 (FCA ob cb programParser kps gps cps) = do
   --putStrLn $ prettyMatrix matt
   putStrLn $ prettyMatrix (mkFormalConceptMatrixSmall totalContext)
 
+
+
+
+
+
+
+-- TODO PROBABLY REMOVE
 -- Compute Concept Intents for the labeling on the concept lattice
 getNewIntents :: [FormalConcept] -> [FormalConcept] -> [String] -> ([FormalConcept],[String])
 getNewIntents [] fcs i = (fcs,i)
@@ -221,9 +229,17 @@ _computeConceptIntentLabels (x:ls) intents cl1 = let nxts = getLowerNeighbors cl
                                                  _computeConceptIntentLabels (ls ++ nxts) intents2 cl2
 
 computeConceptIntentLabels :: ConceptLattice -> ConceptLattice
-computeConceptIntentLabels cl = let join = getJoin cl in _computeConceptIntentLabels [join] [] cl -- (conceptIntent join)
+computeConceptIntentLabels cl = let join = getJoin cl in _computeConceptIntentLabels [join] (conceptIntent join) cl
 
 
+
+
+
+
+
+
+
+-- TODO PROBABLY REMOVE
 -- Compute Concept Extents for the labeling on the concept lattice
 getNewExtents :: [FormalConcept] -> [FormalConcept] -> [String] -> ([FormalConcept],[String])
 getNewExtents [] fcs g = (fcs,g)
@@ -241,7 +257,13 @@ _computeConceptExtentLabels (x:ls) extents cl1 = let nxts = getUpperNeighbors cl
                                                  _computeConceptExtentLabels (ls ++ nxts) extents2 cl2
 
 computeConceptExtentLabels :: ConceptLattice -> ConceptLattice
-computeConceptExtentLabels cl = let meet = getMeet cl in _computeConceptExtentLabels [meet] [] cl -- (conceptExtent meet)
+computeConceptExtentLabels cl = let meet = getMeet cl in _computeConceptExtentLabels [meet] (conceptExtent meet) cl
+
+
+
+
+
+
 
 
 
@@ -259,10 +281,12 @@ doesConceptIntentAlreadyExist :: FormalConcept -> [FormalConcept] -> Bool
 doesConceptIntentAlreadyExist (FormalConcept (_,_,intent)) ls = any (\(FormalConcept (_,_,m)) -> S.fromList m == S.fromList intent) ls
 
 
+{-
 filterOutDuplicateExtents :: [FormalConcept] -> [FormalConcept] -> [FormalConcept]
 filterOutDuplicateExtents [] _ = []
 filterOutDuplicateExtents (fc@(FormalConcept (n1,a,_)):ls) bs = let n = filter (\(FormalConcept (n2,b,_)) -> S.fromList a == S.fromList b) bs in
                                                              if length n > 1 then filterOutDuplicateExtents ls bs else fc : filterOutDuplicateExtents ls bs
+-}
 
 getConceptOrdering :: OrderBy -> (FormalConcept -> FormalConcept -> Ordering)
 getConceptOrdering OrderByIntents = compareFormalConceptsByIntents
@@ -272,10 +296,36 @@ showConcepts :: [FormalConcept] -> String
 showConcepts [] = "\n"
 showConcepts ((FormalConcept (s,n,a)):ls) = "(" ++ s ++ ") Extent: " ++ (show n) ++ "\nIntent: " ++ (show a) ++ "\n\n" ++ (showConcepts ls)
 
+fcDiffButSameGM :: FormalConcept -> FormalConcept -> Bool
+fcDiffButSameGM (FormalConcept (n1,g1,m1)) (FormalConcept (n2,g2,m2)) = (S.fromList g1) == (S.fromList g2) && (S.fromList m1) == (S.fromList m2) && n1 /= n2
+
+-- | Combines identical concepts with the same extent & intent, by joining their names & tossing one
+combineIdenticalConcepts :: [FormalConcept] -> [FormalConcept]
+combineIdenticalConcepts ls = combineIC ls ls
+                              where
+                                combineIC :: [FormalConcept] -> [FormalConcept] -> [FormalConcept]
+                                combineIC [] _ = []
+                                combineIC (fc@(FormalConcept (n,g,m)):xs) ys = let dups = filter (fcDiffButSameGM fc) ys in
+                                                                               let dupNames = if length dups > 0 then (join "," (map conceptName dups)) else "" in
+                                                                               let fc2 = (FormalConcept (n++dupNames,g,m)) in
+                                                                               let filt = filter (not . (fcDiffButSameGM fc)) xs in
+                                                                               fc2 : combineIC filt ys
+
+-- Produce intersections that do not already exist
+intersectExtents :: [[Object]] -> [Object] -> [[Object]]
+intersectExtents xs y = filter (\z -> not (elem z xs) && z /= []) $ map (intersect y) xs
 
 getConceptsFromContext :: ConceptsBy -> FormalContext -> [FormalConcept]
-getConceptsFromContext ConceptsByIntents fc = uniqueInSameOrder $ mkFormalConceptFromIntents fc
-getConceptsFromContext ConceptsByExtents fc = uniqueInSameOrder $ mkFormalConceptFromExtants fc
+-- Focuses on attribute concepts
+getConceptsFromContext ConceptsByIntents fc = combineIdenticalConcepts $ mkFormalConceptFromIntents fc
+-- Focuses on object concepts
+getConceptsFromContext ConceptsByExtents fc = combineIdenticalConcepts $ mkFormalConceptFromExtents fc
+getConceptsFromContext AllConcepts fc = let objectConcepts = combineIdenticalConcepts $ mkFormalConceptFromExtents fc in
+                                        let objectConcepts' = map (\(FormalConcept (n,g,m)) -> (FormalConcept (n++" / ",g,m))) objectConcepts in
+                                        let ocExtents = map conceptExtent objectConcepts' in
+                                        let ocIntersections = concatMap (intersectExtents ocExtents) ocExtents in
+                                        let extraConcepts = map (\ogi -> FormalConcept ("",b' (a' ogi fc) fc, a' ogi fc)) ocIntersections in
+                                        uniqueInSameOrder $ combineIdenticalConcepts $ objectConcepts' ++ extraConcepts ++ (mkFormalConceptFromIntents fc)
 
 
 -- Convert program in AST to list Terms
@@ -323,17 +373,17 @@ b' (x:ls) fc@(_,_,i) = let filt = filter (\(_,a) -> a == x) i in
 -- Set A of objs can determine a concept
 -- (A'',A')
 -- A'' is the extent closure
-mkFormalConceptFromExtants :: FormalContext -> [FormalConcept]
-mkFormalConceptFromExtants fc@(g,m,i) = map (\obj -> FormalConcept ("",b' (a' [obj] fc) fc, a' [obj] fc)) g
+mkFormalConceptFromExtents :: FormalContext -> [FormalConcept]
+mkFormalConceptFromExtents fc@(g,m,i) = map (\obj -> FormalConcept (obj,b' (a' [obj] fc) fc, a' [obj] fc)) g
 
 -- find formal concepts through attribute analysis
 -- or set B of attributes determines a concept
 -- (B',B'')
 -- B'' is the intent closure
 mkFormalConceptFromIntents :: FormalContext -> [FormalConcept]
-mkFormalConceptFromIntents fc@(g,m,i) = map (\atr -> FormalConcept ("",b' [atr] fc, a' (b' [atr] fc) fc)) m
+mkFormalConceptFromIntents fc@(g,m,i) = map (\atr -> FormalConcept (atr,b' [atr] fc, a' (b' [atr] fc) fc)) m
 
--- partially ordered by extants
+-- partially ordered by extents
 -- (A1,B1) <= (A2,B2) iff A1 is a subset A2
 compareFormalConceptsByExtents :: FormalConcept -> FormalConcept -> Ordering
 compareFormalConceptsByExtents (FormalConcept (_,a,_)) (FormalConcept (_,b,_)) = case (S.fromList a) `S.isSubsetOf` (S.fromList b) of

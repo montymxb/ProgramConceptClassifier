@@ -11,7 +11,7 @@ import P2021.Bogl_Specifics
 main :: IO ()
 main = r32 (FCA
   OrderByIntents
-  ConceptsByExtents
+  AllConcepts
   parseBOGLPrograms
   [] -- ("KNOWN","game S")
   [] -- ("GOAL","game T\nid : Int -> Int\nid(x) = x")
