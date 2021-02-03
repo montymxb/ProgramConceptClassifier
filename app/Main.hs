@@ -10,7 +10,7 @@ import P2021.Bogl_Specifics
 
 main :: IO ()
 main = r32 (FCA
-  OrderByIntents
+  OrderByExtents
   AllConcepts
   parseBOGLPrograms
   [] -- ("KNOWN","game S")
