@@ -68,8 +68,8 @@ exCP4 = [("BasicProg","game S"),
         ("Add","game S\ntype Number = Int\nv : Int\nv = 1 + 1"),
         ("Sub","game S\ntype Number = Int\nv : Int\nv = 1 - 1"),
         ("Let","game S\nv : Int\nv = let x = 2 in x"),
-        ("LetAgain","game S\nv : Int\nv = let x = 2 in let y = 3 in x"),
-        ("IncFunc","game S\ninc : Int -> Int\ninc(x) = x+1")]
+        ("LetAddSub","game S\nv : Int\nv = let x = 2 in let y = 3 in x + y - 1"),
+        ("AddSubFunc","game S\nadd : (Int,Int) -> Int\nadd(x,y) = let z = 1 in x+y - z")]
 
 exConcretePrograms :: [ConcreteProgram]
 exConcretePrograms = [("Simplest","game Simplest"),

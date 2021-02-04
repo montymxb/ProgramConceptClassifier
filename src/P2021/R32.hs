@@ -189,9 +189,10 @@ r32 (FCA ob cb programParser kps gps cps) = do
   let conceptLattice = mkConceptLattice sorted
 
 
-  let implications = filterCommonPremise (conceptIntent $ getJoin conceptLattice) $ removeConflictingImplications $ deriveImplications (fcM totalContext) $ getTT totalContext
+  --let implications = filterCommonPremise (conceptIntent $ getJoin conceptLattice) $ removeConflictingImplications $ deriveImplications (fcM totalContext) $ getTT totalContext
+  let implications = filterCommonPremise (conceptIntent $ getJoin conceptLattice) $ deriveImplications (fcM totalContext) $ getTT totalContext
   putStrLn $ "Num implications: " ++ (show $ length implications)
-  qq <- stringImplications implications
+  qq <- stringImplications $ sort $ implications
 
   --let prettyLattice = mapL conceptName conceptLattice
   graphConceptLattice "R32_Test_1" conceptLattice
@@ -393,7 +394,7 @@ _mkConceptLattice (x:ls) bs = let subConcepts = filter (\y -> y < x) bs in -- fi
 -- TODO attribute implication work
 --
 getTT :: FormalContext -> [[Attribute]]
-getTT (g,m,i) = map (getAttrList i) g
+getTT (g,m,i) = reverse $ map (getAttrList i) g
                              where
                                getAttrList :: [(Object,Attribute)] -> Object -> [Attribute]
                                getAttrList i o = map snd $ filter (\(a,_) -> a == o) i
@@ -401,10 +402,11 @@ getTT (g,m,i) = map (getAttrList i) g
 deriveImplications :: [Attribute] -> [[Attribute]] -> [Implication]
 deriveImplications [] _ = []
 deriveImplications (x:xs) ys = let x1 = map (\\ [x]) (filter (\yy -> elem x yy) ys) in -- retrieve all rows that have 'x' present (and remove 'x' as a possible premise)
-                               let inter = foldl intersect (x1 !! 0) x1 in -- compute the intersection of all rows that have 'x' present
+                               let inter = foldl intersect (x1 !! 0) (tail x1) in -- compute the intersection of all rows that have 'x' present
                                (inter,[x]) : (deriveImplications xs ys) -- use the intersection of all rows as an implication for attribute 'x'
 
 -- | Remove conflicting implications
+-- TODO This rule is the problem, can probably re worked to better capture what I want it to do
 removeConflictingImplications :: [Implication] -> [Implication]
 removeConflictingImplications ls = filter (\(p,c) -> length c == 1) (_mi ls ls) -- only allow implications to pass that are valid, i.e. unambiguous
                        where
@@ -412,12 +414,13 @@ removeConflictingImplications ls = filter (\(p,c) -> length c == 1) (_mi ls ls) 
                         _mi [] _ = []
                         _mi ((p,_):xs) ys = let filt = filter (\(p',c') -> p == p') ys in
                                             case filt of
-                                              []    -> _mi xs ys
+                                              []    -> _mi xs ys -- no matches, ignore it
+                                              --[one] -> (one) : (_mi xs ys) -- 1 match is itself, move along
                                               filt' -> (p,concatMap snd filt') : (_mi xs (ys \\ filt'))
 
 filterCommonPremise :: [Attribute] -> [Implication] -> [Implication]
 filterCommonPremise as ls = let inter = (foldl (\p' s -> intersect p' s) (fst $ ls !! 0) (map fst ls)) ++ as in
-                         DT.trace ("Common intersection is " ++ (show inter)) $ filter (not . null . fst) $ map (\(p,c) -> (p \\ inter, c)) ls
+                             DT.trace ("Common intersection is " ++ (show inter)) $ filter (not . null . fst) $ map (\(p,c) -> (p \\ inter, c)) ls
 
 stringImplications :: [Implication] -> IO ()
 stringImplications [] = do putStrLn "\n"
