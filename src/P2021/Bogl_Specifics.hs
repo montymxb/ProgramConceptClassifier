@@ -4,8 +4,8 @@ module P2021.Bogl_Specifics where
 --- BoGL Specific Stuff
 ---
 
-import Language.Syntax
-import Language.Types
+import qualified Language.Syntax as LS
+--import qualified Language.Types as LT
 import Text.Parsec.Pos
 import P2021.General
 
@@ -34,13 +34,132 @@ deriving instance Data Op
 deriving instance Data Btype
 deriving instance Data Ftype
 -}
+data AttributeConcept = NotEquiv
+  | GreaterEqual
+  | LessEqual
+  | SymbolExpr
+  | Equiv
+  | Div
+  | Let
+  | Mult
+  | Greater
+  | Sub
+  | Less
+  | While
+  | IfThenElse
+  | Tuple
+  | BoolExpr
+  | ForAll
+  | Index
+  | BoardEquation
+  | ValueEquation
+  | Get
+  | Game
+  | Value
+  | FunctionEquation
+  | Type
+  | App
+  | BinOp
+  | Add
+  | Ref
+  | IntType
+  | BoardDef
+  | InputDef
+  | SymbolType
+  | TupType
+  | BoolType
+  | Tru
+  | Fls
+  | PlainType
+  | IntExpr
+  | Name
+  deriving (Eq,Show,Enum)
+
+boglConceptMapping :: String -> Maybe AttributeConcept
+boglConceptMapping "Top" = Just SymbolType
+boglConceptMapping "NotEquiv" = Just NotEquiv
+boglConceptMapping "Geq" = Just GreaterEqual
+boglConceptMapping "Leq" = Just LessEqual
+boglConceptMapping "S" = Just SymbolExpr
+boglConceptMapping "Equiv" = Just Equiv
+boglConceptMapping "Div" = Just Div
+boglConceptMapping "Let" = Just Let
+boglConceptMapping "Times" = Just Mult
+boglConceptMapping "Greater" = Just Greater
+boglConceptMapping "Minus" = Just Sub
+boglConceptMapping "Less" = Just Less
+boglConceptMapping "While" = Just While
+boglConceptMapping "If" = Just IfThenElse
+boglConceptMapping "Tup" = Just TupType
+boglConceptMapping "Booltype" = Just BoolType
+-- [Xtype] ~ a list of Xtypes (n)
+boglConceptMapping "True" = Just Tru
+-- B ~ constructor for expression that evaluates to a Boolean, should probably have this? (n)
+boglConceptMapping "B" = Just BoolExpr
+boglConceptMapping "False" = Just Fls
+-- Bool ~ not needed, as we will always have 'B' above when this is here too (the type of the value in B)
+boglConceptMapping "ForAll" = Just ForAll
+-- BVal ~ a Board Value (n), doesn't add anything new
+-- Board ~ subsumed by BoardEq
+-- PosDef ~ instance of a Board Equation... (n)
+boglConceptMapping "Index" = Just Index
+-- Pos ~ no help (n)
+boglConceptMapping "BoardEq SourcePos" = Just BoardEquation
+-- [BoardEq SourcePos] ~ array of board equations, which are the same as array of PosDef (n)
+boglConceptMapping "Plain" = Just PlainType
+boglConceptMapping "Veq" = Just ValueEquation
+boglConceptMapping "Get" = Just Get
+boglConceptMapping "Tuple" = Just Tuple
+-- [Expr SourcePos] ~ List of expressions (n)
+-- Game SourcePos ~ Annotated Game (n)
+boglConceptMapping "Game" = Just Game
+-- (,) ~ Tuple constructor (n)
+-- (Int,Int) ~ Tuple of Ints constructor (n)
+boglConceptMapping "Val" = Just Value
+-- Sig ~ doesn't give us anything new
+-- Function ~ Feq has this
+-- Ft ~ Function type (n), does not add anything
+-- X ~ Xtype (n)
+-- Itype ~ instance of a base type (Btype) (n)
+-- fromList ~ has to do with enums for enumerated types & board defs (which always have this interestingly enough...) (n)
+-- Btype ~ Atomic type, includes (Booltype, Itype, AnySymbol, Input, Board, Top, Undef) (n)
+-- Set [Char] ~ Used for Symbols I think (n)
+-- Xtype ~ Sum type, X Tup or Hole (n)
+-- Ftype ~ Function Type, plain type -> plain type (implied by functions) (n)
+boglConceptMapping "Type" = Just Type
+boglConceptMapping "Feq" = Just FunctionEquation
+-- Pars ~ parameters, nothing added
+-- [[Char]] ~ List of names, probably for symbols & or other thing (n)
+boglConceptMapping "App" = Just App
+-- BinOp ~ does not add anything 'Op' already does
+boglConceptMapping "Plus" = Just Add
+boglConceptMapping "Ref" = Just Ref
+-- Annotation ~ used for annotating for parsing (n)
+boglConceptMapping "I" = Just IntExpr
+boglConceptMapping "Op" = Just BinOp
+-- Parlist ~ list of names to bind to funtion equation parameters (n)
+-- Expr SourcePos ~ nothing lost here
+-- (:) ~ cons (n)
+-- Char ~ single char (n)
+boglConceptMapping "Int" = Just IntType
+-- Signature ~ general signature (n)
+-- Equation SourcePos ~ general equation (n)
+-- SourcePos ~ annotation stuff (n)
+-- [] ~ empty list (n)
+-- ValDef SourcePos ~ value definition (n)
+boglConceptMapping "[Char]" = Just Name
+boglConceptMapping "BoardDef" = Just BoardDef
+boglConceptMapping "InputDef" = Just InputDef
+-- [ValDef SourcePos] ~ list of valdefs, (n)
+boglConceptMapping x = Nothing
+
 
 -- 1) Function that parses 2 lists of BoGL progs (from strings) into ASTs (nothing else yet)
-parseBOGLPrograms :: [ConcreteProgram] -> [(String, Game SourcePos)]
+parseBOGLPrograms :: [ConcreteProgram] -> [(String, LS.Game SourcePos)]
 parseBOGLPrograms ls = fdown $ map (\(n,p) -> (n, parsePreludeAndGameText "" p "test")) ls
 
 -- filter down programs that pass
-fdown :: [(String,Either a (Game SourcePos))] -> [(String,Game SourcePos)]
+fdown :: [(String,Either a (LS.Game SourcePos))] -> [(String,LS.Game SourcePos)]
 fdown [] = []
 fdown ((n,x):ls) = case x of
                       Left _  -> error $ "Failed to parse program '" ++ n ++ "'" --fdown ls
@@ -63,13 +182,20 @@ exCP3 = [("BasicProg","game S"),
         ("LetAgain","game S\nv : Int\nv = let x = 2 in let y = 3 in x")]
 
 exCP4 :: [ConcreteProgram]
-exCP4 = [("BasicProg","game S"),
-        ("TypeDecl1","game S\ntype Number = Int"),
+exCP4 = [("Base","game S"),
+        ("Val","game S\nv : Int\nv = 1"),
         ("Add","game S\ntype Number = Int\nv : Int\nv = 1 + 1"),
         ("Sub","game S\ntype Number = Int\nv : Int\nv = 1 - 1"),
         ("Let","game S\nv : Int\nv = let x = 2 in x"),
         ("LetAddSub","game S\nv : Int\nv = let x = 2 in let y = 3 in x + y - 1"),
         ("AddSubFunc","game S\nadd : (Int,Int) -> Int\nadd(x,y) = let z = 1 in x+y - z")]
+
+exCP5 :: [ConcreteProgram]
+exCP5 = [("A","game A"),
+        ("B","game B\nv : Int\nv = 32"),
+        ("C","game C\nv : Int\nv = 2 + 1"),
+        ("D","game D\nv : Int\nv = 2 * 4"),
+        ("E","game E\nv : Int\nv = 2 + 5 * 2")]
 
 exConcretePrograms :: [ConcreteProgram]
 exConcretePrograms = [("Simplest","game Simplest"),
@@ -148,9 +274,9 @@ exConcretePrograms = [("Simplest","game Simplest"),
   ("BoardIf","game B\ntype Board = Array(3,3) of Int\nb : Board\nb!(x,y) = if True then 1 else 0"),
   ("Board2","game B\ntype Board = Array(3,3) of Int\nb : Board\nb!(x,y) = 1\nb!(2,2) = 0"),
   ("Board3","game B\ntype Board = Array(1,1) of Int\nb : Board\nb!(1,1) = 8"),
-  ("Board3","game B\ntype Board = Array(1,1) of Bool\nb : Board\nb!(1,1) = False"),
-  ("Board3","game B\ntype Board = Array(1,1) of Bool\nb : Board\nb!(x,y) = True"),
-  ("Board3","game B\ntype Board = Array(1,1) of (Bool,Bool)\nb : Board\nb!(x,y) = (True,False)"),
+  ("Board4","game B\ntype Board = Array(1,1) of Bool\nb : Board\nb!(1,1) = False"),
+  ("Board5","game B\ntype Board = Array(1,1) of Bool\nb : Board\nb!(x,y) = True"),
+  ("Board6","game B\ntype Board = Array(1,1) of (Bool,Bool)\nb : Board\nb!(x,y) = (True,False)"),
   ("Get1","game B\ntype Board = Array(1,1) of Int\nb : Board\nb!(x,y) = 5\nv : Int\nv = b!(1,1)"),
   ("Get2","game B\ntype Board = Array(1,1) of Int\nb : Board\nb!(1,1) = 8\nv : Int\nv = b!(1,1)"),
   ("InfinRecur","game E\nr : Int -> Int\nr(x) = r(x+1)")]

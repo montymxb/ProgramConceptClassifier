@@ -13,6 +13,7 @@ main = r32 (FCA
   OrderByExtents
   AllConcepts
   parseBOGLPrograms
+  boglConceptMapping --asIsConceptMapping
   [] -- ("KNOWN","game S")
   [] -- ("GOAL","game T\nid : Int -> Int\nid(x) = x")
   exConcretePrograms)
