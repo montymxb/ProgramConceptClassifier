@@ -76,9 +76,9 @@ instance Ord FormalConcept where
 
 instance GV.ShowGV FormalConcept where
   showGV (FormalConcept (([],[]),_,_)) = ""
-  showGV (FormalConcept ((g,[]),_,_)) = join "," g ++ " :: "
-  showGV (FormalConcept (([],m),_,_)) = " :: " ++ join "," m
-  showGV (FormalConcept ((g,m),_,_)) = join "," g ++ " :: " ++ join "," m
+  showGV (FormalConcept ((g,[]),_,_)) = "({" ++ join "," g ++ "},{})"
+  showGV (FormalConcept (([],m),_,_)) = "({},{" ++ join "," m ++ "})"
+  showGV (FormalConcept ((g,m),_,_)) = "({" ++ join "," g ++ "},{" ++ join "," m ++ "})"
 
 -- formal context (G,M,I)
 -- G = Set of all objects (programs)

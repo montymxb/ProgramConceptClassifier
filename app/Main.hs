@@ -17,3 +17,6 @@ main = r32 (FCA
   [] -- ("KNOWN","game S")
   [] -- ("GOAL","game T\nid : Int -> Int\nid(x) = x")
   exConcretePrograms)
+
+  -- ("KNOWN","game K\nv : Bool\nv = True")
+  -- ("GOAL","game G\nv : Bool\nv = if True == False then False else True")
