@@ -57,6 +57,7 @@ library
     , uniplate
     , matrix
     , directory
+    , partial-order
   default-language: Haskell2010
 
 executable ConceptGraph-exe

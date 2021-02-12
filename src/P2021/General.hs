@@ -14,7 +14,7 @@ uniqueInSameOrder (x:ls) | elem x ls = uniqueInSameOrder ls     -- drop, already
 -- | Removes duplicates from a list, whilst preserving order (reporting dups)
 uniqueInSameOrder' :: (Eq a, Show a) => [a] -> [a]
 uniqueInSameOrder' [] = []
-uniqueInSameOrder' (x:ls) | elem x ls = trace ("\n\nFiltered out program " ++ (show x) ++ ", intent was duplicated\n\n") $ uniqueInSameOrder' ls     -- drop, already present
+uniqueInSameOrder' (x:ls) | elem x ls = trace ("\n\nProgram " ++ (show x) ++ ", intent was duplicated, but kept\n\n") $ x : uniqueInSameOrder' ls     -- drop, already present
                           | otherwise = x : uniqueInSameOrder' ls -- keep it
 
 
