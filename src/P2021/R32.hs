@@ -257,6 +257,8 @@ r32 (FCA ob cb programParser conceptMapping kps gps cps) = do
     -- model this as a data type for knowledge
   -- 5) compute the direct lower neighbors of this knowledge state (these are the next transitions)
   --let nxtNeighbors = concatMap (getLowerNeighbors conceptLattice) knownFormalConcepts \\ knownFormalConcepts
+  --putStrLn $ show nxtNeighbors
+  putStrLn $ "\n\n\n"
   putStrLn $ exploreNeighborhood finalKS initKS conceptLattice
   --let zz = explainNeighbors initKS finalKS nxtNeighbors
   -- 6) Present the new attributes of the INTENT of the neighbor (or all of them)
@@ -277,19 +279,34 @@ r32 (FCA ob cb programParser conceptMapping kps gps cps) = do
 
 -- TODO WORKing on this prinout
 knowledgeStateToStr :: KnowledgeState -> String
-knowledgeStateToStr (KnowledgeState ks progs) = "\nKS:\n{"++ join "," progs ++"}\n{" ++ join "," (concatMap conceptIntent ks) ++ "}"
+knowledgeStateToStr (KnowledgeState ks progs) = "{"++ join "," progs ++"}\n{" ++ join "," (concatMap conceptIntent ks) ++ "}"
 
 -- TODO IS THIS OKAY?
 goalMet :: KnowledgeState -> KnowledgeState -> Bool
 goalMet (KnowledgeState fs fprogs) (KnowledgeState ks kprogs) = S.fromList fprogs == S.fromList kprogs && S.fromList (concatMap conceptIntent fs) == S.fromList (concatMap conceptIntent ks)
 
--- TODO KEEP WORKING ON THIS
+
+explainNeighbors :: KnowledgeState -> [FormalConcept] -> String
+explainNeighbors _ [] = ""
+explainNeighbors k@(KnowledgeState ks kp) (f:fs) = let ns = "neighbor: " ++ GV.showGV f ++ "\n" in
+                                                   let q = "adds concepts: " ++ (show $ (conceptIntent f) \\ (concatMap conceptIntent ks)) in
+                                                   let r = "adds programs: " ++ (show $ ((concatMap conceptExtent ks) \\ (conceptExtent f)) \\ kp) in
+                                                   ns ++ q ++ "\n" ++ r ++ "\n\n" ++ explainNeighbors k fs
+
+
+-- TODO working on this
 exploreNeighborhood :: KnowledgeState -> KnowledgeState -> ConceptLattice -> String
 exploreNeighborhood fks@(KnowledgeState fs fprogs) kks@(KnowledgeState ks kprogs) cl = if goalMet fks kks then
-                                                                                        "\n* Goal has been met"
-                                                                                     else
-                                                                                       _undefined -- TODO finish off the explore the neighborhood algorithm
-
+                                                                                        "\n* Goal has been met" -- all done
+                                                                                       else
+                                                                                         -- explain where we are currently
+                                                                                         let exp' = "\n> Current knowledge model " ++ (knowledgeStateToStr kks) ++ "\n" in
+                                                                                         -- get lower neighbors
+                                                                                         let ln = concatMap (getLowerNeighbors cl) ks \\ ks in
+                                                                                         -- explain each neighbor
+                                                                                         let ne = "\n\n" ++ explainNeighbors kks ln in
+                                                                                         -- for each neighbor add & call again
+                                                                                         exp' ++ ne ++ "\n" ++ concatMap (\n -> exploreNeighborhood fks (KnowledgeState (n:ks) ((((concatMap conceptExtent ks) \\ (conceptExtent n)) \\ kprogs)++kprogs)) cl) ln
 
 convertToCSV :: [[String]] -> String
 convertToCSV ls = join "\n" $ map (\q -> join "," (map show q)) ls

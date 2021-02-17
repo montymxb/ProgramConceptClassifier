@@ -14,9 +14,12 @@ main = r32 (FCA
   AllConcepts
   parseBOGLPrograms
   boglConceptMapping --asIsConceptMapping
-  [("KNOWN","game S"),("B","game B\nv : Int\nv = 32"),("C","game E\nv : Int\nv = 2 + 1")] -- ("KNOWN","game S") -- ("KNOWN","game S")
+  [("KNOWN","game S")] -- ("KNOWN","game S") -- ("KNOWN","game S")
   [("GOAL","game E\nv : Int\nv = 2 + 5 * 1")] -- ("GOAL","game E\nv : Int\nv = 2 + 5") -- ("GOAL","game T\nid : Int -> Int\nid(x) = x")
   exCP5)
 
-  -- ("KNOWN","game K\nv : Bool\nv = True")
-  -- ("GOAL","game G\nv : Bool\nv = if True == False then False else True")
+-- ("KNOWN","game S"),("B","game B\nv : Int\nv = 32"),("C","game E\nv : Int\nv = 2 + 1")
+-- ("GOAL","game E\nv : Int\nv = 2 + 5 * 1")
+
+-- ("KNOWN","game K\nv : Bool\nv = True")
+-- ("GOAL","game G\nv : Bool\nv = if True == False then False else True")
