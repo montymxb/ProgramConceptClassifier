@@ -15,8 +15,10 @@ main = r32 (FCA
   parseBOGLPrograms
   boglConceptMapping --asIsConceptMapping
   [("KNOWN","game S")] -- ("KNOWN","game S") -- ("KNOWN","game S")
-  [("GOAL","game E\nv : Int\nv = 2 + 5 * 1")] -- ("GOAL","game E\nv : Int\nv = 2 + 5") -- ("GOAL","game T\nid : Int -> Int\nid(x) = x")
-  exCP5)
+  [("GOAL","game E\nv : Int\nv = let x = 2 in x + 5 * 1")] -- ("GOAL","game E\nv : Int\nv = 2 + 5") -- ("GOAL","game T\nid : Int -> Int\nid(x) = x")
+  exConcretePrograms
+  ["V_Int"] -- extra progs by name
+  ["Value","IntExpr","ValueEquation","Type","PlainType","BinOp","Ref"]) -- extra attributes by name
 
 -- ("KNOWN","game S"),("B","game B\nv : Int\nv = 32"),("C","game E\nv : Int\nv = 2 + 1")
 -- ("GOAL","game E\nv : Int\nv = 2 + 5 * 1")

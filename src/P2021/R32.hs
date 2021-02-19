@@ -59,8 +59,8 @@ type Label = ([Object],[Attribute])
 data FormalConcept = FormalConcept (Label,[Object],[Attribute])
   deriving (Eq,Show)
 
-conceptName :: FormalConcept -> Label
-conceptName (FormalConcept (n,_,_)) = n
+conceptLabel :: FormalConcept -> Label
+conceptLabel (FormalConcept (n,_,_)) = n
 
 conceptIntent :: FormalConcept -> [Attribute]
 conceptIntent (FormalConcept (_,_,m)) = m
@@ -93,6 +93,9 @@ instance GV.ShowGV FormalConcept where
   showGV (FormalConcept ((g,[]),_,_)) = "({" ++ join "," g ++ "},{})"
   showGV (FormalConcept (([],m),_,_)) = "({},{" ++ join "," m ++ "})"
   showGV (FormalConcept ((g,m),_,_)) = "({" ++ join "," g ++ "},{" ++ join "," m ++ "})"
+
+strConcept :: FormalConcept -> String
+strConcept (FormalConcept (_,g,m)) = "({" ++ join "," g ++ "},{" ++ join "," m ++ "})"
 
 -- formal context (G,M,I)
 -- G = Set of all objects (programs)
@@ -128,7 +131,7 @@ type GoalPrograms  = [ConcreteProgram]
 type CoursePrograms= [ConcreteProgram]
 
 -- Configuration for performing Formal Concept Analysis
-data FCA a b = FCA OrderBy ConceptsBy (ParsingFunction a) (ConceptMapping b) KnownPrograms GoalPrograms CoursePrograms
+data FCA a b = FCA OrderBy ConceptsBy (ParsingFunction a) (ConceptMapping b) KnownPrograms GoalPrograms CoursePrograms [Object] [Attribute]
 
 type Lattice a = ([a],[(a,a)])
 type ConceptLattice = ([FormalConcept],[(FormalConcept,FormalConcept)])
@@ -176,15 +179,15 @@ asIsConceptMapping :: String -> Maybe Wrapper
 asIsConceptMapping s = Just (Wrap s)
 
 -- knowledge state is modeled with
--- [KnownClassifications] [KnownPrograms] (known attributes are implied, but programs are not)
-data KnowledgeState = KnowledgeState [FormalConcept] [Object]
+-- [KnownClassifications] [KnownPrograms] [KnownAttributes]
+data KnowledgeState = KnowledgeState [FormalConcept] [Object] [Attribute]
   deriving Show
 
 -- This is for TESTING, the actual setup will not be an IO monad (essentially a prototyping sandbox)
 -- run the analysis, taking an FCA analysis instance
 -- Takes known programs, goal programs, and course programs (programs available in the course)
 r32 :: (Data a, Show a, Show b) => FCA a b -> IO ()
-r32 (FCA ob cb programParser conceptMapping kps gps cps) = do
+r32 (FCA ob cb programParser conceptMapping kps gps cps extraKnownProgs extraKnownIntents) = do
   -- parse the programs that are understood
   let parsedKPS = programParser kps
   -- parse the goal programs that are desired to be understood
@@ -197,16 +200,23 @@ r32 (FCA ob cb programParser conceptMapping kps gps cps) = do
   -- extract terms for the goal list of programs, preserving names
   let goalTaggedPrograms = map (astToTerms conceptMapping) parsedGPS
   -- extract terms for the course list of programs, preserving names
-  let courseIntents = map (astToTerms conceptMapping) parsedCPS
+  let courseTaggedPrograms = map (astToTerms conceptMapping) parsedCPS
 
   -- produce total context
-  let totalContext = mkFormalContext (uniqueInSameOrder' $ knownTaggedPrograms ++ goalTaggedPrograms ++ courseIntents)
+  -- from known & goal programs, we want to create an 'intent of interest'
+  -- we will use this to reduce the attributes we have in our graph to only those we care about (between goal & known inclusively)
+  let intentOfInterest = uniqueInSameOrder $ concatMap snd knownTaggedPrograms ++ concatMap snd goalTaggedPrograms
+  let filteredCourseProgs = filter (\(_,b) -> S.fromList b `S.isSubsetOf` S.fromList intentOfInterest) courseTaggedPrograms
+  let (g,m,i) = mkFormalContext (uniqueInSameOrder' $ knownTaggedPrograms ++ goalTaggedPrograms ++ filteredCourseProgs)
+  let totalContext = (g, filter (`elem` intentOfInterest) m, filter (\(_,b) -> b `elem` intentOfInterest) i)
 
   -- produce total concepts from total context
   let totalConcepts' = getConceptsFromContext cb totalContext
-  -- Apply Bounding concepts to get sub-lattice to work with
-  let knownFormalConcepts = mkFormalConceptsFromSubExtents totalContext (map fst knownTaggedPrograms)
+  -- get known formal concepts, factoring in those that have been implicitly indicated by the programs & attributes added so far while learning
+  let knownFormalConcepts = (mkFormalConceptsFromSubExtents totalContext (map fst knownTaggedPrograms)) ++ (filter (\(FormalConcept ((g,m),_,_)) -> S.fromList g `S.isSubsetOf` S.fromList extraKnownProgs && S.fromList m `S.isSubsetOf` S.fromList extraKnownIntents && (not $ S.null $ S.fromList g) && (not $ S.null $ S.fromList m)) totalConcepts')
+  -- goal is fixed to what programs are given in the goal
   let goalFormalConcepts = mkFormalConceptsFromSubExtents totalContext (map fst goalTaggedPrograms)
+  -- Apply Bounding concepts to get sub-lattice to work with
   let boundingConcepts = mkFormalConceptsFromSubExtents totalContext ((map fst knownTaggedPrograms) ++ (map fst goalTaggedPrograms))
   let totalConcepts = case (length knownFormalConcepts > 0, length goalFormalConcepts > 0) of
                         -- no bounds
@@ -246,12 +256,12 @@ r32 (FCA ob cb programParser conceptMapping kps gps cps) = do
 
   -- 0) get object concepts of the goal (knownFormalConcepts)
   -- 1) compute the final knowledge state desired from OCG
-  let finalKS = KnowledgeState goalFormalConcepts (concatMap conceptExtent knownFormalConcepts) --(concatMap conceptExtent knownFormalConcepts, concatMap conceptIntent goalFormalConcepts)
+  let finalKS = KnowledgeState goalFormalConcepts (concatMap conceptExtent knownFormalConcepts) (concatMap conceptIntent goalFormalConcepts) --(concatMap conceptExtent knownFormalConcepts, concatMap conceptIntent goalFormalConcepts)
   putStrLn $ knowledgeStateToStr finalKS
 
   -- 2) get the initially known object concepts
   -- 3) use these to build the initial knowledge state
-  let initKS = KnowledgeState knownFormalConcepts (map fst knownTaggedPrograms) -- (map fst knownTaggedPrograms, concatMap conceptIntent knownFormalConcepts)
+  let initKS = KnowledgeState knownFormalConcepts (extraKnownProgs ++ map fst knownTaggedPrograms) (extraKnownIntents ++ concatMap conceptIntent knownFormalConcepts) -- (map fst knownTaggedPrograms, concatMap conceptIntent knownFormalConcepts)
   putStrLn $ knowledgeStateToStr initKS
   -- 4) store the known concepts as well
     -- model this as a data type for knowledge
@@ -259,12 +269,13 @@ r32 (FCA ob cb programParser conceptMapping kps gps cps) = do
   --let nxtNeighbors = concatMap (getLowerNeighbors conceptLattice) knownFormalConcepts \\ knownFormalConcepts
   --putStrLn $ show nxtNeighbors
   putStrLn $ "\n\n\n"
-  putStrLn $ exploreNeighborhood finalKS initKS conceptLattice
+  --putStrLn $ exploreNeighborhoodAuto "" finalKS initKS conceptLattice
+  putStrLn $ showImmediateNeighborhood finalKS initKS conceptLattice
   --let zz = explainNeighbors initKS finalKS nxtNeighbors
   -- 6) Present the new attributes of the INTENT of the neighbor (or all of them)
   -- 7) Explore to all options automatically, until we are done, and then continue (basically a breadth-first search)
 
-  --let prettyLattice = mapL conceptName conceptLattice
+  --let prettyLattice = mapL conceptLabel conceptLattice
   graphConceptLattice "R32_Test_1" conceptLattice
 
   -- TODO full detailed formal context as a matrix
@@ -279,34 +290,70 @@ r32 (FCA ob cb programParser conceptMapping kps gps cps) = do
 
 -- TODO WORKing on this prinout
 knowledgeStateToStr :: KnowledgeState -> String
-knowledgeStateToStr (KnowledgeState ks progs) = "{"++ join "," progs ++"}\n{" ++ join "," (concatMap conceptIntent ks) ++ "}"
+knowledgeStateToStr (KnowledgeState ks progs _) = "{"++ join "," progs ++"}\n{" ++ join "," (concatMap conceptIntent ks) ++ "}"
 
--- TODO IS THIS OKAY?
-goalMet :: KnowledgeState -> KnowledgeState -> Bool
-goalMet (KnowledgeState fs fprogs) (KnowledgeState ks kprogs) = S.fromList fprogs == S.fromList kprogs && S.fromList (concatMap conceptIntent fs) == S.fromList (concatMap conceptIntent ks)
+showImmediateNeighborhood :: KnowledgeState -> KnowledgeState -> ConceptLattice -> String
+showImmediateNeighborhood fks@(KnowledgeState fs fprogs fc) kks@(KnowledgeState ks kprogs kc) cl =
+  let ln = filter (\(_,q) -> not $ q `elem` ks) $ concatMap (\un -> map (\y -> (un,y)) (getLowerNeighbors cl un)) ks in
+  if length ln > 0 then
+    let unknownClassifications = map conceptLabel (map fst ln) in
+    let unknownConcepts = (uniqueInSameOrder $ concatMap snd unknownClassifications) \\ kc in
+    let unknownPrograms = (uniqueInSameOrder $ concatMap fst unknownClassifications) \\ kprogs in
+    --let unknownPrograms = (uniqueInSameOrder $ (concatMap (\(from,to) -> conceptExtent from \\ conceptExtent to) ln)) \\ kprogs in
+    --let unknownConcepts = (uniqueInSameOrder $ (concatMap (\(from,to) -> conceptIntent from) ln)) \\ kc in
+    case (length unknownConcepts, length unknownPrograms) of
+      -- nothing to introduce for these neighbors, so add all neighbors & continue
+      (0,0)  -> showImmediateNeighborhood fks (KnowledgeState ((map snd ln)++ks) kprogs kc) cl
+      -- program to introduce
+      (0,y)  -> ">>>\n" ++ concatMap (explainUnknownProgram "") unknownPrograms -- ++ exploreNeighborhoodAuto s fks (KnowledgeState ks ((head unknownPrograms):kprogs) kc) cl
+      -- syntactic concept to introduce
+      (x,_)  -> ">>>\n" ++ concatMap (explainUnknownConcept "") unknownConcepts -- ++ exploreNeighborhoodAuto s fks (KnowledgeState ks kprogs ((head unknownConcepts):kc)) cl
+  else
+    -- no more neighbors to explore, but verify we understand the goal by checking w/ upper neighbors
+    let ln = concatMap (\un -> map (\y -> (y,un)) (getUpperNeighbors cl un)) fs in
+    let unknownPrograms = fprogs \\ kprogs in
+    let unknownConcepts = fc \\ kc in
+    case (length unknownConcepts, length unknownPrograms) of
+      -- done!
+      (0,0)  -> ">>> Goal Set Met, Done! "
+      -- program to introduce
+      (0,y)  -> ">>>\n" ++ concatMap (explainUnknownProgram "") unknownPrograms  --explainUnknownProgram s (head unknownPrograms) ++ exploreNeighborhoodAuto s fks (KnowledgeState ks ((head unknownPrograms):kprogs) kc) cl
+      -- syntactic concept to introduce
+      (x,_)  -> ">>>\n" ++ concatMap (explainUnknownConcept "") unknownConcepts --explainUnknownConcept s (head unknownConcepts) ++ exploreNeighborhoodAuto s fks (KnowledgeState ks kprogs ((head unknownConcepts):kc)) cl
 
 
-explainNeighbors :: KnowledgeState -> [FormalConcept] -> String
-explainNeighbors _ [] = ""
-explainNeighbors k@(KnowledgeState ks kp) (f:fs) = let ns = "neighbor: " ++ GV.showGV f ++ "\n" in
-                                                   let q = "adds concepts: " ++ (show $ (conceptIntent f) \\ (concatMap conceptIntent ks)) in
-                                                   let r = "adds programs: " ++ (show $ ((concatMap conceptExtent ks) \\ (conceptExtent f)) \\ kp) in
-                                                   ns ++ q ++ "\n" ++ r ++ "\n\n" ++ explainNeighbors k fs
+explainUnknownProgram :: String -> Object -> String
+explainUnknownProgram b p = b ++ "- p " ++ p ++ "\n"
 
+explainUnknownConcept :: String -> Attribute -> String
+explainUnknownConcept b c = b ++ "- c " ++ c ++ "\n"
 
--- TODO working on this
-exploreNeighborhood :: KnowledgeState -> KnowledgeState -> ConceptLattice -> String
-exploreNeighborhood fks@(KnowledgeState fs fprogs) kks@(KnowledgeState ks kprogs) cl = if goalMet fks kks then
-                                                                                        "\n* Goal has been met" -- all done
-                                                                                       else
-                                                                                         -- explain where we are currently
-                                                                                         let exp' = "\n> Current knowledge model " ++ (knowledgeStateToStr kks) ++ "\n" in
-                                                                                         -- get lower neighbors
-                                                                                         let ln = concatMap (getLowerNeighbors cl) ks \\ ks in
-                                                                                         -- explain each neighbor
-                                                                                         let ne = "\n\n" ++ explainNeighbors kks ln in
-                                                                                         -- for each neighbor add & call again
-                                                                                         exp' ++ ne ++ "\n" ++ concatMap (\n -> exploreNeighborhood fks (KnowledgeState (n:ks) ((((concatMap conceptExtent ks) \\ (conceptExtent n)) \\ kprogs)++kprogs)) cl) ln
+-- Change this to a BREADTH first search
+exploreNeighborhoodAuto :: String -> KnowledgeState -> KnowledgeState -> ConceptLattice -> String
+exploreNeighborhoodAuto s fks@(KnowledgeState fs fprogs fc) kks@(KnowledgeState ks kprogs kc) cl = -- get the lower neighbors
+                                                                                         let ln = filter (\(_,q) -> not $ q `elem` ks) $ concatMap (\un -> map (\y -> (un,y)) (getLowerNeighbors cl un)) ks in
+                                                                                         if length ln > 0 then
+                                                                                           let unknownPrograms = (uniqueInSameOrder $ (concatMap (\(from,to) -> conceptExtent from \\ conceptExtent to) ln)) \\ kprogs in
+                                                                                           let unknownConcepts = (uniqueInSameOrder $ (concatMap (\(from,to) -> conceptIntent from) ln)) \\ kc in
+                                                                                           case (length unknownConcepts, length unknownPrograms) of
+                                                                                             -- nothing to introduce for these neighbors, so add a neighbor and continue
+                                                                                             (0,0)  -> exploreNeighborhoodAuto (s++"  ") fks (KnowledgeState ((snd $ head ln):ks) kprogs kc) cl
+                                                                                             -- program to introduce
+                                                                                             (0,y)  -> explainUnknownProgram s (head unknownPrograms) ++ exploreNeighborhoodAuto s fks (KnowledgeState ks ((head unknownPrograms):kprogs) kc) cl
+                                                                                             -- syntactic concept to introduce
+                                                                                             (x,_)  -> explainUnknownConcept s (head unknownConcepts) ++ exploreNeighborhoodAuto s fks (KnowledgeState ks kprogs ((head unknownConcepts):kc)) cl
+                                                                                         else
+                                                                                           -- no more neighbors to explore, but verify we understand the goal by checking w/ upper neighbors
+                                                                                           let ln = concatMap (\un -> map (\y -> (y,un)) (getUpperNeighbors cl un)) fs in
+                                                                                           let unknownPrograms = fprogs \\ kprogs in
+                                                                                           let unknownConcepts = fc \\ kc in
+                                                                                           case (length unknownConcepts, length unknownPrograms) of
+                                                                                             -- done!
+                                                                                             (0,0)  -> s ++ "Goal Set Met "
+                                                                                             -- program to introduce
+                                                                                             (0,y)  -> explainUnknownProgram s (head unknownPrograms) ++ exploreNeighborhoodAuto s fks (KnowledgeState ks ((head unknownPrograms):kprogs) kc) cl
+                                                                                             -- syntactic concept to introduce
+                                                                                             (x,_)  -> explainUnknownConcept s (head unknownConcepts) ++ exploreNeighborhoodAuto s fks (KnowledgeState ks kprogs ((head unknownConcepts):kc)) cl
 
 convertToCSV :: [[String]] -> String
 convertToCSV ls = join "\n" $ map (\q -> join "," (map show q)) ls
@@ -353,7 +400,7 @@ combineIdenticalConcepts ls = combineIC ls ls
                                 combineIC :: [FormalConcept] -> [FormalConcept] -> [FormalConcept]
                                 combineIC [] _ = []
                                 combineIC (fc@(FormalConcept (n,g,m)):xs) ys = let dups = filter (fcDiffButSameGM fc) ys in
-                                                                               let dupNames = if length dups > 0 then map conceptName dups else [] in
+                                                                               let dupNames = if length dups > 0 then map conceptLabel dups else [] in
                                                                                let fc2 = (FormalConcept (mergeLabels $ n : dupNames, g, m)) in
                                                                                let filt = filter (not . (fcDiffButSameGM fc)) xs in
                                                                                fc2 : combineIC filt ys
