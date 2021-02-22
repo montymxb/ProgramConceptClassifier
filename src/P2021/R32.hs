@@ -277,8 +277,9 @@ r32 (FCA ob cb programParser conceptMapping kps gps cps extraKnownProgs extraKno
   --putStrLn $ show nxtNeighbors
   putStrLn ""
   --putStrLn $ exploreNeighborhoodAuto "" finalKS initKS conceptLattice
-  -----putStrLn $ show $ foldl fringe (Fringe [] []) (getKnowledgeSteps finalKS initKS conceptLattice)
-  putStrLn $ show $ makeUnique $ fg2 (getKnowledgeSteps finalKS initKS conceptLattice)
+  let knowledgeSteps = getKnowledgeSteps finalKS initKS conceptLattice
+  putStrLn $ show knowledgeSteps
+  putStrLn $ show $ makeUnique $ fg2 knowledgeSteps
   --let zz = explainNeighbors initKS finalKS nxtNeighbors
   -- 6) Present the new attributes of the INTENT of the neighbor (or all of them)
   -- 7) Explore to all options automatically, until we are done, and then continue (basically a breadth-first search)
@@ -296,9 +297,34 @@ r32 (FCA ob cb programParser conceptMapping kps gps cps extraKnownProgs extraKno
   --putStrLn "* Exported to CSV"
   exportCSV totalContext smallMat
 
--- TODO WORKing on this prinout
+  printWebPage kps gps initKS finalKS knowledgeSteps
+
+
+
+-- simple knowledge state printout
 knowledgeStateToStr :: KnowledgeState -> String
 knowledgeStateToStr (KnowledgeState ks progs _) = "{"++ join "," progs ++"}\n{" ++ join "," (concatMap conceptIntent ks) ++ "}"
+
+
+printWebPage :: KnownPrograms -> GoalPrograms -> KnowledgeState -> KnowledgeState -> [KnowledgeStep] -> IO ()
+printWebPage kps gps fks@(KnowledgeState ks' progs' attrs') kks@(KnowledgeState ks progs attrs) ls = do
+  let dt = "<!DOCTYPE html><html><head><title>Ex. 1</title><script src='site/script.js'></script><link href='site/style.css' type='text/css' rel='stylesheet'/></link></head><div></div><body><div id='main'>"
+  let ks = "<div>" ++ concatMap t2s kps ++ "<p class='attributes'>(" ++ join ", " (makeUnique attrs') ++ ")</p>" ++ "<br/>" ++ concatMap t2s gps ++ "<p class='attributes'>(" ++ join ", " (makeUnique (attrs \\ attrs')) ++ ")</p></div>"
+  let img = "<h2>Lattice from Known to Goal</h3><img src='R32_Test_1.png'>"
+  let stps = "<h2>Frontier Steps</h2><div class='steps'>" ++ join "<br/><br/><br/>" (map kstep ls) ++ "</div>"
+  let db = "</div></body></html>"
+  writeFile ("Result.html") $ dt ++ ks ++ img ++ stps ++ db
+  where
+    t2s :: (String,String) -> String
+    t2s (a,b) = "<h3 class='pn'>" ++ a ++ "</h3><br/><div class='code'>" ++ b ++ "</div>"
+
+    kstep :: KnowledgeStep -> String
+    kstep (Step (o,a) ks) = "<div class='step'>({" ++ join "," o ++ "},{" ++ join "," a  ++ "})" ++ "<div class='step-block'>" ++ concatMap kstep ks ++ "</div></div>"
+    kstep (Fringe o a) = "<div class='step'>({" ++ join "," o ++ "},{" ++ join "," a  ++ "})</div>"
+    --t3s :: (String,String,String) -> String
+    --t2s (a,b,c) = "<h3 class='pn'>" ++ a ++ "</h3><p class='attributes'>(" ++ c ++ ")</p><br/><div class='code'>" ++ b ++ "</div>"
+
+
 
 data KnowledgeStep =
   -- a step from a classification to zero or more steps
