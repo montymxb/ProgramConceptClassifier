@@ -277,7 +277,7 @@ r32 (FCA ob cb programParser conceptMapping kps gps cps extraKnownProgs extraKno
   --putStrLn $ show nxtNeighbors
   putStrLn ""
   --putStrLn $ exploreNeighborhoodAuto "" finalKS initKS conceptLattice
-  let knowledgeSteps = getKnowledgeSteps finalKS initKS conceptLattice
+  let knowledgeSteps = getKnowledgeSteps initKS conceptLattice
   putStrLn $ show knowledgeSteps
   putStrLn $ show $ makeUnique $ fg2 knowledgeSteps
   --let zz = explainNeighbors initKS finalKS nxtNeighbors
@@ -319,8 +319,8 @@ printWebPage kps gps fks@(KnowledgeState ks' progs' attrs') kks@(KnowledgeState 
     t2s (a,b) = "<h3 class='pn'>" ++ a ++ "</h3><br/><div class='code'>" ++ b ++ "</div>"
 
     kstep :: KnowledgeStep -> String
-    kstep (Step (o,a) ks) = "<div class='step'>({" ++ join "," o ++ "},{" ++ join "," a  ++ "})" ++ "<div class='step-block'>" ++ concatMap kstep ks ++ "</div></div>"
-    kstep (Fringe o a) = "<div class='step'>({" ++ join "," o ++ "},{" ++ join "," a  ++ "})</div>"
+    kstep (Step (o,a) ks) = "<div class='step'>Step ({" ++ join "," o ++ "},{" ++ join "," a  ++ "})" ++ "<div class='step-block'>" ++ concatMap kstep ks ++ "</div></div>"
+    kstep (Fringe o a) = "<div class='step'>Fringe ({" ++ join "," o ++ "},{" ++ join "," a  ++ "})</div>"
     --t3s :: (String,String,String) -> String
     --t2s (a,b,c) = "<h3 class='pn'>" ++ a ++ "</h3><p class='attributes'>(" ++ c ++ ")</p><br/><div class='code'>" ++ b ++ "</div>"
 
@@ -345,28 +345,30 @@ fg2 (x:ls) = x : fg2 ls
 
 
 -- Get knowledge steps to learn from
-getKnowledgeSteps :: KnowledgeState -> KnowledgeState -> ConceptLattice -> [KnowledgeStep]
-getKnowledgeSteps fks@(KnowledgeState fs fprogs fc) kks@(KnowledgeState ks kprogs kc) cl =
+getKnowledgeSteps :: KnowledgeState -> ConceptLattice -> [KnowledgeStep]
+getKnowledgeSteps (KnowledgeState ks kprogs kc) cl =
   let ln = concatMap (\un -> map (\y -> (un,y)) (getLowerNeighbors cl un)) ks in
   let lowerNeighbors = filter (\(_,q) -> not (q `elem` ks) && (getUpperNeighbors cl q) PO.<= ks) ln in
-  map getKnowledgeSteps' lowerNeighbors
+  DT.trace ("\n\nLN: " ++ show (map snd lowerNeighbors) ++ "\n\n" ++ "KS: " ++ show ks) $ map getKnowledgeSteps' lowerNeighbors
   where
     getKnowledgeSteps' :: (FormalConcept,FormalConcept) -> KnowledgeStep
     getKnowledgeSteps' (x,y)  = let unknownClassifications = conceptLabel y in
                                 let unknownConcepts = (uniqueInSameOrder $ snd unknownClassifications) \\ kc in
                                 let unknownPrograms = (uniqueInSameOrder $ fst unknownClassifications) \\ kprogs in
+                                -- ??? how to fix this relation here
                                 case (length unknownConcepts, length unknownPrograms) of
-                                  (0,0)  -> Step (conceptLabel y) $ S.fromList (getKnowledgeSteps fks (KnowledgeState (y:ks) kprogs kc) cl)
+                                  (0,0)  -> Step (conceptLabel y) $ S.fromList (getKnowledgeSteps (KnowledgeState (y:ks) kprogs kc) cl)
                                   (_,_)  -> Step (conceptLabel x) $ S.fromList [(Fringe unknownPrograms unknownConcepts)]
 
 
-explainUnknownProgram :: String -> Object -> String
-explainUnknownProgram b p = b ++ "- p " ++ p ++ "\n"
+--explainUnknownProgram :: String -> Object -> String
+--explainUnknownProgram b p = b ++ "- p " ++ p ++ "\n"
 
-explainUnknownConcept :: String -> Attribute -> String
-explainUnknownConcept b c = b ++ "- c " ++ c ++ "\n"
+--explainUnknownConcept :: String -> Attribute -> String
+--explainUnknownConcept b c = b ++ "- c " ++ c ++ "\n"
 
 -- Change this to a BREADTH first search
+{-
 exploreNeighborhoodAuto :: String -> KnowledgeState -> KnowledgeState -> ConceptLattice -> String
 exploreNeighborhoodAuto s fks@(KnowledgeState fs fprogs fc) kks@(KnowledgeState ks kprogs kc) cl = -- get the lower neighbors
                                                                                          let ln = filter (\(_,q) -> not $ q `elem` ks) $ concatMap (\un -> map (\y -> (un,y)) (getLowerNeighbors cl un)) ks in
@@ -392,6 +394,7 @@ exploreNeighborhoodAuto s fks@(KnowledgeState fs fprogs fc) kks@(KnowledgeState 
                                                                                              (0,y)  -> explainUnknownProgram s (head unknownPrograms) ++ exploreNeighborhoodAuto s fks (KnowledgeState ks ((head unknownPrograms):kprogs) kc) cl
                                                                                              -- syntactic concept to introduce
                                                                                              (x,_)  -> explainUnknownConcept s (head unknownConcepts) ++ exploreNeighborhoodAuto s fks (KnowledgeState ks kprogs ((head unknownConcepts):kc)) cl
+-}
 
 convertToCSV :: [[String]] -> String
 convertToCSV ls = join "\n" $ map (\q -> join "," (map show q)) ls
