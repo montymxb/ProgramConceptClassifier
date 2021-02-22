@@ -131,7 +131,7 @@ type GoalPrograms  = [ConcreteProgram]
 type CoursePrograms= [ConcreteProgram]
 
 -- Configuration for performing Formal Concept Analysis
-data FCA a b = FCA OrderBy ConceptsBy (ParsingFunction a) (ConceptMapping b) KnownPrograms GoalPrograms CoursePrograms [Object] [Attribute]
+data FCA a b = FCA OrderBy ConceptsBy (ParsingFunction a) (ConceptMapping b) KnownPrograms GoalPrograms CoursePrograms [Object] [b]
 
 type Lattice a = ([a],[(a,a)])
 type ConceptLattice = ([FormalConcept],[(FormalConcept,FormalConcept)])
@@ -186,7 +186,7 @@ data KnowledgeState = KnowledgeState [FormalConcept] [Object] [Attribute]
 -- This is for TESTING, the actual setup will not be an IO monad (essentially a prototyping sandbox)
 -- run the analysis, taking an FCA analysis instance
 -- Takes known programs, goal programs, and course programs (programs available in the course)
-r32 :: (Data a, Show a, Show b) => FCA a b -> IO ()
+r32 :: (Data a, Show a, Subsumable b, Show b) => FCA a b -> IO ()
 r32 (FCA ob cb programParser conceptMapping kps gps cps extraKnownProgs extraKnownIntents) = do
   -- parse the programs that are understood
   let parsedKPS = programParser kps
@@ -196,7 +196,7 @@ r32 (FCA ob cb programParser conceptMapping kps gps cps extraKnownProgs extraKno
   let parsedCPS = programParser cps
 
   -- extract terms for the known list of programs, preserving names
-  let knownTaggedPrograms = map (astToTerms conceptMapping) parsedKPS
+  let knownTaggedPrograms = (map (astToTerms conceptMapping) parsedKPS)
   -- extract terms for the goal list of programs, preserving names
   let goalTaggedPrograms = map (astToTerms conceptMapping) parsedGPS
   -- extract terms for the course list of programs, preserving names
@@ -213,7 +213,7 @@ r32 (FCA ob cb programParser conceptMapping kps gps cps extraKnownProgs extraKno
   -- produce total concepts from total context
   let totalConcepts' = getConceptsFromContext cb totalContext
   -- get known formal concepts, factoring in those that have been implicitly indicated by the programs & attributes added so far while learning
-  let knownFormalConcepts = (mkFormalConceptsFromSubExtents totalContext (map fst knownTaggedPrograms)) ++ (filter (\(FormalConcept ((g,m),_,_)) -> S.fromList g `S.isSubsetOf` S.fromList extraKnownProgs && S.fromList m `S.isSubsetOf` S.fromList extraKnownIntents && (not $ S.null $ S.fromList g) && (not $ S.null $ S.fromList m)) totalConcepts')
+  let knownFormalConcepts = (mkFormalConceptsFromSubExtents totalContext (map fst knownTaggedPrograms)) ++ (filter (\(FormalConcept ((g,m),_,_)) -> S.fromList g `S.isSubsetOf` S.fromList extraKnownProgs && S.fromList m `S.isSubsetOf` S.fromList (map show extraKnownIntents) && (not $ S.null $ S.fromList g) && (not $ S.null $ S.fromList m)) totalConcepts')
   -- goal is fixed to what programs are given in the goal
   let goalFormalConcepts = mkFormalConceptsFromSubExtents totalContext (map fst goalTaggedPrograms)
   -- Apply Bounding concepts to get sub-lattice to work with
@@ -235,6 +235,13 @@ r32 (FCA ob cb programParser conceptMapping kps gps cps extraKnownProgs extraKno
   --putStrLn $ showConcepts (sortBy (getConceptOrdering ob) totalConcepts)
   putStrLn $ showConcepts totalConcepts
 
+  -- report Known Concepts
+  let knownConcepts = S.toList $ S.fromList (concatMap conceptIntent knownFormalConcepts)
+  putStrLn $ "Known Concepts: " ++ show knownConcepts
+
+  -- report Goal concepts (minus Known), these represent all concepts in the reduced set
+  let goalConcepts = (S.toList $ S.fromList (concatMap conceptIntent goalFormalConcepts)) \\ knownConcepts
+  putStrLn $ "Goal Concepts: " ++ show goalConcepts
 
   -- create Formal Concept of all intents
   let m' = FormalConcept (([],[]), [], (\(_,m,_) -> m) totalContext)
@@ -257,20 +264,21 @@ r32 (FCA ob cb programParser conceptMapping kps gps cps extraKnownProgs extraKno
   -- 0) get object concepts of the goal (knownFormalConcepts)
   -- 1) compute the final knowledge state desired from OCG
   let finalKS = KnowledgeState goalFormalConcepts (concatMap conceptExtent knownFormalConcepts) (concatMap conceptIntent goalFormalConcepts) --(concatMap conceptExtent knownFormalConcepts, concatMap conceptIntent goalFormalConcepts)
-  putStrLn $ knowledgeStateToStr finalKS
+  putStrLn $ "\n\nFinal Knowledge State: " ++ knowledgeStateToStr finalKS
 
   -- 2) get the initially known object concepts
   -- 3) use these to build the initial knowledge state
-  let initKS = KnowledgeState knownFormalConcepts (extraKnownProgs ++ map fst knownTaggedPrograms) (extraKnownIntents ++ concatMap conceptIntent knownFormalConcepts) -- (map fst knownTaggedPrograms, concatMap conceptIntent knownFormalConcepts)
-  putStrLn $ knowledgeStateToStr initKS
+  let initKS = KnowledgeState knownFormalConcepts (extraKnownProgs ++ map fst knownTaggedPrograms) ((map show extraKnownIntents) ++ concatMap conceptIntent knownFormalConcepts) -- (map fst knownTaggedPrograms, concatMap conceptIntent knownFormalConcepts)
+  putStrLn $ "\nCurrent Knowledge State: " ++ knowledgeStateToStr initKS
   -- 4) store the known concepts as well
     -- model this as a data type for knowledge
   -- 5) compute the direct lower neighbors of this knowledge state (these are the next transitions)
   --let nxtNeighbors = concatMap (getLowerNeighbors conceptLattice) knownFormalConcepts \\ knownFormalConcepts
   --putStrLn $ show nxtNeighbors
-  putStrLn $ "\n\n\n"
+  putStrLn ""
   --putStrLn $ exploreNeighborhoodAuto "" finalKS initKS conceptLattice
-  putStrLn $ showImmediateNeighborhood finalKS initKS conceptLattice
+  -----putStrLn $ show $ foldl fringe (Fringe [] []) (getKnowledgeSteps finalKS initKS conceptLattice)
+  putStrLn $ show $ makeUnique $ fg2 (getKnowledgeSteps finalKS initKS conceptLattice)
   --let zz = explainNeighbors initKS finalKS nxtNeighbors
   -- 6) Present the new attributes of the INTENT of the neighbor (or all of them)
   -- 7) Explore to all options automatically, until we are done, and then continue (basically a breadth-first search)
@@ -292,34 +300,38 @@ r32 (FCA ob cb programParser conceptMapping kps gps cps extraKnownProgs extraKno
 knowledgeStateToStr :: KnowledgeState -> String
 knowledgeStateToStr (KnowledgeState ks progs _) = "{"++ join "," progs ++"}\n{" ++ join "," (concatMap conceptIntent ks) ++ "}"
 
-showImmediateNeighborhood :: KnowledgeState -> KnowledgeState -> ConceptLattice -> String
-showImmediateNeighborhood fks@(KnowledgeState fs fprogs fc) kks@(KnowledgeState ks kprogs kc) cl =
-  let ln = filter (\(_,q) -> not $ q `elem` ks) $ concatMap (\un -> map (\y -> (un,y)) (getLowerNeighbors cl un)) ks in
-  if length ln > 0 then
-    let unknownClassifications = map conceptLabel (map fst ln) in
-    let unknownConcepts = (uniqueInSameOrder $ concatMap snd unknownClassifications) \\ kc in
-    let unknownPrograms = (uniqueInSameOrder $ concatMap fst unknownClassifications) \\ kprogs in
-    --let unknownPrograms = (uniqueInSameOrder $ (concatMap (\(from,to) -> conceptExtent from \\ conceptExtent to) ln)) \\ kprogs in
-    --let unknownConcepts = (uniqueInSameOrder $ (concatMap (\(from,to) -> conceptIntent from) ln)) \\ kc in
-    case (length unknownConcepts, length unknownPrograms) of
-      -- nothing to introduce for these neighbors, so add all neighbors & continue
-      (0,0)  -> showImmediateNeighborhood fks (KnowledgeState ((map snd ln)++ks) kprogs kc) cl
-      -- program to introduce
-      (0,y)  -> ">>>\n" ++ concatMap (explainUnknownProgram "") unknownPrograms -- ++ exploreNeighborhoodAuto s fks (KnowledgeState ks ((head unknownPrograms):kprogs) kc) cl
-      -- syntactic concept to introduce
-      (x,_)  -> ">>>\n" ++ concatMap (explainUnknownConcept "") unknownConcepts -- ++ exploreNeighborhoodAuto s fks (KnowledgeState ks kprogs ((head unknownConcepts):kc)) cl
-  else
-    -- no more neighbors to explore, but verify we understand the goal by checking w/ upper neighbors
-    let ln = concatMap (\un -> map (\y -> (y,un)) (getUpperNeighbors cl un)) fs in
-    let unknownPrograms = fprogs \\ kprogs in
-    let unknownConcepts = fc \\ kc in
-    case (length unknownConcepts, length unknownPrograms) of
-      -- done!
-      (0,0)  -> ">>> Goal Set Met, Done! "
-      -- program to introduce
-      (0,y)  -> ">>>\n" ++ concatMap (explainUnknownProgram "") unknownPrograms  --explainUnknownProgram s (head unknownPrograms) ++ exploreNeighborhoodAuto s fks (KnowledgeState ks ((head unknownPrograms):kprogs) kc) cl
-      -- syntactic concept to introduce
-      (x,_)  -> ">>>\n" ++ concatMap (explainUnknownConcept "") unknownConcepts --explainUnknownConcept s (head unknownConcepts) ++ exploreNeighborhoodAuto s fks (KnowledgeState ks kprogs ((head unknownConcepts):kc)) cl
+data KnowledgeStep =
+  -- a step from a classification to zero or more steps
+  Step Label (S.Set KnowledgeStep) |
+  -- a fringe step, which ends with a set of unknown programs & concepts that remain to be learned
+  Fringe [Object] [Attribute]
+    deriving (Show,Ord,Eq)
+
+-- get and report only the total fringe
+fringe :: KnowledgeStep -> KnowledgeStep -> KnowledgeStep
+fringe fs (Step ls ks) = foldl fringe fs ks
+fringe (Fringe o' a') (Fringe o a) = Fringe (makeUnique $ o++o') (makeUnique $ a++a')
+
+fg2 :: [KnowledgeStep] -> [KnowledgeStep]
+fg2 [] = []
+fg2 ((Step _ ks):ls) = fg2 (S.toList ks) ++ fg2 ls
+fg2 (x:ls) = x : fg2 ls
+
+
+-- Get knowledge steps to learn from
+getKnowledgeSteps :: KnowledgeState -> KnowledgeState -> ConceptLattice -> [KnowledgeStep]
+getKnowledgeSteps fks@(KnowledgeState fs fprogs fc) kks@(KnowledgeState ks kprogs kc) cl =
+  let ln = concatMap (\un -> map (\y -> (un,y)) (getLowerNeighbors cl un)) ks in
+  let lowerNeighbors = filter (\(_,q) -> not (q `elem` ks) && (getUpperNeighbors cl q) PO.<= ks) ln in
+  map getKnowledgeSteps' lowerNeighbors
+  where
+    getKnowledgeSteps' :: (FormalConcept,FormalConcept) -> KnowledgeStep
+    getKnowledgeSteps' (x,y)  = let unknownClassifications = conceptLabel y in
+                                let unknownConcepts = (uniqueInSameOrder $ snd unknownClassifications) \\ kc in
+                                let unknownPrograms = (uniqueInSameOrder $ fst unknownClassifications) \\ kprogs in
+                                case (length unknownConcepts, length unknownPrograms) of
+                                  (0,0)  -> Step (conceptLabel y) $ S.fromList (getKnowledgeSteps fks (KnowledgeState (y:ks) kprogs kc) cl)
+                                  (_,_)  -> Step (conceptLabel x) $ S.fromList [(Fringe unknownPrograms unknownConcepts)]
 
 
 explainUnknownProgram :: String -> Object -> String
@@ -422,8 +434,8 @@ getConceptsFromContext AllConcepts fc@(_,fcm,_) = let attrConcepts = combineIden
 
 
 -- Convert program in AST to list Terms
-astToTerms :: (Data a, Show b) => (String -> Maybe b) -> (Object,a) -> (Object,[Term])
-astToTerms f (name,p) = (name, uniqueInSameOrder $ map show $ catMaybes $ map f $ mkTermsFromData p)
+astToTerms :: (Data a, Show b, Subsumable b) => (String -> Maybe b) -> (Object,a) -> (Object,[Term])
+astToTerms f (name,p) = (name, uniqueInSameOrder $ map show $ subsume $ catMaybes $ map f $ mkTermsFromData p)
 
 -- Traverse immediate subterms recursively to discover all terms used
 mkTermsFromData :: Data a => a -> [Term]

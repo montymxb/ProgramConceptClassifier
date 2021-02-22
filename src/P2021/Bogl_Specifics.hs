@@ -75,6 +75,22 @@ data AttributeConcept = NotEquiv
   | Name
   deriving (Eq,Show,Enum)
 
+instance Subsumable AttributeConcept where
+  {-
+  subsumes BinOp Equiv = True
+  subsumes BinOp Div = True
+  subsumes BinOp Mult = True
+  subsumes BinOp Greater = True
+  subsumes BinOp Less = True
+  subsumes BinOp GreaterEqual = True
+  subsumes BinOp LessEqual = True
+  subsumes BinOp Sub = True
+  subsumes BinOp Add = True
+  -}
+  subsumes _ _ = False
+
+-- subsumption relation for the BinOps & their related parts
+
 boglConceptMapping :: String -> Maybe AttributeConcept
 boglConceptMapping "Top" = Just SymbolType
 boglConceptMapping "NotEquiv" = Just NotEquiv

@@ -5,6 +5,20 @@ import Debug.Trace
 -- program in concrete syntax w/ a name
 type ConcreteProgram = (String,String)
 
+-- subsumable relation
+class Subsumable a where
+  -- if the 1st subsumes the 2nd
+  subsumes :: a -> a -> Bool
+
+  -- attempts to reduce a list by applying subsumption
+  subsume :: [a] -> [a]
+  subsume ls = foldl (\x y -> subsume' x y) ls ls
+               where
+                 subsume' :: Subsumable a => [a] -> a -> [a]
+                 subsume' [] _ = []
+                 subsume' (y:ys) x  | x `subsumes` y = subsume' ys x
+                                    | otherwise      = y : subsume' ys x
+
 -- | Removes duplicates from a list, whilst preserving order
 uniqueInSameOrder :: (Eq a) => [a] -> [a]
 uniqueInSameOrder [] = []
