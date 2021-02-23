@@ -80,9 +80,9 @@ printLatticeGVData :: GraphVizData -> String
 printLatticeGVData ([],[]) = "\n}"
 -- print edges
 printLatticeGVData ([], ((s1,s2):ls2)) = let r1 = cn s1 in
-                                  let r2 = cn s2 in
-
-                                  r1 ++ "\t--\t" ++ r2 ++ "\n" ++ printLatticeGVData ([],ls2) -- ee ++ ";\n"
+                                            let r2 = cn s2 in
+                                            --let sr = rstrip lb in
+                                            r1 ++ "\t->\t" ++ r2 ++ "\n" ++ printLatticeGVData ([],ls2) -- ee ++ ";\n"
 -- print vertices
 printLatticeGVData (((uid,s):ls1), ls2) = let sr = rstrip s in
                              let rr = cn sr in
@@ -125,7 +125,7 @@ convertToGVData (verts,edges) = let v2 = uidForVerts 1 verts in -- first convert
 -- | Convert Lattice to a Graph Viz Specification
 convertLatticeToGVSpec :: (ShowGV a, Eq a) => ([a],[(a,a)]) -> String
 convertLatticeToGVSpec (vertices,edges) = let (gVerts,gEdges) = convertToGVData (vertices,edges) in
-                                          "strict graph G {\n" ++ printLatticeGVData (map (\(a,b) -> (a,showGV b)) gVerts,map (\(n1,n2) -> (show n1, show n2)) gEdges)
+                                          "strict digraph G {\n" ++ printLatticeGVData (map (\(a,b) -> (a,showGV b)) gVerts,map (\(n1,n2) -> (show n1, show n2)) gEdges)
 
 
 -- | Used for graphing a ConceptGraph (old)

@@ -41,3 +41,8 @@ uniqueInSameOrder'' (x@(a,b):ls) | elem b (map snd ls) = trace ("\n\nFiltered ou
 -- | Removes duplicates in a list, but does not preserve order
 makeUnique :: (Eq a) => [a] -> [a]
 makeUnique = reverse . uniqueInSameOrder . reverse
+
+-- Hand written join
+join :: String -> [String] -> String
+join _ [] = ""
+join c (x:ls) = if length ls > 0 then x ++ c ++ (join c ls) else x

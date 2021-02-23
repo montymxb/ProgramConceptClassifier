@@ -13,7 +13,7 @@ import Data.List
 import Data.Matrix
 import Data.Maybe
 import qualified Data.PartialOrd as PO
-import qualified GVSpec.GVSpec as GV
+import qualified P2021.GraphViz as GV
 
 import qualified Debug.Trace as DT
 
@@ -88,11 +88,16 @@ instance PO.PartialOrd FormalConcept where
               Nothing -> False
   compare a b = compareFormalConceptsByExtents a b
 
-instance GV.ShowGV FormalConcept where
-  showGV (FormalConcept (([],[]),_,_)) = ""
-  showGV (FormalConcept ((g,[]),_,_)) = "({" ++ join "," g ++ "},{})"
-  showGV (FormalConcept (([],m),_,_)) = "({},{" ++ join "," m ++ "})"
-  showGV (FormalConcept ((g,m),_,_)) = "({" ++ join "," g ++ "},{" ++ join "," m ++ "})"
+
+instance GV.GraphVizable FormalConcept where
+  node (FormalConcept (([],[]),_,_))  = [("label","")]
+  node (FormalConcept ((g,m),_,_))    = [("label",join ", " g),("fontcolor","purple"),("fontname","Helvetica")]
+  edge (FormalConcept ((_,a),_,_)) (FormalConcept ((_,b),_,_)) = let d = (b \\ a) in
+                                                                 if length d > 0 then
+                                                                   [("label",join ", " d),("fontname","Helvetica")]
+                                                                 else
+                                                                   []
+
 
 strConcept :: FormalConcept -> String
 strConcept (FormalConcept (_,g,m)) = "({" ++ join "," g ++ "},{" ++ join "," m ++ "})"
@@ -158,8 +163,8 @@ getMeet (nodes,_) = head $ PO.minima nodes
 mapL :: (a -> b) -> Lattice a -> Lattice b
 mapL f (nodes,edges) = (map f nodes, map (\(a,b) -> (f a, f b)) edges)
 
-graphConceptLattice :: String -> ConceptLattice -> IO ()
-graphConceptLattice name cl = GV.writeLattice name cl
+--graphConceptLattice :: String -> ConceptLattice -> IO ()
+--graphConceptLattice name cl = GV.writeLattice name cl
 
 -- updates a single concept in both the nodes & edges portion and returns the updated lattice
 -- focuses on updating name only
@@ -285,7 +290,8 @@ r32 (FCA ob cb programParser conceptMapping kps gps cps extraKnownProgs extraKno
   -- 7) Explore to all options automatically, until we are done, and then continue (basically a breadth-first search)
 
   --let prettyLattice = mapL conceptLabel conceptLattice
-  graphConceptLattice "R32_Test_1" conceptLattice
+  --graphConceptLattice "R32_Test_1" conceptLattice
+  GV.makeDGraph "R23_Test_1" conceptLattice
 
   -- TODO full detailed formal context as a matrix
   let (pm,mm,matt) = mkFormalConceptMatrix totalContext
@@ -297,7 +303,7 @@ r32 (FCA ob cb programParser conceptMapping kps gps cps extraKnownProgs extraKno
   --putStrLn "* Exported to CSV"
   exportCSV totalContext smallMat
 
-  printWebPage kps gps initKS finalKS knowledgeSteps
+  printWebPage (filter (\(a,b) -> a `elem` extraKnownProgs) cps) kps gps initKS finalKS knowledgeSteps
 
 
 
@@ -306,14 +312,15 @@ knowledgeStateToStr :: KnowledgeState -> String
 knowledgeStateToStr (KnowledgeState ks progs _) = "{"++ join "," progs ++"}\n{" ++ join "," (concatMap conceptIntent ks) ++ "}"
 
 
-printWebPage :: KnownPrograms -> GoalPrograms -> KnowledgeState -> KnowledgeState -> [KnowledgeStep] -> IO ()
-printWebPage kps gps fks@(KnowledgeState ks' progs' attrs') kks@(KnowledgeState ks progs attrs) ls = do
+printWebPage :: [(String,String)] -> KnownPrograms -> GoalPrograms -> KnowledgeState -> KnowledgeState -> [KnowledgeStep] -> IO ()
+printWebPage eps kps gps fks@(KnowledgeState ks' progs' attrs') kks@(KnowledgeState ks progs attrs) ls = do
   let dt = "<!DOCTYPE html><html><head><title>Ex. 1</title><script src='site/script.js'></script><link href='site/style.css' type='text/css' rel='stylesheet'/></link></head><div></div><body><div id='main'>"
   let ks = "<div>" ++ concatMap t2s kps ++ "<p class='attributes'>(" ++ join ", " (makeUnique attrs') ++ ")</p>" ++ "<br/>" ++ concatMap t2s gps ++ "<p class='attributes'>(" ++ join ", " (makeUnique (attrs \\ attrs')) ++ ")</p></div>"
   let img = "<h2>Lattice from Known to Goal</h3><img src='R32_Test_1.png'>"
+  let prgs = "<h2>Step Programs</h2><div>" ++ concatMap sprg eps ++ "</div>"
   let stps = "<h2>Frontier Steps</h2><div class='steps'>" ++ join "<br/><br/><br/>" (map kstep ls) ++ "</div>"
   let db = "</div></body></html>"
-  writeFile ("Result.html") $ dt ++ ks ++ img ++ stps ++ db
+  writeFile ("Result.html") $ dt ++ ks ++ img ++ prgs ++ stps ++ db
   where
     t2s :: (String,String) -> String
     t2s (a,b) = "<h3 class='pn'>" ++ a ++ "</h3><br/><div class='code'>" ++ b ++ "</div>"
@@ -323,6 +330,9 @@ printWebPage kps gps fks@(KnowledgeState ks' progs' attrs') kks@(KnowledgeState 
     kstep (Fringe o a) = "<div class='step'>Fringe ({" ++ join "," o ++ "},{" ++ join "," a  ++ "})</div>"
     --t3s :: (String,String,String) -> String
     --t2s (a,b,c) = "<h3 class='pn'>" ++ a ++ "</h3><p class='attributes'>(" ++ c ++ ")</p><br/><div class='code'>" ++ b ++ "</div>"
+
+    sprg :: (String,String) -> String
+    sprg (a,b) = "<h4>" ++ a ++ "</h4><div class='code'>" ++ b ++ "</div>"
 
 
 
@@ -347,17 +357,18 @@ fg2 (x:ls) = x : fg2 ls
 -- Get knowledge steps to learn from
 getKnowledgeSteps :: KnowledgeState -> ConceptLattice -> [KnowledgeStep]
 getKnowledgeSteps (KnowledgeState ks kprogs kc) cl =
-  let ln = concatMap (\un -> map (\y -> (un,y)) (getLowerNeighbors cl un)) ks in
-  let lowerNeighbors = filter (\(_,q) -> not (q `elem` ks) && (getUpperNeighbors cl q) PO.<= ks) ln in
-  DT.trace ("\n\nLN: " ++ show (map snd lowerNeighbors) ++ "\n\n" ++ "KS: " ++ show ks) $ map getKnowledgeSteps' lowerNeighbors
+  let mm = PO.maxima ks in
+  let ln = concatMap (getLowerNeighbors cl) mm in --concatMap (\un -> map (\y -> (un,y)) (getLowerNeighbors cl un)) ks in
+  --let lowerNeighbors = ln in --filter (\(_,q) -> not (q `elem` ks) && (getUpperNeighbors cl q) PO.<= ks) ln in
+  map (getKnowledgeSteps' ks) ln
   where
-    getKnowledgeSteps' :: (FormalConcept,FormalConcept) -> KnowledgeStep
-    getKnowledgeSteps' (x,y)  = let unknownClassifications = conceptLabel y in
+    getKnowledgeSteps' :: [FormalConcept] -> FormalConcept -> KnowledgeStep
+    getKnowledgeSteps' ks' x  = let unknownClassifications = conceptLabel x in
                                 let unknownConcepts = (uniqueInSameOrder $ snd unknownClassifications) \\ kc in
                                 let unknownPrograms = (uniqueInSameOrder $ fst unknownClassifications) \\ kprogs in
                                 -- ??? how to fix this relation here
                                 case (length unknownConcepts, length unknownPrograms) of
-                                  (0,0)  -> Step (conceptLabel y) $ S.fromList (getKnowledgeSteps (KnowledgeState (y:ks) kprogs kc) cl)
+                                  (0,0)  -> Step (conceptLabel x) $ S.fromList $ map (getKnowledgeSteps' (x:ks')) (filter (\q -> (getUpperNeighbors cl q) PO.<= (x:ks')) (getLowerNeighbors cl x))
                                   (_,_)  -> Step (conceptLabel x) $ S.fromList [(Fringe unknownPrograms unknownConcepts)]
 
 
@@ -426,7 +437,7 @@ getConceptOrdering OrderByExtents = compareFormalConceptsByExtents
 
 showConcepts :: [FormalConcept] -> String
 showConcepts [] = "\n"
-showConcepts (fc@(FormalConcept (s,n,a)):ls) = (GV.showGV fc) ++ " Extent: " ++ (show n) ++ "\nIntent: " ++ (show a) ++ "\n\n" ++ (showConcepts ls)
+showConcepts (fc@(FormalConcept ((s,s'),n,a)):ls) = ("({" ++ join "," s ++ "},{" ++ join "," s' ++ "})") ++ " Extent: " ++ (show n) ++ "\nIntent: " ++ (show a) ++ "\n\n" ++ (showConcepts ls)
 
 fcDiffButSameGM :: FormalConcept -> FormalConcept -> Bool
 fcDiffButSameGM (FormalConcept (n1,g1,m1)) (FormalConcept (n2,g2,m2)) = (S.fromList g1) == (S.fromList g2) && (S.fromList m1) == (S.fromList m2) && n1 /= n2
@@ -580,10 +591,6 @@ mkFormalConceptMatrixSmall (g,m,i) = matrix ((length g)) ((length m)) (\(x,y) ->
                                                                                     case find (\q -> q == (gx,my)) i of
                                                                                         Just _  -> Some "X"
                                                                                         Nothing -> None)
--- But maybe handy to have?
-join :: String -> [String] -> String
-join _ [] = ""
-join c (x:ls) = if length ls > 0 then x ++ c ++ (join c ls) else x
 
 -- Builds a ConceptLattice from a list of formal concepts
 mkConceptLattice :: [FormalConcept] -> ConceptLattice
