@@ -1,39 +1,42 @@
-module P2021.Bogl_Specifics where
+{-# LANGUAGE DeriveDataTypeable, StandaloneDeriving #-}
+
+module Bogl_Specifics where
 
 ---
 --- BoGL Specific Stuff
 ---
 
 import qualified Language.Syntax as LS
---import qualified Language.Types as LT
+import Language.Types
 import Text.Parsec.Pos
-import P2021.General
+import General
 
 import Parser.Parser
 import Data.Data
 import Data.Either
 
--- Previously used, but now unneeded
-{-
-deriving instance (Eq a) => Eq (Game a)
+-- Data, Typeable, and Eq instances for the data types we we need to traverse
+deriving instance (Eq a) => Eq (LS.Game a)
 deriving instance Eq BoardDef
 deriving instance Eq InputDef
-deriving instance (Typeable a, Data a) => Data (Game a)
+deriving instance (Typeable a, Data a) => Data (LS.Game a)
 deriving instance Data BoardDef
 deriving instance Data InputDef
-deriving instance (Typeable a, Data a) => Data (ValDef a)
+deriving instance (Typeable a, Data a) => Data (LS.ValDef a)
 deriving instance Data Type
 deriving instance Data Xtype
-deriving instance Data Signature
-deriving instance (Typeable a, Data a) => Data (Equation a)
-deriving instance (Typeable a, Data a) => Data (BoardEq a)
-deriving instance (Typeable a, Data a) => Data (Expr a)
-deriving instance Data Parlist
-deriving instance Data Pos
-deriving instance Data Op
+deriving instance Data LS.Signature
+deriving instance (Typeable a, Data a) => Data (LS.Equation a)
+deriving instance (Typeable a, Data a) => Data (LS.BoardEq a)
+deriving instance (Typeable a, Data a) => Data (LS.Expr a)
+deriving instance Data LS.Parlist
+deriving instance Data LS.Pos
+deriving instance Data LS.Op
 deriving instance Data Btype
 deriving instance Data Ftype
--}
+
+
+-- | Attributes we want to map to from their equivalent direct representations in the BoGL abstract syntax
 data AttributeConcept = NotEquiv
   | GreaterEqual
   | LessEqual
@@ -75,6 +78,7 @@ data AttributeConcept = NotEquiv
   | Name
   deriving (Eq,Show,Enum)
 
+-- | Defines subsumable attributes
 instance Subsumable AttributeConcept where
   {-
   subsumes BinOp Equiv = True
@@ -89,8 +93,7 @@ instance Subsumable AttributeConcept where
   -}
   subsumes _ _ = False
 
--- subsumption relation for the BinOps & their related parts
-
+-- | Partial mapping of bogl syntactic categories (concepts) to refined ones (attribute concepts)
 boglConceptMapping :: String -> Maybe AttributeConcept
 boglConceptMapping "Top" = Just SymbolType
 boglConceptMapping "NotEquiv" = Just NotEquiv
@@ -164,31 +167,34 @@ boglConceptMapping "Int" = Just IntType
 -- [] ~ empty list (n)
 -- ValDef SourcePos ~ value definition (n)
 boglConceptMapping "[Char]" = Just Name
-boglConceptMapping "BoardDef" = Just BoardDef
-boglConceptMapping "InputDef" = Just InputDef
+boglConceptMapping "BoardDef" = Just Bogl_Specifics.BoardDef
+boglConceptMapping "InputDef" = Just Bogl_Specifics.InputDef
 -- [ValDef SourcePos] ~ list of valdefs, (n)
 boglConceptMapping x = Nothing
 
 
--- 1) Function that parses 2 lists of BoGL progs (from strings) into ASTs (nothing else yet)
+-- | Parses a list of BoGL progs (from strings) into ASTs
 parseBOGLPrograms :: [ConcreteProgram] -> [(String, LS.Game SourcePos)]
 parseBOGLPrograms ls = fdown $ map (\(n,p) -> (n, parsePreludeAndGameText "" p "test")) ls
 
--- filter down programs that pass
+-- | Filter down to the programs that passeed parsing, reporting errors if any failed
 fdown :: [(String,Either a (LS.Game SourcePos))] -> [(String,LS.Game SourcePos)]
 fdown [] = []
 fdown ((n,x):ls) = case x of
                       Left _  -> error $ "Failed to parse program '" ++ n ++ "'" --fdown ls
                       Right g -> (n,g) : fdown ls
 
+-- | Simple program
 exCP1 :: [ConcreteProgram]
 exCP1 = [("OnlyProgram","game Simplest")]
 
+-- | Second simplest, adds value equations and bin ops
 exCP2 :: [ConcreteProgram]
 exCP2 = [("Prog1","game Simplest"),
         ("Prog2","game Simplest\nv : Int\nv = 1"),
         ("Prog3","game Simplest\nv : Int\nv = 1 + 2")]
 
+-- | Third simplest example, adds more bin ops, let exprs
 exCP3 :: [ConcreteProgram]
 exCP3 = [("BasicProg","game S"),
         ("TypeDecl1","game S\ntype Number = Int"),
@@ -197,6 +203,7 @@ exCP3 = [("BasicProg","game S"),
         ("Let","game S\nv : Int\nv = let x = 2 in x"),
         ("LetAgain","game S\nv : Int\nv = let x = 2 in let y = 3 in x")]
 
+-- | Fourth simplest, adds functions
 exCP4 :: [ConcreteProgram]
 exCP4 = [("Base","game S"),
         ("Val","game S\nv : Int\nv = 1"),
@@ -206,6 +213,7 @@ exCP4 = [("Base","game S"),
         ("LetAddSub","game S\nv : Int\nv = let x = 2 in let y = 3 in x + y - 1"),
         ("AddSubFunc","game S\nadd : (Int,Int) -> Int\nadd(x,y) = let z = 1 in x+y - z")]
 
+-- | Simple A-E program set for demonstration
 exCP5 :: [ConcreteProgram]
 exCP5 = [("A","game A"),
         ("B","game B\nv : Int\nv = 32"),
@@ -213,6 +221,7 @@ exCP5 = [("A","game A"),
         ("D","game D\nv : Int\nv = 2 * 4"),
         ("E","game E\nv : Int\nv = 2 + 5 * 2")]
 
+-- | A full set of concrete programs, designed to try and express all possible concepts that are present in BoGL
 exConcretePrograms :: [ConcreteProgram]
 exConcretePrograms = [("Simplest","game Simplest"),
   ("V_Int","game E\nv : Int\nv = 0"),

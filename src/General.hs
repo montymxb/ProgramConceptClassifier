@@ -1,11 +1,11 @@
-module P2021.General where
+module General where
 
 import Debug.Trace
 
--- program in concrete syntax w/ a name
+-- | Program in concrete syntax w/ a name
 type ConcreteProgram = (String,String)
 
--- subsumable relation
+-- | Typeclass for objects that have a subsumption relation
 class Subsumable a where
   -- if the 1st subsumes the 2nd
   subsumes :: a -> a -> Bool
@@ -25,14 +25,14 @@ uniqueInSameOrder [] = []
 uniqueInSameOrder (x:ls) | elem x ls = uniqueInSameOrder ls     -- drop, already present
                          | otherwise = x : uniqueInSameOrder ls -- keep it
 
--- | Removes duplicates from a list, whilst preserving order (reporting dups)
+-- | Removes duplicates from a list, whilst preserving order (reporting dups) ** for debugging purposes **
 uniqueInSameOrder' :: (Eq a, Show a) => [a] -> [a]
 uniqueInSameOrder' [] = []
 uniqueInSameOrder' (x:ls) | elem x ls = trace ("\n\nProgram " ++ (show x) ++ ", intent was duplicated, but kept\n\n") $ x : uniqueInSameOrder' ls     -- drop, already present
                           | otherwise = x : uniqueInSameOrder' ls -- keep it
 
 
--- | Removes duplicates from a list, whilst preserving order (reporting dups by NAME)
+-- | Removes duplicates from a list, whilst preserving order (reporting dups by Name specifically) ** for debugging purposes **
 uniqueInSameOrder'' :: (Eq a, Show a) => [(a,[a])] -> [(a,[a])]
 uniqueInSameOrder'' [] = []
 uniqueInSameOrder'' (x@(a,b):ls) | elem b (map snd ls) = trace ("\n\nFiltered out program " ++ (show a) ++ ", intent was duplicated in programs " ++ (show $ map fst $ filter (\(_,b') -> b' == b) ls) ++ "\n\n") $ uniqueInSameOrder'' ls
@@ -42,7 +42,7 @@ uniqueInSameOrder'' (x@(a,b):ls) | elem b (map snd ls) = trace ("\n\nFiltered ou
 makeUnique :: (Eq a) => [a] -> [a]
 makeUnique = reverse . uniqueInSameOrder . reverse
 
--- Hand written join
+-- | Joins list of strings using a provided separator
 join :: String -> [String] -> String
 join _ [] = ""
 join c (x:ls) = if length ls > 0 then x ++ c ++ (join c ls) else x

@@ -1,8 +1,7 @@
 module Main where
 
-import Programs.BOGL_R1()
-import P2021.R32
-import P2021.Bogl_Specifics
+import R32
+import Bogl_Specifics
 
 main :: IO ()
 main = r32 (FCA

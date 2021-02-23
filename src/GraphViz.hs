@@ -1,18 +1,21 @@
 {-# LANGUAGE ConstrainedClassMethods #-}
 
-module P2021.GraphViz where
+module GraphViz where
 
 import System.Process
 import Data.List
-import P2021.General
+import General
 
+-- | Universally Unique Identifier, used to describe elements independent of their contents
 type UID = String
 
+-- | Produces uniquely identifiable vertices
 uidForVerts :: GraphVizable a => Int -> [a] -> [(UID,a)]
 uidForVerts _ [] = []
 uidForVerts x (y:ys) = (("V" ++ (show x), y) : (uidForVerts (x+1) ys))
 
 
+-- | Produces uniquely identifiable edges
 uidForEdges :: (Eq a, GraphVizable a) => [(UID,a)] -> [(a,a)] -> [((UID,a),(UID,a))]
 uidForEdges verts edges = let firsts = map (\(a,b) -> case (find (\(_,n) -> a == n) verts) of
                                                         Just (u,_) -> ((u,a),b)
@@ -22,27 +25,30 @@ uidForEdges verts edges = let firsts = map (\(a,b) -> case (find (\(_,n) -> a ==
                                                         Nothing-> error "second FAILED") firsts in
                           scnds
 
-foldPairs :: [(String,String)] -> String
-foldPairs ls = foldl (\s (a,b) -> "[" ++ a ++ "=\"" ++ b ++ "\"]" ++ s) "" ls
+-- | Folds pairs of strings into GV properties
+foldPairsIntoProps :: [(String,String)] -> String
+foldPairsIntoProps ls = foldl (\s (a,b) -> "[" ++ a ++ "=\"" ++ b ++ "\"]" ++ s) "" ls
 
+-- | Typeclass for objects that can be used to generate DOT specifications for GV graphs
 class GraphVizable a where
-  -- node properties
+  -- | Generate key:value pairs for node properties
   node :: a -> [(String,String)]
-  -- edge properties
+
+  -- | Generate key:value pairs for edge properties
   edge :: a -> a -> [(String,String)]
 
-  -- construct a digraph using the dot program
+  -- | Construct a digraph using a DOT program
   makeDGraph :: Eq a => String -> ([a],[(a,a)]) -> IO ()
   makeDGraph name (n,e) = do
     makeDot name (n,e)
     _ <- system ("dot -Tpng -o"++ name ++".png " ++ name ++".gv")
     return ()
 
-  -- writes out a DOT file suitable for using with `dot`
+  -- | Writes out a DOT file suitable for using with `dot`, system dependent
   makeDot :: Eq a => String -> ([a],[(a,a)]) -> IO ()
   makeDot name (n,e) = do
     let uV = uidForVerts 1 n
     let uE = uidForEdges uV e
-    let nodes = map (\(u,x) -> u ++ " " ++ foldPairs (node x)) uV
-    let edges = map (\((u,a),(u',b)) -> u ++ " -> " ++ u' ++ " " ++ foldPairs (edge a b)) uE
+    let nodes = map (\(u,x) -> u ++ " " ++ foldPairsIntoProps (node x)) uV
+    let edges = map (\((u,a),(u',b)) -> u ++ " -> " ++ u' ++ " " ++ foldPairsIntoProps (edge a b)) uE
     writeFile (name ++ ".gv") $ "strict digraph {\n" ++ join ";\n" nodes ++ ";\n" ++ join ";\n" edges ++ "\n}"

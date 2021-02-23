@@ -2,32 +2,24 @@
 --
 -- Modern revision of the tool
 --
-module P2021.R32 where
+module R32 where
 
 import Parser.Parser
 import Data.Data
 import Data.Either
-import P2021.General
+import General
 import qualified Data.Set as S
 import Data.List
 import Data.Matrix
 import Data.Maybe
 import qualified Data.PartialOrd as PO
-import qualified P2021.GraphViz as GV
-
+import qualified GraphViz as GV
 import qualified Debug.Trace as DT
 
---
 -- BoGL Stuff
---
-import P2021.Bogl_Specifics
-
+import Bogl_Specifics
 import Language.Syntax (Game)
 import Text.Parsec.Pos
---import qualified Data.Set as DS
-import qualified DB.BoglDB as BDB
-import ConceptGraph.GraphToConceptGraph (graph_to_concept_graph)
-import ConceptGraph.Conceptual (graphCG)
 
 -- terms are names in this context, both terminal & nonterminal
 type Term = String
