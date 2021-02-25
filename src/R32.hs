@@ -23,7 +23,6 @@ type Object = String
 
 -- attribute of an object
 type Attribute = String
-type Intent = Attribute
 
 -- Representation of a singular form of implication
 -- Many Ands -> Many Ands
@@ -55,7 +54,6 @@ conceptExtent :: FormalConcept -> [Object]
 conceptExtent (FormalConcept (_,g,_)) = g
 
 instance PO.PartialOrd FormalConcept where
-  --(<=) a b = let r = compareFormalConceptsByExtents a b in r /= GT
   (<=) a b = case compareFormalConceptsByExtents a b of
               Just r  -> r /= GT
               Nothing -> False
@@ -72,7 +70,6 @@ instance PO.PartialOrd FormalConcept where
   (>) a b = case compareFormalConceptsByExtents a b of
               Just r  -> r == GT
               Nothing -> False
-  compare a b = compareFormalConceptsByExtents a b
 
 
 instance GV.GraphVizable FormalConcept where
@@ -84,34 +81,17 @@ instance GV.GraphVizable FormalConcept where
                                                                  else
                                                                    []
 
-
-strConcept :: FormalConcept -> String
-strConcept (FormalConcept (_,g,m)) = "({" ++ join "," g ++ "},{" ++ join "," m ++ "})"
-
 -- formal context (G,M,I)
 -- G = Set of all objects (programs)
 -- M = Set of all attributes (terms)
 -- I = Subset of (G X M), Relation that links elements of G to elements of M
 type FormalContext = ([Object],[Attribute],[(Object,Attribute)])
 
-fcM :: FormalContext -> [Attribute]
-fcM (_,m,_) = m
-
 contextExtent :: FormalContext -> [Object]
 contextExtent (g,_,_) = g
 
 contextIntent :: FormalContext -> [Attribute]
 contextIntent (_,m,_) = m
-
--- Ordering for Formal Concepts
---data OrderBy =
---  OrderByIntents |
---  OrderByExtents
-
-data ConceptsBy =
-  ConceptsByIntents |
-  ConceptsByExtents |
-  AllConcepts
 
 type ParsingFunction a = ([ConcreteProgram] -> [(String, a)])
 
@@ -122,13 +102,9 @@ type GoalPrograms  = [ConcreteProgram]
 type CoursePrograms= [ConcreteProgram]
 
 -- Configuration for performing Formal Concept Analysis
-data FCA a b = FCA ConceptsBy (ParsingFunction a) (ConceptMapping b) KnownPrograms GoalPrograms CoursePrograms [Object] [b]
+data FCA a b = FCA (ParsingFunction a) (ConceptMapping b) KnownPrograms GoalPrograms CoursePrograms [Object] [b]
 
-type Lattice a = ([a],[(a,a)])
 type ConceptLattice = ([FormalConcept],[(FormalConcept,FormalConcept)])
-
-getAllNodes :: ConceptLattice -> [FormalConcept]
-getAllNodes (nodes,_) = nodes
 
 -- Return the lower neighbors of this node in the concept lattice, if any
 getLowerNeighbors :: ConceptLattice -> FormalConcept -> [FormalConcept]
@@ -143,23 +119,19 @@ getJoin :: ConceptLattice -> FormalConcept
 getJoin (nodes,_) = head $ PO.maxima nodes
 
 -- returns the infimum of the concept lattice (Bottom most node, most specific, concept of all attributes)
-getMeet :: ConceptLattice -> FormalConcept
-getMeet (nodes,_) = head $ PO.minima nodes
-
-mapL :: (a -> b) -> Lattice a -> Lattice b
-mapL f (nodes,edges) = (map f nodes, map (\(a,b) -> (f a, f b)) edges)
-
---graphConceptLattice :: String -> ConceptLattice -> IO ()
---graphConceptLattice name cl = GV.writeLattice name cl
+--getMeet :: ConceptLattice -> FormalConcept
+--getMeet (nodes,_) = head $ PO.minima nodes
 
 -- updates a single concept in both the nodes & edges portion and returns the updated lattice
 -- focuses on updating name only
+{-
 updateInLattice :: ConceptLattice -> FormalConcept -> ConceptLattice
 updateInLattice (nodes,edges) fc@(FormalConcept (_,a,b)) = let n = map maybeReplace nodes in
                                                            let e = map (\(f1,f2) -> (maybeReplace f1, maybeReplace f2)) edges in
                                                            (n,e) where
                                                              maybeReplace :: FormalConcept -> FormalConcept
                                                              maybeReplace fc2@(FormalConcept (_,a2,b2)) = if a == a2 && b == b2 then fc else fc2
+-}
 
 data Wrapper = Wrap String
 
@@ -178,20 +150,11 @@ data KnowledgeState = KnowledgeState [FormalConcept] [Object] [Attribute]
 -- run the analysis, taking an FCA analysis instance
 -- Takes known programs, goal programs, and course programs (programs available in the course)
 r32 :: (Data a, Show a, Subsumable b, Show b) => FCA a b -> IO ()
-r32 (FCA cb programParser conceptMapping kps gps cps extraKnownProgs extraKnownIntents) = do
-  -- parse the programs that are understood
-  let parsedKPS = programParser kps
-  -- parse the goal programs that are desired to be understood
-  let parsedGPS = programParser gps
-  -- parse course programs that are available as extents
-  let parsedCPS = programParser cps
-
-  -- extract terms for the known list of programs, preserving names
-  let knownTaggedPrograms = (map (astToTerms conceptMapping) parsedKPS)
-  -- extract terms for the goal list of programs, preserving names
-  let goalTaggedPrograms = map (astToTerms conceptMapping) parsedGPS
-  -- extract terms for the course list of programs, preserving names
-  let courseTaggedPrograms = map (astToTerms conceptMapping) parsedCPS
+r32 (FCA programParser conceptMapping kps gps cps extraKnownProgs extraKnownIntents) = do
+  -- extract terms for the these program lists, preserving names
+  let knownTaggedPrograms   = map (astToTerms conceptMapping) (programParser kps)
+  let goalTaggedPrograms    = map (astToTerms conceptMapping) (programParser gps)
+  let courseTaggedPrograms  = map (astToTerms conceptMapping) (programParser cps)
 
   -- produce total context
   -- from known & goal programs, we want to create an 'intent of interest'
@@ -214,13 +177,15 @@ r32 (FCA cb programParser conceptMapping kps gps cps extraKnownProgs extraKnownI
                         ul  -> (g', filter (`elem` ul) m', filter (\(_,b) -> b `elem` ul) i')
 
   -- produce total concepts from total context
-  let totalConcepts' = getConceptsFromContext cb totalContext
+  let totalConcepts' = getConceptsFromContext totalContext
   -- get known formal concepts, factoring in those that have been implicitly indicated by the programs & attributes added so far while learning
-  let knownFormalConcepts = (mkFormalConceptsFromSubExtents totalContext (map fst knownTaggedPrograms)) ++ (filter (\(FormalConcept ((g,m),_,_)) -> S.fromList g `S.isSubsetOf` S.fromList extraKnownProgs && S.fromList m `S.isSubsetOf` S.fromList (map show extraKnownIntents) && (not $ S.null $ S.fromList g) && (not $ S.null $ S.fromList m)) totalConcepts')
-  -- goal is fixed to what programs are given in the goal
-  let goalFormalConcepts = mkFormalConceptsFromSubExtents totalContext (map fst goalTaggedPrograms)
+  let kfc = catMaybes $ map (findObjectConcept totalConcepts') (map fst knownTaggedPrograms)
+  -- find known concepts plus any concepts that we could additionally mark as known (ones that are subsets of what we indicated we have learned so far, beyond the known program)
+  let knownFormalConcepts = kfc ++ (filter (\(FormalConcept ((g,m),_,_)) -> S.fromList g `S.isSubsetOf` S.fromList extraKnownProgs && S.fromList m `S.isSubsetOf` S.fromList (map show extraKnownIntents) && (not $ S.null $ S.fromList g) && (not $ S.null $ S.fromList m)) totalConcepts')
+  let goalFormalConcepts = catMaybes $ map (findObjectConcept totalConcepts') (map fst goalTaggedPrograms)
   -- Apply Bounding concepts to get sub-lattice to work with
-  let boundingConcepts = mkFormalConceptsFromSubExtents totalContext ((map fst knownTaggedPrograms) ++ (map fst goalTaggedPrograms))
+  let boundingConcepts = catMaybes $ map (findObjectConcept totalConcepts') ((map fst knownTaggedPrograms) ++ (map fst goalTaggedPrograms))
+
   let totalConcepts = case (length knownFormalConcepts > 0, length goalFormalConcepts > 0) of
                         -- no bounds
                         (False,False) -> totalConcepts'
@@ -259,8 +224,8 @@ r32 (FCA cb programParser conceptMapping kps gps cps extraKnownProgs extraKnownI
 
 
   -- TODO, this removed conflicting implications, but there may be a better way to do this
-  --let implications = filterCommonPremise (conceptIntent $ getJoin conceptLattice) $ removeConflictingImplications $ deriveImplications (fcM totalContext) $ getTT totalContext
-  --let implications = filterCommonPremise (conceptIntent $ getJoin conceptLattice) $ deriveImplications (fcM totalContext) $ getTT totalContext
+  --let implications = filterCommonPremise (conceptIntent $ getJoin conceptLattice) $ removeConflictingImplications $ deriveImplications (conceptIntent totalContext) $ getTT totalContext
+  --let implications = filterCommonPremise (conceptIntent $ getJoin conceptLattice) $ deriveImplications (conceptIntent totalContext) $ getTT totalContext
   --putStrLn $ "Num implications: " ++ (show $ length implications)
   --qq <- stringImplications $ sort $ implications
 
@@ -279,33 +244,32 @@ r32 (FCA cb programParser conceptMapping kps gps cps extraKnownProgs extraKnownI
   --let nxtNeighbors = concatMap (getLowerNeighbors conceptLattice) knownFormalConcepts \\ knownFormalConcepts
   --putStrLn $ show nxtNeighbors
   putStrLn ""
-  --putStrLn $ exploreNeighborhoodAuto "" finalKS initKS conceptLattice
   let knowledgeSteps = getKnowledgeSteps initKS conceptLattice
   putStrLn $ show knowledgeSteps
   putStrLn $ show $ makeUnique $ fg2 knowledgeSteps
-  --let zz = explainNeighbors initKS finalKS nxtNeighbors
-  -- 6) Present the new attributes of the INTENT of the neighbor (or all of them)
-  -- 7) Explore to all options automatically, until we are done, and then continue (basically a breadth-first search)
 
   --let prettyLattice = mapL conceptLabel conceptLattice
-  --graphConceptLattice "R32_Test_1" conceptLattice
   GV.makeDGraph "R23_Test_1" conceptLattice
 
-  -- TODO full detailed formal context as a matrix
-  let (pm,mm,matt) = mkFormalConceptMatrix totalContext
-  putStrLn $ showMatLegend pm
-  putStrLn $ showMatLegend mm
-  putStrLn $ prettyMatrix matt
+  -- full detailed formal context as a matrix
+  --let (pm,mm,matt) = mkFormalConceptMatrix totalContext
+  --putStrLn $ showMatLegend pm
+  --putStrLn $ showMatLegend mm
+  --putStrLn $ prettyMatrix matt
   let smallMat = mkFormalConceptMatrixSmall totalContext
-  putStrLn $ prettyMatrix smallMat
+  --putStrLn $ prettyMatrix smallMat
   --putStrLn "* Exported to CSV"
   exportCSV totalContext smallMat
-
+  -- printout a webpage
   printWebPage (filter (\(a,_) -> a `elem` extraKnownProgs) cps) kps gps initKS finalKS knowledgeSteps
 
 
+-- | Finds the object concept (classification) from a list of classifications (if present)
+findObjectConcept :: [FormalConcept] -> Object -> Maybe FormalConcept
+findObjectConcept fc o = find (\(FormalConcept ((g,_),_,_)) -> elem o g) fc
 
--- simple knowledge state printout
+
+-- | simple knowledge state printout
 knowledgeStateToStr :: KnowledgeState -> String
 knowledgeStateToStr (KnowledgeState ks progs _) = "{"++ join "," progs ++"}\n{" ++ join "," (concatMap conceptIntent ks) ++ "}"
 
@@ -326,8 +290,6 @@ printWebPage eps kps gps (KnowledgeState _ _ attrs') (KnowledgeState _ _ attrs) 
     kstep :: KnowledgeStep -> String
     kstep (Step (o,a) ks) = "<div class='step'>Step ({" ++ join "," o ++ "},{" ++ join "," a  ++ "})" ++ "<div class='step-block'>" ++ concatMap kstep ks ++ "</div></div>"
     kstep (Fringe o a) = "<div class='step'>Fringe ({" ++ join "," o ++ "},{" ++ join "," a  ++ "})</div>"
-    --t3s :: (String,String,String) -> String
-    --t2s (a,b,c) = "<h3 class='pn'>" ++ a ++ "</h3><p class='attributes'>(" ++ c ++ ")</p><br/><div class='code'>" ++ b ++ "</div>"
 
     sprg :: (String,String) -> String
     sprg (a,b) = "<h4>" ++ a ++ "</h4><div class='code'>" ++ b ++ "</div>"
@@ -415,19 +377,11 @@ combineIdenticalConcepts ls = combineIC ls ls
                                                                                fc2 : combineIC filt ys
 
 -- Produce intersections that do not already exist
-intersectExtents :: [[Object]] -> [Object] -> [[Object]]
-intersectExtents xs y = filter (\z -> not (elem z xs) && z /= []) $ map (intersect y) xs
+--intersectExtents :: [[Object]] -> [Object] -> [[Object]]
+--intersectExtents xs y = filter (\z -> not (elem z xs) && z /= []) $ map (intersect y) xs
 
-getConceptsFromContext :: ConceptsBy -> FormalContext -> [FormalConcept]
--- Focuses on attribute concepts
-getConceptsFromContext ConceptsByIntents fc = combineIdenticalConcepts $ mkFormalConceptFromIntents fc
--- Focuses on object concepts
-getConceptsFromContext ConceptsByExtents fc = combineIdenticalConcepts $ mkFormalConceptFromExtents fc
-getConceptsFromContext AllConcepts fc = let attrConcepts = combineIdenticalConcepts $ mkFormalConceptFromIntents fc in -- compute attribute concepts
-                                        let acExtents = map conceptExtent attrConcepts in -- compute extents of these concepts
-                                        let acIntersections = concatMap (intersectExtents acExtents) acExtents in -- intersect these extents
-                                        let extraConcepts = map (\ogi -> FormalConcept (([],[]), ogi, a' ogi fc)) acIntersections in -- generate the extra concepts
-                                        uniqueInSameOrder $ combineIdenticalConcepts $ attrConcepts ++ extraConcepts ++ (mkFormalConceptFromExtents fc) -- put it all together
+getConceptsFromContext :: FormalContext -> [FormalConcept]
+getConceptsFromContext fc = uniqueInSameOrder $ combineIdenticalConcepts $ mkFormalConceptsFromExtents fc ++ mkFormalConceptsFromIntents fc
 
 
 -- Convert program in AST to list Terms
@@ -468,27 +422,22 @@ b' [] _ = []
 b' (x:ls) fc@(_,_,i) = let filt = filter (\(_,a) -> a == x) i in
                        let cm = map fst filt in
                        let rset = S.fromList (b' ls fc) in
-                       let atrs = if null rset then cm else S.toList $ (S.fromList cm) `S.intersection` rset in
-                       uniqueInSameOrder $ atrs
+                       let objs = if null rset then cm else S.toList $ (S.fromList cm) `S.intersection` rset in
+                       uniqueInSameOrder $ objs
 
 -- find formal concepts through object analysis
 -- Set A of objs can determine a concept
 -- (A'',A')
 -- A'' is the extent closure
-mkFormalConceptFromExtents :: FormalContext -> [FormalConcept]
-mkFormalConceptFromExtents fc@(g,_,_) = map (\obj -> FormalConcept (([obj],[]), b' (a' [obj] fc) fc, a' [obj] fc)) g
-
--- produce a sub-set of concepts from a given set of objects
--- which are implied to be in the formal context, otherwise this does not work...
-mkFormalConceptsFromSubExtents :: FormalContext -> [Object] -> [FormalConcept]
-mkFormalConceptsFromSubExtents fc g = map (\obj -> FormalConcept (([obj],[]), b' (a' [obj] fc) fc, a' [obj] fc)) g
+mkFormalConceptsFromExtents :: FormalContext -> [FormalConcept]
+mkFormalConceptsFromExtents fc@(g,_,_) = map (\obj -> FormalConcept (([obj],[]), b' (a' [obj] fc) fc, a' [obj] fc)) g
 
 -- find formal concepts through attribute analysis
 -- or set B of attributes determines a concept
 -- (B',B'')
 -- B'' is the intent closure
-mkFormalConceptFromIntents :: FormalContext -> [FormalConcept]
-mkFormalConceptFromIntents fc@(_,m,_) = map (\atr -> FormalConcept (([],[atr]), b' [atr] fc, a' (b' [atr] fc) fc)) m
+mkFormalConceptsFromIntents :: FormalContext -> [FormalConcept]
+mkFormalConceptsFromIntents fc@(_,m,_) = map (\atr -> FormalConcept (([],[atr]), b' [atr] fc, a' (b' [atr] fc) fc)) m
 
 -- partially ordered by extents
 -- (A1,B1) <= (A2,B2) iff A1 is a subset A2
@@ -499,18 +448,6 @@ compareFormalConceptsByExtents (FormalConcept (_,a,_)) (FormalConcept (_,b,_)) =
                                                                                     case sa `S.isSubsetOf` sb of
                                                                                       True  -> if sa == sb then Just EQ else Just LT
                                                                                       False -> case sb `S.isSubsetOf` sa of
-                                                                                                True  -> Just GT
-                                                                                                False -> Nothing
-
--- partially ordered by intents (these 2 should be equivalent ways of doing this)
--- (A1,B1) <= (A2,B2) iff B2 is a subset B1
-compareFormalConceptsByIntents :: FormalConcept -> FormalConcept -> Maybe Ordering
-compareFormalConceptsByIntents (FormalConcept (_,_,a)) (FormalConcept (_,_,b)) = let sa = S.fromList a
-                                                                                     sb = S.fromList b
-                                                                                 in
-                                                                                    case sb `S.isSubsetOf` sa of
-                                                                                      True  -> if sb == sa then Just EQ else Just LT
-                                                                                      False -> case sa `S.isSubsetOf` sb of
                                                                                                 True  -> Just GT
                                                                                                 False -> Nothing
 
@@ -552,21 +489,21 @@ mkFormalConceptMatrixSmall (g,m,i) = matrix ((length g)) ((length m)) (\(x,y) ->
 -- Builds a ConceptLattice from a list of formal concepts
 mkConceptLattice :: [FormalConcept] -> ConceptLattice
 mkConceptLattice xs = (xs, _mkConceptLattice xs xs)
-
--- internally constructs the relationships between formal concepts as edges
-_mkConceptLattice :: [FormalConcept] -> [FormalConcept] -> [(FormalConcept,FormalConcept)]
-_mkConceptLattice [] _ = []
-_mkConceptLattice ls bs    = let x = head $ PO.maxima ls in -- get one of the maxima to work with
-                             -- compute direct lower neighbors
-                             let subConcepts = filter (\y -> y PO.< x) bs in -- find all subconcepts of our picked maxima
-                             -- get the most general subconcepts that are direct neighbors of concept 'x' (i.e, the maxima)
-                             let neighbors = PO.maxima subConcepts in
-                             -- creates edges from x -> neighbors
-                             let edges = map (\z -> (x,z)) neighbors in
-                             -- remove our plucked maxima from the running list
-                             let subList = ls \\ [x] in
-                             -- add edges, and continue
-                             edges ++ (_mkConceptLattice subList bs)
+                      where
+                        -- internally constructs the relationships between formal concepts as edges
+                        _mkConceptLattice :: [FormalConcept] -> [FormalConcept] -> [(FormalConcept,FormalConcept)]
+                        _mkConceptLattice [] _ = []
+                        _mkConceptLattice ls bs    = let x = head $ PO.maxima ls in -- get one of the maxima to work with
+                                                     -- compute direct lower neighbors
+                                                     let subConcepts = filter (\y -> y PO.< x) bs in -- find all subconcepts of our picked maxima
+                                                     -- get the most general subconcepts that are direct neighbors of concept 'x' (i.e, the maxima)
+                                                     let neighbors = PO.maxima subConcepts in
+                                                     -- creates edges from x -> neighbors
+                                                     let edges = map (\z -> (x,z)) neighbors in
+                                                     -- remove our plucked maxima from the running list
+                                                     let subList = ls \\ [x] in
+                                                     -- add edges, and continue
+                                                     edges ++ (_mkConceptLattice subList bs)
 
 --
 -- TODO attribute implication work
