@@ -13,7 +13,7 @@ import General
 
 import Parser.Parser
 import Data.Data
-import Data.Either
+--import Data.Either
 
 -- Data, Typeable, and Eq instances for the data types we we need to traverse
 deriving instance (Eq a) => Eq (LS.Game a)
@@ -170,7 +170,7 @@ boglConceptMapping "[Char]" = Just Name
 boglConceptMapping "BoardDef" = Just Bogl_Specifics.BoardDef
 boglConceptMapping "InputDef" = Just Bogl_Specifics.InputDef
 -- [ValDef SourcePos] ~ list of valdefs, (n)
-boglConceptMapping x = Nothing
+boglConceptMapping _ = Nothing
 
 
 -- | Parses a list of BoGL progs (from strings) into ASTs

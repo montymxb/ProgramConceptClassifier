@@ -4,9 +4,8 @@
 --
 module R32 where
 
-import Parser.Parser
 import Data.Data
-import Data.Either
+--import Data.Either
 import General
 import qualified Data.Set as S
 import Data.List
@@ -15,11 +14,6 @@ import Data.Maybe
 import qualified Data.PartialOrd as PO
 import qualified GraphViz as GV
 import qualified Debug.Trace as DT
-
--- BoGL Stuff
-import Bogl_Specifics
-import Language.Syntax (Game)
-import Text.Parsec.Pos
 
 -- terms are names in this context, both terminal & nonterminal
 type Term = String
@@ -83,7 +77,7 @@ instance PO.PartialOrd FormalConcept where
 
 instance GV.GraphVizable FormalConcept where
   node (FormalConcept (([],[]),_,_))  = [("label","")]
-  node (FormalConcept ((g,m),_,_))    = [("label",join ", " g),("fontcolor","purple"),("fontname","Helvetica")]
+  node (FormalConcept ((g,_),_,_))    = [("label",join ", " g),("fontcolor","purple"),("fontname","Helvetica")]
   edge (FormalConcept ((_,a),_,_)) (FormalConcept ((_,b),_,_)) = let d = (b \\ a) in
                                                                  if length d > 0 then
                                                                    [("label",join ", " d),("fontname","Helvetica")]
@@ -110,9 +104,9 @@ contextIntent :: FormalContext -> [Attribute]
 contextIntent (_,m,_) = m
 
 -- Ordering for Formal Concepts
-data OrderBy =
-  OrderByIntents |
-  OrderByExtents
+--data OrderBy =
+--  OrderByIntents |
+--  OrderByExtents
 
 data ConceptsBy =
   ConceptsByIntents |
@@ -128,7 +122,7 @@ type GoalPrograms  = [ConcreteProgram]
 type CoursePrograms= [ConcreteProgram]
 
 -- Configuration for performing Formal Concept Analysis
-data FCA a b = FCA OrderBy ConceptsBy (ParsingFunction a) (ConceptMapping b) KnownPrograms GoalPrograms CoursePrograms [Object] [b]
+data FCA a b = FCA ConceptsBy (ParsingFunction a) (ConceptMapping b) KnownPrograms GoalPrograms CoursePrograms [Object] [b]
 
 type Lattice a = ([a],[(a,a)])
 type ConceptLattice = ([FormalConcept],[(FormalConcept,FormalConcept)])
@@ -138,11 +132,11 @@ getAllNodes (nodes,_) = nodes
 
 -- Return the lower neighbors of this node in the concept lattice, if any
 getLowerNeighbors :: ConceptLattice -> FormalConcept -> [FormalConcept]
-getLowerNeighbors (_,edges) fc = map snd $ filter (\(i,o) -> i PO.== fc) edges
+getLowerNeighbors (_,edges) fc = map snd $ filter (\(i,_) -> i PO.== fc) edges
 
 -- Return the upper neighbors of this node in the concept lattice, if any
 getUpperNeighbors :: ConceptLattice -> FormalConcept -> [FormalConcept]
-getUpperNeighbors (_,edges) fc = map fst $ filter (\(i,o) -> o PO.== fc) edges
+getUpperNeighbors (_,edges) fc = map fst $ filter (\(_,o) -> o PO.== fc) edges
 
 -- returns supremum of the concept lattice (Top most node, most general, concept of all objects)
 getJoin :: ConceptLattice -> FormalConcept
@@ -184,7 +178,7 @@ data KnowledgeState = KnowledgeState [FormalConcept] [Object] [Attribute]
 -- run the analysis, taking an FCA analysis instance
 -- Takes known programs, goal programs, and course programs (programs available in the course)
 r32 :: (Data a, Show a, Subsumable b, Show b) => FCA a b -> IO ()
-r32 (FCA ob cb programParser conceptMapping kps gps cps extraKnownProgs extraKnownIntents) = do
+r32 (FCA cb programParser conceptMapping kps gps cps extraKnownProgs extraKnownIntents) = do
   -- parse the programs that are understood
   let parsedKPS = programParser kps
   -- parse the goal programs that are desired to be understood
@@ -202,10 +196,22 @@ r32 (FCA ob cb programParser conceptMapping kps gps cps extraKnownProgs extraKno
   -- produce total context
   -- from known & goal programs, we want to create an 'intent of interest'
   -- we will use this to reduce the attributes we have in our graph to only those we care about (between goal & known inclusively)
-  let intentOfInterest = uniqueInSameOrder $ concatMap snd knownTaggedPrograms ++ concatMap snd goalTaggedPrograms
-  let filteredCourseProgs = filter (\(_,b) -> S.fromList b `S.isSubsetOf` S.fromList intentOfInterest) courseTaggedPrograms
-  let (g,m,i) = mkFormalContext (uniqueInSameOrder' $ knownTaggedPrograms ++ goalTaggedPrograms ++ filteredCourseProgs)
-  let totalContext = (g, filter (`elem` intentOfInterest) m, filter (\(_,b) -> b `elem` intentOfInterest) i)
+  -- get upper & lower intents
+  let lowerIntent = uniqueInSameOrder $ concatMap snd knownTaggedPrograms
+  let upperIntent = uniqueInSameOrder $ concatMap snd goalTaggedPrograms
+  -- filter by lower & upper intents
+  let fcp1 = case lowerIntent of
+              [] -> courseTaggedPrograms
+              _  -> filter (\(_,b) -> not $ S.fromList b `S.isSubsetOf` S.fromList lowerIntent) courseTaggedPrograms
+  let filteredCourseProgs = case upperIntent of
+              [] -> fcp1
+              _  -> filter (\(_,b) -> S.fromList b `S.isSubsetOf` S.fromList upperIntent) fcp1
+  -- generate decomposed formal context
+  let (g',m',i') = mkFormalContext (uniqueInSameOrder' $ knownTaggedPrograms ++ goalTaggedPrograms ++ filteredCourseProgs)
+  -- only reduce the context against the upper intent
+  let totalContext = case upperIntent of
+                        []  -> (g',m',i')
+                        ul  -> (g', filter (`elem` ul) m', filter (\(_,b) -> b `elem` ul) i')
 
   -- produce total concepts from total context
   let totalConcepts' = getConceptsFromContext cb totalContext
@@ -218,18 +224,18 @@ r32 (FCA ob cb programParser conceptMapping kps gps cps extraKnownProgs extraKno
   let totalConcepts = case (length knownFormalConcepts > 0, length goalFormalConcepts > 0) of
                         -- no bounds
                         (False,False) -> totalConcepts'
-                        -- upper & lower bounds
-                        (True,True)   -> filter (\x -> any (x PO.>=) (PO.minima boundingConcepts) && any (x PO.<=) (PO.maxima boundingConcepts)) totalConcepts'
-                        -- lower bound, we only want programs more specific than this
-                        (True,False)  -> filter (\x -> any (x PO.<=) (PO.minima boundingConcepts)) totalConcepts'
-                        -- upper bound, we only want programs more general than this
-                        (False,True)  -> filter (\x -> any (x PO.>=) (PO.maxima boundingConcepts)) totalConcepts'
+                        -- upper & lower bounds, we want programs that are more specific than the most general program
+                        -- and are more general than the most specific program (bounded set)
+                        (True,True)   -> filter (\x -> any (x PO.<=) (PO.maxima boundingConcepts) && any (x PO.>=) (PO.minima boundingConcepts)) totalConcepts'
+                        -- lower bound, we only want programs more specific than this set (smaller extent)
+                        (True,False)  -> filter (\x -> any (x PO.<=) (PO.maxima boundingConcepts)) totalConcepts'
+                        -- upper bound, we only want programs more general than this set (larger extent)
+                        (False,True)  -> filter (\x -> any (x PO.>=) (PO.minima boundingConcepts)) totalConcepts'
 
   putStrLn $ "Num Course Progs: " ++ (show $ length cps)
   putStrLn $ "Num Course Objects: " ++ (show $ length ((\(x,_,_) -> x) totalContext))
   putStrLn $ "Num Course attributes: " ++ (show $ length ((\(_,x,_) -> x) totalContext))
   putStrLn $ "Num Formal Concepts (Program,Attribute set pairs): " ++ (show $ length totalConcepts)
-  --putStrLn $ showConcepts (sortBy (getConceptOrdering ob) totalConcepts)
   putStrLn $ showConcepts totalConcepts
 
   -- report Known Concepts
@@ -241,20 +247,20 @@ r32 (FCA ob cb programParser conceptMapping kps gps cps extraKnownProgs extraKno
   putStrLn $ "Goal Concepts: " ++ show goalConcepts
 
   -- create Formal Concept of all intents
-  let m' = FormalConcept (([],[]), [], (\(_,m,_) -> m) totalContext)
+  let fcm = FormalConcept (([],[]), [], (\(_,m,_) -> m) totalContext)
   -- create Formal Concept of all extents
-  let g' = FormalConcept (([],[]), (\(a,_,_) -> a) totalContext, [])
+  let fcg = FormalConcept (([],[]), (\(a,_,_) -> a) totalContext, [])
   -- Add the Formal Concept of all Extents ONLY if a program does not exist that captures this notion
-  let l1 = if doesConceptExtentAlreadyExist g' totalConcepts then totalConcepts else totalConcepts ++ [g']
+  let l1 = if doesConceptExtentAlreadyExist fcg totalConcepts then totalConcepts else totalConcepts ++ [fcg]
   -- Add the Formal Concept of all Intents ONLY if a program does not exist that captures this notion
-  let l2 = if doesConceptIntentAlreadyExist m' l1 then l1 else l1 ++ [m']
+  let l2 = if doesConceptIntentAlreadyExist fcm l1 then l1 else l1 ++ [fcm]
 
   let conceptLattice = mkConceptLattice l2
 
 
   -- TODO, this removed conflicting implications, but there may be a better way to do this
   --let implications = filterCommonPremise (conceptIntent $ getJoin conceptLattice) $ removeConflictingImplications $ deriveImplications (fcM totalContext) $ getTT totalContext
-  let implications = filterCommonPremise (conceptIntent $ getJoin conceptLattice) $ deriveImplications (fcM totalContext) $ getTT totalContext
+  --let implications = filterCommonPremise (conceptIntent $ getJoin conceptLattice) $ deriveImplications (fcM totalContext) $ getTT totalContext
   --putStrLn $ "Num implications: " ++ (show $ length implications)
   --qq <- stringImplications $ sort $ implications
 
@@ -287,15 +293,15 @@ r32 (FCA ob cb programParser conceptMapping kps gps cps extraKnownProgs extraKno
 
   -- TODO full detailed formal context as a matrix
   let (pm,mm,matt) = mkFormalConceptMatrix totalContext
-  --putStrLn $ showMatLegend pm
-  --putStrLn $ showMatLegend mm
-  --putStrLn $ prettyMatrix matt
+  putStrLn $ showMatLegend pm
+  putStrLn $ showMatLegend mm
+  putStrLn $ prettyMatrix matt
   let smallMat = mkFormalConceptMatrixSmall totalContext
-  --putStrLn $ prettyMatrix smallMat
+  putStrLn $ prettyMatrix smallMat
   --putStrLn "* Exported to CSV"
   exportCSV totalContext smallMat
 
-  printWebPage (filter (\(a,b) -> a `elem` extraKnownProgs) cps) kps gps initKS finalKS knowledgeSteps
+  printWebPage (filter (\(a,_) -> a `elem` extraKnownProgs) cps) kps gps initKS finalKS knowledgeSteps
 
 
 
@@ -305,7 +311,7 @@ knowledgeStateToStr (KnowledgeState ks progs _) = "{"++ join "," progs ++"}\n{" 
 
 
 printWebPage :: [(String,String)] -> KnownPrograms -> GoalPrograms -> KnowledgeState -> KnowledgeState -> [KnowledgeStep] -> IO ()
-printWebPage eps kps gps fks@(KnowledgeState ks' progs' attrs') kks@(KnowledgeState ks progs attrs) ls = do
+printWebPage eps kps gps (KnowledgeState _ _ attrs') (KnowledgeState _ _ attrs) ls = do
   let dt = "<!DOCTYPE html><html><head><title>Ex. 1</title><script src='site/script.js'></script><link href='site/style.css' type='text/css' rel='stylesheet'/></link></head><div></div><body><div id='main'>"
   let ks = "<div>" ++ concatMap t2s kps ++ "<p class='attributes'>(" ++ join ", " (makeUnique attrs') ++ ")</p>" ++ "<br/>" ++ concatMap t2s gps ++ "<p class='attributes'>(" ++ join ", " (makeUnique (attrs \\ attrs')) ++ ")</p></div>"
   let img = "<h2>Lattice from Known to Goal</h3><img src='R32_Test_1.png'>"
@@ -337,8 +343,9 @@ data KnowledgeStep =
 
 -- get and report only the total fringe
 fringe :: KnowledgeStep -> KnowledgeStep -> KnowledgeStep
-fringe fs (Step ls ks) = foldl fringe fs ks
-fringe (Fringe o' a') (Fringe o a) = Fringe (makeUnique $ o++o') (makeUnique $ a++a')
+fringe fs (Step _ ks) = foldl fringe fs ks
+fringe (Fringe o' a'') (Fringe o a) = Fringe (makeUnique $ o++o') (makeUnique $ a++a'')
+fringe _ _ = error "Unexpected case for 'fringe'"
 
 fg2 :: [KnowledgeStep] -> [KnowledgeStep]
 fg2 [] = []
@@ -363,55 +370,18 @@ getKnowledgeSteps (KnowledgeState ks kprogs kc) cl =
                                   (0,0)  -> Step (conceptLabel x) $ S.fromList $ map (getKnowledgeSteps' (x:ks')) (filter (\q -> (getUpperNeighbors cl q) PO.<= (x:ks')) (getLowerNeighbors cl x))
                                   (_,_)  -> Step (conceptLabel x) $ S.fromList [(Fringe unknownPrograms unknownConcepts)]
 
-
---explainUnknownProgram :: String -> Object -> String
---explainUnknownProgram b p = b ++ "- p " ++ p ++ "\n"
-
---explainUnknownConcept :: String -> Attribute -> String
---explainUnknownConcept b c = b ++ "- c " ++ c ++ "\n"
-
--- Change this to a BREADTH first search
-{-
-exploreNeighborhoodAuto :: String -> KnowledgeState -> KnowledgeState -> ConceptLattice -> String
-exploreNeighborhoodAuto s fks@(KnowledgeState fs fprogs fc) kks@(KnowledgeState ks kprogs kc) cl = -- get the lower neighbors
-                                                                                         let ln = filter (\(_,q) -> not $ q `elem` ks) $ concatMap (\un -> map (\y -> (un,y)) (getLowerNeighbors cl un)) ks in
-                                                                                         if length ln > 0 then
-                                                                                           let unknownPrograms = (uniqueInSameOrder $ (concatMap (\(from,to) -> conceptExtent from \\ conceptExtent to) ln)) \\ kprogs in
-                                                                                           let unknownConcepts = (uniqueInSameOrder $ (concatMap (\(from,to) -> conceptIntent from) ln)) \\ kc in
-                                                                                           case (length unknownConcepts, length unknownPrograms) of
-                                                                                             -- nothing to introduce for these neighbors, so add a neighbor and continue
-                                                                                             (0,0)  -> exploreNeighborhoodAuto (s++"  ") fks (KnowledgeState ((snd $ head ln):ks) kprogs kc) cl
-                                                                                             -- program to introduce
-                                                                                             (0,y)  -> explainUnknownProgram s (head unknownPrograms) ++ exploreNeighborhoodAuto s fks (KnowledgeState ks ((head unknownPrograms):kprogs) kc) cl
-                                                                                             -- syntactic concept to introduce
-                                                                                             (x,_)  -> explainUnknownConcept s (head unknownConcepts) ++ exploreNeighborhoodAuto s fks (KnowledgeState ks kprogs ((head unknownConcepts):kc)) cl
-                                                                                         else
-                                                                                           -- no more neighbors to explore, but verify we understand the goal by checking w/ upper neighbors
-                                                                                           let ln = concatMap (\un -> map (\y -> (y,un)) (getUpperNeighbors cl un)) fs in
-                                                                                           let unknownPrograms = fprogs \\ kprogs in
-                                                                                           let unknownConcepts = fc \\ kc in
-                                                                                           case (length unknownConcepts, length unknownPrograms) of
-                                                                                             -- done!
-                                                                                             (0,0)  -> s ++ "Goal Set Met "
-                                                                                             -- program to introduce
-                                                                                             (0,y)  -> explainUnknownProgram s (head unknownPrograms) ++ exploreNeighborhoodAuto s fks (KnowledgeState ks ((head unknownPrograms):kprogs) kc) cl
-                                                                                             -- syntactic concept to introduce
-                                                                                             (x,_)  -> explainUnknownConcept s (head unknownConcepts) ++ exploreNeighborhoodAuto s fks (KnowledgeState ks kprogs ((head unknownConcepts):kc)) cl
--}
-
 convertToCSV :: [[String]] -> String
 convertToCSV ls = join "\n" $ map (\q -> join "," (map show q)) ls
 
 addNames :: [Object] -> [[String]] -> [[String]]
 addNames [] [] = []
 addNames (x:xs) (y:ys) = (x : y) : addNames xs ys
+addNames _ _ = error "Unexpected case for 'addNames'"
 
 exportCSV :: FormalContext -> Matrix Mark -> IO ()
-exportCSV (g,m,i) mm = do
+exportCSV (g,m,_) mm = do
   let lsts = map (\q -> map show q) (toLists mm)
   let addedNames = addNames g lsts
-  --let gm = map (\x -> [x]) g
-  --let lsts2 = (concat . Data.List.transpose) [gm,lsts]
   writeFile ("export.csv") $ convertToCSV (("":m) : addedNames)
 
 -- determine whether a concept extent already exists
@@ -422,14 +392,9 @@ doesConceptExtentAlreadyExist (FormalConcept (_,extent,_)) ls = any (\(FormalCon
 doesConceptIntentAlreadyExist :: FormalConcept -> [FormalConcept] -> Bool
 doesConceptIntentAlreadyExist (FormalConcept (_,_,intent)) ls = any (\(FormalConcept (_,_,m)) -> S.fromList m == S.fromList intent) ls
 
-getConceptOrdering :: OrderBy -> (FormalConcept -> FormalConcept -> Maybe Ordering)
-getConceptOrdering OrderByIntents = compareFormalConceptsByIntents
-getConceptOrdering OrderByExtents = compareFormalConceptsByExtents
---getConceptOrdering OrderByAll = undefined -- since this is not a bool how do we order these?????
-
 showConcepts :: [FormalConcept] -> String
 showConcepts [] = "\n"
-showConcepts (fc@(FormalConcept ((s,s'),n,a)):ls) = ("({" ++ join "," s ++ "},{" ++ join "," s' ++ "})") ++ " Extent: " ++ (show n) ++ "\nIntent: " ++ (show a) ++ "\n\n" ++ (showConcepts ls)
+showConcepts ((FormalConcept ((s,s'),n,a)):ls) = ("({" ++ join "," s ++ "},{" ++ join "," s' ++ "})") ++ " Extent: " ++ (show n) ++ "\nIntent: " ++ (show a) ++ "\n\n" ++ (showConcepts ls)
 
 fcDiffButSameGM :: FormalConcept -> FormalConcept -> Bool
 fcDiffButSameGM (FormalConcept (n1,g1,m1)) (FormalConcept (n2,g2,m2)) = (S.fromList g1) == (S.fromList g2) && (S.fromList m1) == (S.fromList m2) && n1 /= n2
@@ -458,7 +423,7 @@ getConceptsFromContext :: ConceptsBy -> FormalContext -> [FormalConcept]
 getConceptsFromContext ConceptsByIntents fc = combineIdenticalConcepts $ mkFormalConceptFromIntents fc
 -- Focuses on object concepts
 getConceptsFromContext ConceptsByExtents fc = combineIdenticalConcepts $ mkFormalConceptFromExtents fc
-getConceptsFromContext AllConcepts fc@(_,fcm,_) = let attrConcepts = combineIdenticalConcepts $ mkFormalConceptFromIntents fc in -- compute attribute concepts
+getConceptsFromContext AllConcepts fc = let attrConcepts = combineIdenticalConcepts $ mkFormalConceptFromIntents fc in -- compute attribute concepts
                                         let acExtents = map conceptExtent attrConcepts in -- compute extents of these concepts
                                         let acIntersections = concatMap (intersectExtents acExtents) acExtents in -- intersect these extents
                                         let extraConcepts = map (\ogi -> FormalConcept (([],[]), ogi, a' ogi fc)) acIntersections in -- generate the extra concepts
@@ -511,7 +476,7 @@ b' (x:ls) fc@(_,_,i) = let filt = filter (\(_,a) -> a == x) i in
 -- (A'',A')
 -- A'' is the extent closure
 mkFormalConceptFromExtents :: FormalContext -> [FormalConcept]
-mkFormalConceptFromExtents fc@(g,m,i) = map (\obj -> FormalConcept (([obj],[]), b' (a' [obj] fc) fc, a' [obj] fc)) g
+mkFormalConceptFromExtents fc@(g,_,_) = map (\obj -> FormalConcept (([obj],[]), b' (a' [obj] fc) fc, a' [obj] fc)) g
 
 -- produce a sub-set of concepts from a given set of objects
 -- which are implied to be in the formal context, otherwise this does not work...
@@ -523,7 +488,7 @@ mkFormalConceptsFromSubExtents fc g = map (\obj -> FormalConcept (([obj],[]), b'
 -- (B',B'')
 -- B'' is the intent closure
 mkFormalConceptFromIntents :: FormalContext -> [FormalConcept]
-mkFormalConceptFromIntents fc@(g,m,i) = map (\atr -> FormalConcept (([],[atr]), b' [atr] fc, a' (b' [atr] fc) fc)) m
+mkFormalConceptFromIntents fc@(_,m,_) = map (\atr -> FormalConcept (([],[atr]), b' [atr] fc, a' (b' [atr] fc) fc)) m
 
 -- partially ordered by extents
 -- (A1,B1) <= (A2,B2) iff A1 is a subset A2
@@ -556,8 +521,8 @@ instance Show Mark where
   show (Some s) = s
   show None = "."
 
-chooseMatElm :: FormalContext -> (Int,Int) -> Mark
-chooseMatElm (g,m,i) (x,y) = case (x,y) of -- x == 1
+chooseMatElm :: (Int,Int) -> Mark
+chooseMatElm (x,y) = case (x,y) of -- x == 1
                               (1,1) -> Some ""
                               -- show attributes
                               (1,_)  -> Some $ "M" ++ (show (y-1)) --
@@ -570,7 +535,7 @@ showMatLegend ((k,v):ls) = k ++ " -> " ++ v ++ "\n" ++ (showMatLegend ls)
 
 -- builds a 2D matrix
 mkFormalConceptMatrix :: FormalContext -> ([(String,String)],[(String,String)],Matrix Mark)
-mkFormalConceptMatrix (g,m,i) = (map (\x -> ("P" ++ show x, g !! (x-1))) [1..(length g)], map (\y -> ("M" ++ show y, m !! (y-1))) [1..(length m)], matrix ((length g) + 1) ((length m) + 1) (\(x,y) -> if x == 1 || y == 1 then chooseMatElm (g,m,i) (x,y) else let gx = g !! (x-2) in
+mkFormalConceptMatrix (g,m,i) = (map (\x -> ("P" ++ show x, g !! (x-1))) [1..(length g)], map (\y -> ("M" ++ show y, m !! (y-1))) [1..(length m)], matrix ((length g) + 1) ((length m) + 1) (\(x,y) -> if x == 1 || y == 1 then chooseMatElm (x,y) else let gx = g !! (x-2) in
                                                                         let my = m !! (y-2) in
                                                                         case find (\q -> q == (gx,my)) i of
                                                                           Just _  -> Some "X"
@@ -607,10 +572,10 @@ _mkConceptLattice ls bs    = let x = head $ PO.maxima ls in -- get one of the ma
 -- TODO attribute implication work
 --
 getTT :: FormalContext -> [[Attribute]]
-getTT (g,m,i) = reverse $ map (getAttrList i) g
+getTT (g,_,i) = reverse $ map (getAttrList i) g
                              where
                                getAttrList :: [(Object,Attribute)] -> Object -> [Attribute]
-                               getAttrList i o = map snd $ filter (\(a,_) -> a == o) i
+                               getAttrList i' o = map snd $ filter (\(a,_) -> a == o) i'
 
 deriveImplications :: [Attribute] -> [[Attribute]] -> [Implication]
 deriveImplications [] _ = []
@@ -621,11 +586,11 @@ deriveImplications (x:xs) ys = let x1 = map (\\ [x]) (filter (\yy -> elem x yy) 
 -- | Remove conflicting implications
 -- TODO This rule is the problem, can probably re worked to better capture what I want it to do
 removeConflictingImplications :: [Implication] -> [Implication]
-removeConflictingImplications ls = filter (\(p,c) -> length c == 1) (_mi ls ls) -- only allow implications to pass that are valid, i.e. unambiguous
+removeConflictingImplications ls = filter (\(_,c) -> length c == 1) (_mi ls ls) -- only allow implications to pass that are valid, i.e. unambiguous
                        where
                         _mi :: [Implication] -> [Implication] -> [Implication]
                         _mi [] _ = []
-                        _mi ((p,_):xs) ys = let filt = filter (\(p',c') -> p == p') ys in
+                        _mi ((p,_):xs) ys = let filt = filter (\(p',_) -> p == p') ys in
                                             case filt of
                                               []    -> _mi xs ys -- no matches, ignore it
                                               --[one] -> (one) : (_mi xs ys) -- 1 match is itself, move along

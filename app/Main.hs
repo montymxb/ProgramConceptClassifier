@@ -5,17 +5,17 @@ import Bogl_Specifics
 
 main :: IO ()
 main = r32 (FCA
-  OrderByExtents
   AllConcepts
   parseBOGLPrograms
   boglConceptMapping --asIsConceptMapping
-  [("KNOWN","game S")] -- ("KNOWN","game S") -- ("KNOWN","game S")
-  [("GOAL","game E\nv : Int\nv = if True == False then 2 * 5 + 2 else let q = 2 in q")] -- ("GOAL","game E\nv : Int\nv = 2 + 5") -- ("GOAL","game T\nid : Int -> Int\nid(x) = x")
+  [("K1","game S\nv : Int\nv = 3 + 3"),("K2","game S\nv : Int\nv = 3")] -- ("K1","game S\nv : Int\nv = input"),("K2","game S")
+  [("GOAL","game E\nv : Int\nv = if True == False then 2 * 5 + 2 else let q = 2 in q")]
+  -- ("GOAL","game E\nv : Int\nv = if True == False then 2 * 5 + 2 else let q = 2 in q")
   exConcretePrograms
-  ["V_Int","V_Ref","V_Let1","V_Add","V_Mul"] -- extra progs by name
+  [] -- extra progs by name
   -- "V_Int","V_Ref","V_Let1","V_Add","V_Mul"
   -- "V_ITE4","V_ITE1","V_AddMul","Input1","V_Let2"
-  [IntExpr,ValueEquation,Type,PlainType,Value,BinOp,Ref,Let,Mult,Add]) -- extra attributes by name
+  []) -- extra attributes by name
   -- IntExpr,ValueEquation,Type,PlainType,Value,BinOp,Ref,Let,Mult,Add
   -- BoolExpr,IfThenElse,Fls,Tru,Equiv
 
