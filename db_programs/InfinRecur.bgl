@@ -1,0 +1,3 @@
+game E
+r : Int -> Int
+r(x) = r(x+1)

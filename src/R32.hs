@@ -93,7 +93,7 @@ contextExtent (g,_,_) = g
 contextIntent :: FormalContext -> [Attribute]
 contextIntent (_,m,_) = m
 
-type ParsingFunction a = ([ConcreteProgram] -> [(String, a)])
+type ParsingFunction a = ([(ConcreteProgram)] -> [(String, a)])
 
 type ConceptMapping b = (String -> Maybe b)
 
@@ -152,9 +152,9 @@ data KnowledgeState = KnowledgeState [FormalConcept] [Object] [Attribute]
 r32 :: (Data a, Show a, Subsumable b, Show b) => FCA a b -> IO ()
 r32 (FCA programParser conceptMapping kps gps cps extraKnownProgs extraKnownIntents) = do
   -- extract terms for the these program lists, preserving names
-  let knownTaggedPrograms   = map (astToTerms conceptMapping) (programParser kps)
-  let goalTaggedPrograms    = map (astToTerms conceptMapping) (programParser gps)
-  let courseTaggedPrograms  = map (astToTerms conceptMapping) (programParser cps)
+  let knownTaggedPrograms   = S.toList $ S.fromList $ map (astToTerms conceptMapping) (programParser kps)
+  let goalTaggedPrograms    = S.toList $ S.fromList $ map (astToTerms conceptMapping) (programParser gps)
+  let courseTaggedPrograms  = S.toList $ S.fromList $ map (astToTerms conceptMapping) (programParser cps)
 
   -- produce total context
   -- from known & goal programs, we want to create an 'intent of interest'
@@ -201,7 +201,7 @@ r32 (FCA programParser conceptMapping kps gps cps extraKnownProgs extraKnownInte
   putStrLn $ "Num Course Objects: " ++ (show $ length ((\(x,_,_) -> x) totalContext))
   putStrLn $ "Num Course attributes: " ++ (show $ length ((\(_,x,_) -> x) totalContext))
   putStrLn $ "Num Formal Concepts (Program,Attribute set pairs): " ++ (show $ length totalConcepts)
-  putStrLn $ showConcepts totalConcepts
+  --putStrLn $ showConcepts totalConcepts
 
   -- report Known Concepts
   let knownConcepts = S.toList $ S.fromList (concatMap conceptIntent knownFormalConcepts)
@@ -386,7 +386,9 @@ getConceptsFromContext fc = uniqueInSameOrder $ combineIdenticalConcepts $ mkFor
 
 -- Convert program in AST to list Terms
 astToTerms :: (Data a, Show b, Subsumable b) => (String -> Maybe b) -> (Object,a) -> (Object,[Term])
-astToTerms f (name,p) = (name, uniqueInSameOrder $ map show $ subsume $ catMaybes $ map f $ mkTermsFromData p)
+astToTerms f (name,p) = let terms = mkTermsFromData p in
+                        let reducedTerms = S.toList $ S.fromList terms in
+                        (name, map show $ subsume $ catMaybes $ map f reducedTerms)
 
 -- Traverse immediate subterms recursively to discover all terms used
 mkTermsFromData :: Data a => a -> [Term]

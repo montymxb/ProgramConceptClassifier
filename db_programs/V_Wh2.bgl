@@ -1,0 +1,3 @@
+game E
+w : Bool
+w = let z = True in while False do z

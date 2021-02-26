@@ -1,0 +1,3 @@
+game E
+id : Int -> Int
+id(x) = x

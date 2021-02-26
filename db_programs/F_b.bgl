@@ -1,0 +1,3 @@
+game E
+b : ((Bool,Bool),Bool) -> Bool
+b(x,y) = y

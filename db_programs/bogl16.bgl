@@ -1,4 +1,0 @@
-game T
-
-id : Int -> Int
-id(x) = x

@@ -1,0 +1,3 @@
+game E
+v : Bool
+v = and(1 == 1, 0 == 0)

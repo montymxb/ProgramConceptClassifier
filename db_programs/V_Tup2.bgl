@@ -1,0 +1,3 @@
+game E
+v : (Bool,Bool)
+v = (True,False)

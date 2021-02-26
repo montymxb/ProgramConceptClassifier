@@ -1,4 +1,0 @@
-game T
-
-f3 : (Int,Int)
-f3 = (1,2)

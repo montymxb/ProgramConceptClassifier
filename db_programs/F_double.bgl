@@ -1,0 +1,3 @@
+game E
+dub : Int -> Int
+dub(x) = x*2

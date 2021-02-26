@@ -1,0 +1,4 @@
+game T
+type Input = Int
+v : Int
+v = input + 1

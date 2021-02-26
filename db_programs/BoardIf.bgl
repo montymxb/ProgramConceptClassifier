@@ -1,0 +1,4 @@
+game B
+type Board = Array(3,3) of Int
+b : Board
+b!(x,y) = if True then 1 else 0

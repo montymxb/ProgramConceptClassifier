@@ -1,0 +1,5 @@
+game E
+a : Int
+a = 5
+b : Int
+b = a

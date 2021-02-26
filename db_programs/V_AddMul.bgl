@@ -1,0 +1,3 @@
+game E
+v : Int
+v = 1 + 2 * 5
