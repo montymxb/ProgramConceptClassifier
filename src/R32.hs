@@ -186,6 +186,8 @@ r32 (FCA programParser conceptMapping kps gps cps extraKnownProgs extraKnownInte
   -- Apply Bounding concepts to get sub-lattice to work with
   let boundingConcepts = catMaybes $ map (findObjectConcept totalConcepts') ((map fst knownTaggedPrograms) ++ (map fst goalTaggedPrograms))
 
+  putStrLn $ "Pre-filter Classification Count: " ++ (show $ length totalConcepts')
+
   let totalConcepts = case (length knownFormalConcepts > 0, length goalFormalConcepts > 0) of
                         -- no bounds
                         (False,False) -> totalConcepts'

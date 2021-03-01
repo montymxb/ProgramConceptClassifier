@@ -13,7 +13,8 @@ import General
 
 import Parser.Parser
 import Data.Data
---import Data.Either
+
+import Debug.Trace
 
 -- Data, Typeable, and Eq instances for the data types we we need to traverse
 deriving instance (Eq a) => Eq (LS.Game a)
@@ -181,5 +182,5 @@ parseBOGLPrograms ls = fdown $ map (\(n,p) -> (n, parsePreludeAndGameText "" p "
 fdown :: [(String,Either a (LS.Game SourcePos))] -> [(String,LS.Game SourcePos)]
 fdown [] = []
 fdown ((n,x):ls) = case x of
-                      Left _  -> error $ "Failed to parse program '" ++ n ++ "'" --fdown ls
+                      Left _  -> trace ("Failed to parse program '" ++ n ++ "'") fdown ls
                       Right g -> (n,g) : fdown ls

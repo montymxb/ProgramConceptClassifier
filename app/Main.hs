@@ -29,14 +29,18 @@ main :: IO ()
 main = do
 
   let dir = "db_programs/"
+  --let dir = "/Users/Bfriedman/OSU/Research/ConceptGraph/db_programs/"
+  --let dir160 = "/Users/Bfriedman/Downloads/CS160-BoGL-section/assignment_9_tictactoe/"
+  --let dir160 = "/Users/Bfriedman/Downloads/CS160-BoGL-section/assignment_8_nim_board/"
+  --let dir160 = "/Users/Bfriedman/Downloads/CS160-BoGL-section/sub_8/"
 
   let getBGLFile = getFileFromDir ".bgl" dir
 
   bglFiles <- getAllBGLFilesFromDir dir
 
   -- try and read the known from a file instead
-  k1 <- getBGLFile "spaceinvaders_v2"
-  let known = []
+  k1 <- getBGLFile "V_CondF"
+  let known = [k1]
 
   -- try and do this with a goal file too
   g1 <- getBGLFile "tictactoe"
