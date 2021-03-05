@@ -1,3 +1,15 @@
-<!DOCTYPE html><html><head><title>Ex. 1</title><script src='site/script.js'></script><link href='site/style.css' type='text/css' rel='stylesheet'/></link></head><div></div><body><div id='main'><div><h3 class='pn'>V_CondF</h3><br/><div class='code'>game E
-v : Bool
-v = False == False</div><p class='attributes'>(BoolExpr, BoardDef, BoolType, Equiv, Fls, Game, InputDef, IntType, BinOp, PlainType, Type, Value, ValueEquation, Name)</p><br/><p class='attributes'>()</p></div><h2>Lattice from Known to Goal</h3><img src='R32_Test_1.png'><h2>Step Programs</h2><div></div><h2>Frontier Steps</h2><div class='steps'><div class='step'>Step ({V_CondMix2,V_CondMix1},{})<div class='step-block'><div class='step'>Fringe ({V_CondMix2,V_CondMix1},{})</div></div></div></div></div></body></html>
+<!DOCTYPE html><html><head><title>Ex. 1</title><script src='site/script.js'></script><link href='site/style.css' type='text/css' rel='stylesheet'/></link></head><div></div><body><div id='main'><div id='wrap'><div class='left'><div><h3 class='pn'>Simplest</h3><br/><div class='code'>game Simplest</div><h3 class='pn'>V_Ref</h3><br/><div class='code'>game E
+a : Int
+a = 5
+b : Int
+b = a</div><h3 class='pn'>V_Sub</h3><br/><div class='code'>game E
+v : Int
+v = 1 - 1</div><h3 class='pn'>V_Add</h3><br/><div class='code'>game E
+v : Int
+v = 1 + 1</div><h3 class='pn'>Input1</h3><br/><div class='code'>game T
+type Input = Int
+v : Int
+v = input + 1</div><p class='attributes'>(BoardDef, Game, IntExpr, InputDef, IntType, BinOp, PlainType, Add, Ref, Type, Value, ValueEquation, Name, Sub)</p></div></div><div class='right'><div><h3 class='pn'>V_LetAddSub</h3><br/><div class='code'>game S
+v : Int
+v = let x = 2 in let y = 3 in x + y - 1
+</div><p class='attributes'>(Let)</p></div></div></div><img src='R32_Test_1.png'><h3>Here those extra programs on the graph should be shown...</h3></div></body></html>

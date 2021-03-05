@@ -17,8 +17,10 @@ h3 {
 }
 
 img {
-  max-width: 900px;
-  margin: 4px; auto;
+  display: block;
+  max-width: 97vw;
+  margin: 4px auto;
+  padding-top: 16px;
 }
 
 .green {
@@ -27,7 +29,7 @@ img {
 
 #main {
   background: #fff;
-  width: 1000px;
+  /*width: 1000px;*/
   margin: 4px auto;
 }
 
@@ -44,4 +46,33 @@ img {
   padding: 8px;
   text-align: center;
   font-size: 12px;
+}
+
+#wrap {
+  display: block;
+  margin: 0;
+  padding: 0;
+  width: 100vw;
+}
+
+.left {
+  float: left;
+  width: 50vw;
+  min-height: 400px;
+  background: #eef;
+}
+
+.left div {
+  padding: 8px;
+}
+
+.right {
+  float: right;
+  width: 50vw;
+  min-height: 400px;
+  background-color: #efe;
+}
+
+.right div {
+  padding: 8px;
 }

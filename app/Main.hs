@@ -3,6 +3,7 @@ module Main where
 import R32
 import Bogl_Specifics
 import System.Directory
+import System.Process
 
 
 --getBGLFileFromDir :: String -> String -> (String,IO String)
@@ -35,21 +36,26 @@ main = do
   --let dir160 = "/Users/Bfriedman/Downloads/CS160-BoGL-section/sub_8/"
 
   let getBGLFile = getFileFromDir ".bgl" dir
-
   bglFiles <- getAllBGLFilesFromDir dir
 
-  -- try and read the known from a file instead
-  k1 <- getBGLFile "V_CondF"
-  let known = [k1]
+  k1 <- getBGLFile "Simplest" -- Notakto
+  k2 <- getBGLFile "V_Ref"
+  k3 <- getBGLFile "V_Sub"
+  k4 <- getBGLFile "V_Add"
+  k5 <- getBGLFile "Input1"
+  k6 <- getBGLFile "V_AddSub"
+  k7 <- getBGLFile "V_Let1"
+  let known = [k1,k2,k3,k4,k5]
+  -- k1,k2,k3,k4,k5,k6,k7 has empty classification!
 
-  -- try and do this with a goal file too
-  g1 <- getBGLFile "tictactoe"
-  let goal = [] -- ("G1","game S\nv : Int\nv = let x = 24 in 24 * 2 + 5 - x")
+  g1 <- getBGLFile "V_LetAddSub" -- tictactoe
+  g2 <- getBGLFile "tictactoe"
+  let goal = [g1] -- ("G1","game S\nv : Int\nv = let x = 24 in 24 * 2 + 5 - x")
 
   let extraProgs    = []
   let extraAttribs  = []
 
-  r32 (FCA
+  dotContent <- r32 (FCA
         parseBOGLPrograms
         boglConceptMapping
         known
@@ -57,3 +63,8 @@ main = do
         bglFiles
         extraProgs
         extraAttribs)
+
+  -- write GV spec
+  writeFile "R32_Test_1.gv" dotContent
+  _ <- system ("dot -Tsvg -oR32_Test_1.svg R32_Test_1.gv")
+  return ()

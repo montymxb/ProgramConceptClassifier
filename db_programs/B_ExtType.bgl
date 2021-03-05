@@ -1,3 +1,0 @@
-game T
-
-type S3 = Int & {Nothing}

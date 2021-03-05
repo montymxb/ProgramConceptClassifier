@@ -106,13 +106,23 @@ data FCA a b = FCA (ParsingFunction a) (ConceptMapping b) KnownPrograms GoalProg
 
 type ConceptLattice = ([FormalConcept],[(FormalConcept,FormalConcept)])
 
--- Return the lower neighbors of this node in the concept lattice, if any
+-- | Return the lower neighbors of this node in the concept lattice, if any
 getLowerNeighbors :: ConceptLattice -> FormalConcept -> [FormalConcept]
 getLowerNeighbors (_,edges) fc = map snd $ filter (\(i,_) -> i PO.== fc) edges
 
--- Return the upper neighbors of this node in the concept lattice, if any
+-- | Return the upper neighbors of this node in the concept lattice, if any
 getUpperNeighbors :: ConceptLattice -> FormalConcept -> [FormalConcept]
 getUpperNeighbors (_,edges) fc = map fst $ filter (\(_,o) -> o PO.== fc) edges
+
+-- | Get all upper neighbors from a classification
+getAllUpperNeighbors :: [FormalConcept] -> FormalConcept -> [FormalConcept]
+getAllUpperNeighbors xs fc = let un = PO.maxima $ filter (\y -> y PO.> fc) xs in
+                             case un of
+                               [] -> []
+                               _  -> concatMap (getAllUpperNeighbors xs) un
+--case getUpperNeighbors cl fc of
+                            --  [] -> []
+                            --  un -> concatMap (getAllUpperNeighbors cl) un
 
 -- returns supremum of the concept lattice (Top most node, most general, concept of all objects)
 getJoin :: ConceptLattice -> FormalConcept
@@ -149,7 +159,7 @@ data KnowledgeState = KnowledgeState [FormalConcept] [Object] [Attribute]
 -- This is for TESTING, the actual setup will not be an IO monad (essentially a prototyping sandbox)
 -- run the analysis, taking an FCA analysis instance
 -- Takes known programs, goal programs, and course programs (programs available in the course)
-r32 :: (Data a, Show a, Subsumable b, Show b) => FCA a b -> IO ()
+r32 :: (Data a, Show a, Subsumable b, Show b) => FCA a b -> IO (String)
 r32 (FCA programParser conceptMapping kps gps cps extraKnownProgs extraKnownIntents) = do
   -- extract terms for the these program lists, preserving names
   let knownTaggedPrograms   = S.toList $ S.fromList $ map (astToTerms conceptMapping) (programParser kps)
@@ -159,20 +169,19 @@ r32 (FCA programParser conceptMapping kps gps cps extraKnownProgs extraKnownInte
   -- produce total context
   -- from known & goal programs, we want to create an 'intent of interest'
   -- we will use this to reduce the attributes we have in our graph to only those we care about (between goal & known inclusively)
-  -- get upper & lower intents
-  let lowerIntent = uniqueInSameOrder $ concatMap snd knownTaggedPrograms
-  let upperIntent = uniqueInSameOrder $ concatMap snd goalTaggedPrograms
-  -- filter by lower & upper intents
-  let fcp1 = case lowerIntent of
+  -- filter by lower intent, removing any programs that are less any other program we 'know'
+  let fcp1 = case knownTaggedPrograms of
               [] -> courseTaggedPrograms
-              _  -> filter (\(_,b) -> not $ S.fromList b `S.isSubsetOf` S.fromList lowerIntent) courseTaggedPrograms
-  let filteredCourseProgs = case upperIntent of
+              _  -> filter (\(_,b) -> all (\z -> not $ S.fromList b `S.isSubsetOf` S.fromList z) (map snd knownTaggedPrograms)) courseTaggedPrograms
+  -- filter by upper intent, including any program that is a subset of any goal program
+  let filteredCourseProgs = case goalTaggedPrograms of
               [] -> fcp1
-              _  -> filter (\(_,b) -> S.fromList b `S.isSubsetOf` S.fromList upperIntent) fcp1
+              _  -> filter (\(_,b) -> any (\z -> S.fromList b `S.isSubsetOf` S.fromList z) (map snd goalTaggedPrograms)) fcp1
   -- generate decomposed formal context
   let (g',m',i') = mkFormalContext (uniqueInSameOrder' $ knownTaggedPrograms ++ goalTaggedPrograms ++ filteredCourseProgs)
-  -- only reduce the context against the upper intent
-  let totalContext = case upperIntent of
+  -- only reduce the context against the upper intent (include only those programs & concepts that are within that scope)
+  -- removes extraneous detail that is unrelated to this query
+  let totalContext = case (uniqueInSameOrder $ concatMap snd goalTaggedPrograms) of
                         []  -> (g',m',i')
                         ul  -> (g', filter (`elem` ul) m', filter (\(_,b) -> b `elem` ul) i')
 
@@ -181,29 +190,43 @@ r32 (FCA programParser conceptMapping kps gps cps extraKnownProgs extraKnownInte
   -- get known formal concepts, factoring in those that have been implicitly indicated by the programs & attributes added so far while learning
   let kfc = catMaybes $ map (findObjectConcept totalConcepts') (map fst knownTaggedPrograms)
   -- find known concepts plus any concepts that we could additionally mark as known (ones that are subsets of what we indicated we have learned so far, beyond the known program)
+  -- TODO, this may be unnecessary now (the addition of the other concepts from the filter)
+  -- The only reason this is here was to make 'Concepts' and 'Programs' explicit by hand...but not sure I want to do that anymore (it's not in our specification, should be dropped)
   let knownFormalConcepts = kfc ++ (filter (\(FormalConcept ((g,m),_,_)) -> S.fromList g `S.isSubsetOf` S.fromList extraKnownProgs && S.fromList m `S.isSubsetOf` S.fromList (map show extraKnownIntents) && (not $ S.null $ S.fromList g) && (not $ S.null $ S.fromList m)) totalConcepts')
+  --let knownFormalConcepts = knownFormalConcepts' ++ (filter (\x -> all (x PO.>) knownFormalConcepts') totalConcepts')
+  -- the above line should have done this, but it seems to have failed in this regard
   let goalFormalConcepts = catMaybes $ map (findObjectConcept totalConcepts') (map fst goalTaggedPrograms)
   -- Apply Bounding concepts to get sub-lattice to work with
   let boundingConcepts = catMaybes $ map (findObjectConcept totalConcepts') ((map fst knownTaggedPrograms) ++ (map fst goalTaggedPrograms))
 
+  putStrLn $ show $ map conceptLabel knownFormalConcepts
+
   putStrLn $ "Pre-filter Classification Count: " ++ (show $ length totalConcepts')
+
+  let upKnownNeigh = concatMap (getAllUpperNeighbors totalConcepts') knownFormalConcepts
+  let upGoalNeigh = concatMap (getAllUpperNeighbors totalConcepts') goalFormalConcepts
 
   let totalConcepts = case (length knownFormalConcepts > 0, length goalFormalConcepts > 0) of
                         -- no bounds
                         (False,False) -> totalConcepts'
+                        -- TODO lower bounds seem good now, but upper bounds seem like the old way worked better then what I tried to change it to
+                        -- i.e. the PO approach seems to work there
                         -- upper & lower bounds, we want programs that are more specific than the most general program
                         -- and are more general than the most specific program (bounded set)
-                        (True,True)   -> filter (\x -> any (x PO.<=) (PO.maxima boundingConcepts) && any (x PO.>=) (PO.minima boundingConcepts)) totalConcepts'
+                        (True,True)   -> filter (\x -> (not $ elem x upKnownNeigh || elem x knownFormalConcepts) || (elem x upGoalNeigh || elem x goalFormalConcepts)) totalConcepts'
+                        --(True,True)   -> filter (\x -> (not $ elem x upKnownNeigh || elem x knownFormalConcepts) && any (x PO.>=) (PO.minima boundingConcepts)) totalConcepts'
                         -- lower bound, we only want programs more specific than this set (smaller extent)
-                        (True,False)  -> filter (\x -> any (x PO.<=) (PO.maxima boundingConcepts)) totalConcepts'
+                        (True,False)  -> filter (\x -> not $ elem x upKnownNeigh || elem x knownFormalConcepts) totalConcepts'
+                        --(True,False)  -> filter (\x -> any (x PO.<) (PO.maxima boundingConcepts)) totalConcepts'
                         -- upper bound, we only want programs more general than this set (larger extent)
+                        --(False,True)  -> filter (\x -> elem x upGoalNeigh || elem x goalFormalConcepts) totalConcepts'
                         (False,True)  -> filter (\x -> any (x PO.>=) (PO.minima boundingConcepts)) totalConcepts'
 
   putStrLn $ "Num Course Progs: " ++ (show $ length cps)
   putStrLn $ "Num Course Objects: " ++ (show $ length ((\(x,_,_) -> x) totalContext))
   putStrLn $ "Num Course attributes: " ++ (show $ length ((\(_,x,_) -> x) totalContext))
   putStrLn $ "Num Formal Concepts (Program,Attribute set pairs): " ++ (show $ length totalConcepts)
-  --putStrLn $ showConcepts totalConcepts
+  putStrLn $ showConcepts totalConcepts
 
   -- report Known Concepts
   let knownConcepts = S.toList $ S.fromList (concatMap conceptIntent knownFormalConcepts)
@@ -214,13 +237,15 @@ r32 (FCA programParser conceptMapping kps gps cps extraKnownProgs extraKnownInte
   putStrLn $ "Goal Concepts: " ++ show goalConcepts
 
   -- create Formal Concept of all intents
-  let fcm = FormalConcept (([],[]), [], (\(_,m,_) -> m) totalContext)
+  let fcm = FormalConcept (([],[]), [], contextIntent totalContext)
   -- create Formal Concept of all extents
-  let fcg = FormalConcept (([],[]), (\(a,_,_) -> a) totalContext, [])
+  let fcg = FormalConcept (([],[]), contextExtent totalContext, [])
   -- Add the Formal Concept of all Extents ONLY if a program does not exist that captures this notion
-  let l1 = if doesConceptExtentAlreadyExist fcg totalConcepts then totalConcepts else totalConcepts ++ [fcg]
+  let l1 = if length (PO.maxima totalConcepts) > 1 then fcg:totalConcepts else totalConcepts
+  --let l1 = if doesConceptExtentAlreadyExist fcg totalConcepts then totalConcepts else fcg:totalConcepts
   -- Add the Formal Concept of all Intents ONLY if a program does not exist that captures this notion
-  let l2 = if doesConceptIntentAlreadyExist fcm l1 then l1 else l1 ++ [fcm]
+  --let l2 = if doesConceptIntentAlreadyExist fcm l1 then l1 else fcm:l1
+  let l2 = if length (PO.minima totalConcepts) > 1 then fcm:l1 else l1
 
   let conceptLattice = mkConceptLattice l2
 
@@ -251,7 +276,6 @@ r32 (FCA programParser conceptMapping kps gps cps extraKnownProgs extraKnownInte
   putStrLn $ show $ makeUnique $ fg2 knowledgeSteps
 
   --let prettyLattice = mapL conceptLabel conceptLattice
-  GV.makeDGraph "R23_Test_1" conceptLattice
 
   -- full detailed formal context as a matrix
   --let (pm,mm,matt) = mkFormalConceptMatrix totalContext
@@ -264,6 +288,9 @@ r32 (FCA programParser conceptMapping kps gps cps extraKnownProgs extraKnownInte
   exportCSV totalContext smallMat
   -- printout a webpage
   printWebPage (filter (\(a,_) -> a `elem` extraKnownProgs) cps) kps gps initKS finalKS knowledgeSteps
+
+  dotSpec <- GV.makeDot conceptLattice
+  return dotSpec
 
 
 -- | Finds the object concept (classification) from a list of classifications (if present)
@@ -279,12 +306,12 @@ knowledgeStateToStr (KnowledgeState ks progs _) = "{"++ join "," progs ++"}\n{" 
 printWebPage :: [(String,String)] -> KnownPrograms -> GoalPrograms -> KnowledgeState -> KnowledgeState -> [KnowledgeStep] -> IO ()
 printWebPage eps kps gps (KnowledgeState _ _ attrs') (KnowledgeState _ _ attrs) ls = do
   let dt = "<!DOCTYPE html><html><head><title>Ex. 1</title><script src='site/script.js'></script><link href='site/style.css' type='text/css' rel='stylesheet'/></link></head><div></div><body><div id='main'>"
-  let ks = "<div>" ++ concatMap t2s kps ++ "<p class='attributes'>(" ++ join ", " (makeUnique attrs') ++ ")</p>" ++ "<br/>" ++ concatMap t2s gps ++ "<p class='attributes'>(" ++ join ", " (makeUnique (attrs \\ attrs')) ++ ")</p></div>"
-  let img = "<h2>Lattice from Known to Goal</h3><img src='R32_Test_1.png'>"
-  let prgs = "<h2>Step Programs</h2><div>" ++ concatMap sprg eps ++ "</div>"
-  let stps = "<h2>Frontier Steps</h2><div class='steps'>" ++ join "<br/><br/><br/>" (map kstep ls) ++ "</div>"
-  let db = "</div></body></html>"
-  writeFile ("Result.html") $ dt ++ ks ++ img ++ prgs ++ stps ++ db
+  let ks = "<div id='wrap'><div class='left'><div>" ++ concatMap t2s kps ++ "<p class='attributes'>(" ++ join ", " (makeUnique attrs') ++ ")</p>" ++ "</div></div><div class='right'><div>" ++ concatMap t2s gps ++ "<p class='attributes'>(" ++ join ", " (makeUnique (attrs \\ attrs')) ++ ")</p></div></div></div>"
+  let img = "<img src='R32_Test_1.png'>"
+  --let prgs = "<h2>Step Programs</h2><div>" ++ concatMap sprg eps ++ "</div>"
+  --let stps = "<h2>Frontier Steps</h2><div class='steps'>" ++ join "<br/><br/><br/>" (map kstep ls) ++ "</div>"
+  let db = "<h3>Here those extra programs on the graph should be shown...</h3></div></body></html>"
+  writeFile ("Result.html") $ dt ++ ks ++ img ++ db
   where
     t2s :: (String,String) -> String
     t2s (a,b) = "<h3 class='pn'>" ++ a ++ "</h3><br/><div class='code'>" ++ b ++ "</div>"
