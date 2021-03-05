@@ -35,21 +35,25 @@ main = do
   --let dir160 = "/Users/Bfriedman/Downloads/CS160-BoGL-section/assignment_8_nim_board/"
   --let dir160 = "/Users/Bfriedman/Downloads/CS160-BoGL-section/sub_8/"
 
-  let getBGLFile = getFileFromDir ".bgl" dir
-  bglFiles <- getAllBGLFilesFromDir dir
+  let getSimpleBGLFile = getFileFromDir ".bgl" (dir ++ "simple/")
+  let getGameBGLFile = getFileFromDir ".bgl" (dir ++ "games/")
 
-  k1 <- getBGLFile "Simplest" -- Notakto
-  k2 <- getBGLFile "V_Ref"
-  k3 <- getBGLFile "V_Sub"
-  k4 <- getBGLFile "V_Add"
-  k5 <- getBGLFile "Input1"
-  k6 <- getBGLFile "V_AddSub"
-  k7 <- getBGLFile "V_Let1"
+  bglFiles1 <- getAllBGLFilesFromDir (dir ++ "simple/")
+  bglFiles2 <- getAllBGLFilesFromDir (dir ++ "games/")
+  let bglFiles = bglFiles1 ++ bglFiles2
+
+  k1 <- getSimpleBGLFile "Simplest" -- Notakto
+  k2 <- getSimpleBGLFile "V_Ref"
+  k3 <- getSimpleBGLFile "V_Sub"
+  k4 <- getSimpleBGLFile "V_Add"
+  k5 <- getSimpleBGLFile "Input1"
+  k6 <- getSimpleBGLFile "V_AddSub"
+  k7 <- getSimpleBGLFile "V_Let1"
   let known = [k1,k2,k3,k4,k5]
   -- k1,k2,k3,k4,k5,k6,k7 has empty classification!
 
-  g1 <- getBGLFile "V_LetAddSub" -- tictactoe
-  g2 <- getBGLFile "tictactoe"
+  g1 <- getSimpleBGLFile "V_LetAddSub" -- tictactoe
+  g2 <- getGameBGLFile "tictactoe"
   let goal = [g1] -- ("G1","game S\nv : Int\nv = let x = 24 in 24 * 2 + 5 - x")
 
   let extraProgs    = []
