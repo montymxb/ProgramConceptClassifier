@@ -49,12 +49,12 @@ main = do
   k5 <- getSimpleBGLFile "Input1"
   k6 <- getSimpleBGLFile "V_AddSub"
   k7 <- getSimpleBGLFile "V_Let1"
-  let known = [k1,k2,k3,k4,k5]
+  let known = [k1,k2,k3,k4,k5,k6,k7]
   -- k1,k2,k3,k4,k5,k6,k7 has empty classification!
 
   g1 <- getSimpleBGLFile "V_LetAddSub" -- tictactoe
   g2 <- getGameBGLFile "tictactoe"
-  let goal = [g1] -- ("G1","game S\nv : Int\nv = let x = 24 in 24 * 2 + 5 - x")
+  let goal = [] -- ("G1","game S\nv : Int\nv = let x = 24 in 24 * 2 + 5 - x")
 
   let extraProgs    = []
   let extraAttribs  = []

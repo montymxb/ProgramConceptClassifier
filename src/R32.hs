@@ -120,9 +120,13 @@ getAllUpperNeighbors xs fc = let un = PO.maxima $ filter (\y -> y PO.> fc) xs in
                              case un of
                                [] -> []
                                _  -> concatMap (getAllUpperNeighbors xs) un
---case getUpperNeighbors cl fc of
-                            --  [] -> []
-                            --  un -> concatMap (getAllUpperNeighbors cl) un
+
+-- | Get all lower neighbors from a classification
+getLowerNeighbors' :: [FormalConcept] -> FormalConcept -> [FormalConcept]
+getLowerNeighbors' xs fc = PO.maxima $ filter (\y -> y PO.< fc) xs --in
+                             --case un of
+                            --   [] -> []
+                            --   _  -> concatMap (getAllLowerNeighbors xs) un
 
 -- returns supremum of the concept lattice (Top most node, most general, concept of all objects)
 getJoin :: ConceptLattice -> FormalConcept
@@ -222,6 +226,9 @@ r32 (FCA programParser conceptMapping kps gps cps extraKnownProgs extraKnownInte
                         --(False,True)  -> filter (\x -> elem x upGoalNeigh || elem x goalFormalConcepts) totalConcepts'
                         (False,True)  -> filter (\x -> any (x PO.>=) (PO.minima boundingConcepts)) totalConcepts'
 
+  let dnKnownNeigh = concatMap (getLowerNeighbors' totalConcepts') knownFormalConcepts
+  --let totalConcepts = filter (\x -> elem x dnKnownNeigh) totalConcepts''
+
   putStrLn $ "Num Course Progs: " ++ (show $ length cps)
   putStrLn $ "Num Course Objects: " ++ (show $ length ((\(x,_,_) -> x) totalContext))
   putStrLn $ "Num Course attributes: " ++ (show $ length ((\(_,x,_) -> x) totalContext))
@@ -307,7 +314,7 @@ printWebPage :: [(String,String)] -> KnownPrograms -> GoalPrograms -> KnowledgeS
 printWebPage eps kps gps (KnowledgeState _ _ attrs') (KnowledgeState _ _ attrs) ls = do
   let dt = "<!DOCTYPE html><html><head><title>Ex. 1</title><script src='site/script.js'></script><link href='site/style.css' type='text/css' rel='stylesheet'/></link></head><div></div><body><div id='main'>"
   let ks = "<div id='wrap'><div class='left'><div>" ++ concatMap t2s kps ++ "<p class='attributes'>(" ++ join ", " (makeUnique attrs') ++ ")</p>" ++ "</div></div><div class='right'><div>" ++ concatMap t2s gps ++ "<p class='attributes'>(" ++ join ", " (makeUnique (attrs \\ attrs')) ++ ")</p></div></div></div>"
-  let img = "<img src='R32_Test_1.png'>"
+  let img = "<img src='R32_Test_1.svg'>"
   --let prgs = "<h2>Step Programs</h2><div>" ++ concatMap sprg eps ++ "</div>"
   --let stps = "<h2>Frontier Steps</h2><div class='steps'>" ++ join "<br/><br/><br/>" (map kstep ls) ++ "</div>"
   let db = "<h3>Here those extra programs on the graph should be shown...</h3></div></body></html>"
