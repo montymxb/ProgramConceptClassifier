@@ -9,6 +9,7 @@ module Bogl_Specifics where
 import qualified Language.Syntax as LS
 import Language.Types
 import Text.Parsec.Pos
+import Text.Parsec.Error
 import General
 
 import Parser.Parser
@@ -175,12 +176,19 @@ boglConceptMapping _ = Nothing
 
 
 -- | Parses a list of BoGL progs (from strings) into ASTs
-parseBOGLPrograms :: [ConcreteProgram] -> [(String, LS.Game SourcePos)]
-parseBOGLPrograms ls = fdown $ map (\(n,p) -> (n, parsePreludeAndGameText "" p "test")) ls
+parseBOGLPrograms :: [ConcreteProgram] -> [(String, Either ParseError (LS.Game SourcePos))]
+parseBOGLPrograms ls = map (\(n,p) -> (n, parsePreludeAndGameText "" p "test")) ls
 
--- | Filter down to the programs that passeed parsing, reporting errors if any failed
-fdown :: Show a => [(String,Either a (LS.Game SourcePos))] -> [(String,LS.Game SourcePos)]
-fdown [] = []
-fdown ((n,x):ls) = case x of
-                      Left l  -> error $ "Error parsing " ++ n ++ ", " ++  show l --trace ("Failed to parse program '" ++ n ++ "'") fdown ls
-                      Right g -> (n,g) : fdown ls
+-- | Get parsed programs
+rightProgs :: Show a => [(String,Either a (LS.Game SourcePos))] -> [(String,LS.Game SourcePos)]
+rightProgs [] = []
+rightProgs ((n,x):ls) = case x of
+                      Left l  -> rightProgs ls
+                      Right g -> (n,g) : rightProgs ls
+
+-- | Get unparsable programs
+leftProgs :: Show a => [(String,Either a (LS.Game SourcePos))] -> [(String,a)]
+leftProgs [] = []
+leftProgs ((n,x):ls) = case x of
+                      Left l  -> (n,l) : leftProgs ls
+                      Right _ -> leftProgs ls

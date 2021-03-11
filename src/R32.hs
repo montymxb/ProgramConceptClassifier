@@ -92,16 +92,14 @@ contextExtent (g,_,_) = g
 contextIntent :: FormalContext -> [Attribute]
 contextIntent (_,m,_) = m
 
-type ParsingFunction a = ([(ConcreteProgram)] -> [(String, a)])
-
 type ConceptMapping b = (String -> Maybe b)
 
-type KnownPrograms = [ConcreteProgram]
-type GoalPrograms  = [ConcreteProgram]
-type CoursePrograms= [ConcreteProgram]
+type KnownPrograms a  = [(String,a)]
+type GoalPrograms a   = [(String,a)]
+type CoursePrograms a = [(String,a)]
 
 -- Configuration for performing Formal Concept Analysis
-data FCA a b = FCA (ParsingFunction a) (ConceptMapping b) KnownPrograms GoalPrograms CoursePrograms [Object] [b]
+data FCA a b = FCA (ConceptMapping b) (KnownPrograms a) (GoalPrograms a) (CoursePrograms a) [Object] [b]
 
 type ConceptLattice = ([FormalConcept],[(FormalConcept,FormalConcept)])
 
@@ -163,11 +161,11 @@ data KnowledgeState = KnowledgeState [FormalConcept] [Object] [Attribute]
 -- run the analysis, taking an FCA analysis instance
 -- Takes known programs, goal programs, and course programs (programs available in the course)
 r32 :: (Data a, Show a, Subsumable b, Show b) => FCA a b -> IO (String)
-r32 (FCA programParser conceptMapping kps gps cps extraKnownProgs extraKnownIntents) = do
+r32 (FCA conceptMapping kps gps cps extraKnownProgs extraKnownIntents) = do
   -- extract terms for the these program lists, preserving names
-  let knownTaggedPrograms   = S.toList $ S.fromList $ map (astToTerms conceptMapping) (programParser kps)
-  let goalTaggedPrograms    = S.toList $ S.fromList $ map (astToTerms conceptMapping) (programParser gps)
-  let courseTaggedPrograms  = S.toList $ S.fromList $ map (astToTerms conceptMapping) (programParser cps)
+  let knownTaggedPrograms   = S.toList $ S.fromList $ map (astToTerms conceptMapping) kps
+  let goalTaggedPrograms    = S.toList $ S.fromList $ map (astToTerms conceptMapping) gps
+  let courseTaggedPrograms  = S.toList $ S.fromList $ map (astToTerms conceptMapping) cps
 
   -- produce total context
   -- from known & goal programs, we want to create an 'intent of interest'
@@ -293,7 +291,7 @@ r32 (FCA programParser conceptMapping kps gps cps extraKnownProgs extraKnownInte
   --putStrLn "* Exported to CSV"
   exportCSV totalContext smallMat
   -- printout a webpage
-  printWebPage (filter (\(a,_) -> a `elem` extraKnownProgs) cps) kps gps initKS finalKS knowledgeSteps
+  --printWebPage (filter (\(a,_) -> a `elem` extraKnownProgs) cps) kps gps initKS finalKS knowledgeSteps
 
   dotSpec <- GV.makeDot conceptLattice
   return dotSpec
@@ -309,6 +307,7 @@ knowledgeStateToStr :: KnowledgeState -> String
 knowledgeStateToStr (KnowledgeState ks progs _) = "{"++ join "," progs ++"}\n{" ++ join "," (concatMap conceptIntent ks) ++ "}"
 
 
+{-
 printWebPage :: [(String,String)] -> KnownPrograms -> GoalPrograms -> KnowledgeState -> KnowledgeState -> [KnowledgeStep] -> IO ()
 printWebPage eps kps gps (KnowledgeState _ _ attrs') (KnowledgeState _ _ attrs) ls = do
   let dt = "<!DOCTYPE html><html><head><title>Ex. 1</title><script src='site/script.js'></script><link href='site/style.css' type='text/css' rel='stylesheet'/></link></head><div></div><body><div id='main'>"
@@ -328,7 +327,7 @@ printWebPage eps kps gps (KnowledgeState _ _ attrs') (KnowledgeState _ _ attrs) 
 
     sprg :: (String,String) -> String
     sprg (a,b) = "<h4>" ++ a ++ "</h4><div class='code'>" ++ b ++ "</div>"
-
+-}
 
 
 data KnowledgeStep =

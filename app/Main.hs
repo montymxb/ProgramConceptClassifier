@@ -40,7 +40,7 @@ main = do
 
   bglFiles1 <- getAllBGLFilesFromDir (dir ++ "simple/")
   bglFiles2 <- getAllBGLFilesFromDir (dir ++ "games/")
-  let bglFiles = bglFiles1 ++ bglFiles2
+  let bglFiles = rightProgs $ parseBOGLPrograms $ bglFiles1 ++ bglFiles2
 
   k1 <- getSimpleBGLFile "Simplest" -- Notakto
   k2 <- getSimpleBGLFile "V_Ref"
@@ -49,18 +49,19 @@ main = do
   k5 <- getSimpleBGLFile "Input1"
   k6 <- getSimpleBGLFile "V_AddSub"
   k7 <- getSimpleBGLFile "V_Let1"
-  let known = [k1]
+  let known = rightProgs $ parseBOGLPrograms [k1]
   -- k1,k2,k3,k4,k5,k6,k7 has empty classification!
 
   g1 <- getSimpleBGLFile "V_LetAddSub" -- tictactoe
   g2 <- getGameBGLFile "tictactoe"
-  let goal = [] -- ("G1","game S\nv : Int\nv = let x = 24 in 24 * 2 + 5 - x")
+  let goal = rightProgs $ parseBOGLPrograms [] -- ("G1","game S\nv : Int\nv = let x = 24 in 24 * 2 + 5 - x")
 
   let extraProgs    = []
   let extraAttribs  = []
 
+
+
   dotContent <- r32 (FCA
-        parseBOGLPrograms
         boglConceptMapping
         known
         goal
