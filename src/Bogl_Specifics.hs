@@ -177,7 +177,7 @@ boglConceptMapping _ = Nothing
 
 -- | Parses a list of BoGL progs (from strings) into ASTs
 parseBOGLPrograms :: [ConcreteProgram] -> [(String, Either ParseError (LS.Game SourcePos))]
-parseBOGLPrograms ls = map (\(n,p) -> (n, parsePreludeAndGameText "" p "test")) ls
+parseBOGLPrograms ls = map (\(n,p) -> (n, parsePreludeAndGameText "" p n)) ls
 
 -- | Get parsed programs
 rightProgs :: Show a => [(String,Either a (LS.Game SourcePos))] -> [(String,LS.Game SourcePos)]
