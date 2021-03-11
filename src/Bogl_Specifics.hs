@@ -182,5 +182,5 @@ parseBOGLPrograms ls = fdown $ map (\(n,p) -> (n, parsePreludeAndGameText "" p "
 fdown :: Show a => [(String,Either a (LS.Game SourcePos))] -> [(String,LS.Game SourcePos)]
 fdown [] = []
 fdown ((n,x):ls) = case x of
-                      Left l  -> error $ show l --trace ("Failed to parse program '" ++ n ++ "'") fdown ls
+                      Left l  -> error $ "Error parsing " ++ n ++ ", " ++  show l --trace ("Failed to parse program '" ++ n ++ "'") fdown ls
                       Right g -> (n,g) : fdown ls
