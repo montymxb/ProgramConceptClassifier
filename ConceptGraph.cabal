@@ -7,7 +7,7 @@ cabal-version: 1.12
 -- hash: 693b758c709d0f42d565c7446a5b46d7d1959fb26b8abbf7c7792d80d26f529c
 
 name:           ConceptGraph
-version:        0.1.0.0
+version:        0.2.0.0
 description:    Please see the README on GitHub at <https://github.com/montymxb/ConceptGraph#readme>
 homepage:       https://github.com/montymxb/ConceptGraph#readme
 bug-reports:    https://github.com/montymxb/ConceptGraph/issues
@@ -27,22 +27,10 @@ source-repository head
 
 library
   exposed-modules:
-      AbstractSyntax.BOGL_S1
-      ConceptGraph.Concept
-      ConceptGraph.ConceptDependency
-      ConceptGraph.ConceptGraph
-      ConceptGraph.Conceptual
-      ConceptGraph.GraphToConceptGraph
-      ConceptGraph.ManualConcepts
-      DB.BoglDB
-      GVSpec.GVSpec
-      Lib
-      P2021.Bogl_Specifics
-      P2021.General
-      P2021.R32
-      Programs.BOGL_R1
-      Programs.BOGL_S1
-      Query.Query
+      Bogl_Specifics
+      General
+      GraphViz
+      R32
   other-modules:
       Paths_ConceptGraph
   hs-source-dirs:
