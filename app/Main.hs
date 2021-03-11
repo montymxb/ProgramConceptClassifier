@@ -49,7 +49,7 @@ main = do
   k5 <- getSimpleBGLFile "Input1"
   k6 <- getSimpleBGLFile "V_AddSub"
   k7 <- getSimpleBGLFile "V_Let1"
-  let known = [k1,k2,k3,k4,k5,k6,k7]
+  let known = [k1]
   -- k1,k2,k3,k4,k5,k6,k7 has empty classification!
 
   g1 <- getSimpleBGLFile "V_LetAddSub" -- tictactoe
