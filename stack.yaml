@@ -36,7 +36,6 @@ resolver: lts-16.9
 #   - wai
 packages:
 - .
-- ../../Capstone/bogl/
 # Dependency packages to be pulled from upstream that are not in the resolver.
 # These entries can reference officially published versions as well as
 # forks / in-progress versions pinned to a git hash. For example:
@@ -45,6 +44,8 @@ extra-deps:
 - json-0.10@sha256:d9fc6b07ce92b8894825a17d2cf14799856767eb30c8bf55962baa579207d799,3210
 - random-strings-0.1.1.0@sha256:935a7a23dab45411960df77636a29b44ce42b89eeb15f2b1e809d771491fa677,2517
 - partial-order-0.2.0.0@sha256:a0d6ddc9ebcfa965a5cbcff1d06d46a79d44ea5a0335c583c2a51bcb41334487,2275
+- git: https://github.com/The-Code-In-Sheep-s-Clothing/bogl.git
+  commit: 16c5bf00b2e44a5380f3f67604a22a9671e0eb37
 # - acme-missiles-0.3
 # - git: https://github.com/commercialhaskell/stack.git
 #   commit: e7b331f14bcffb8367cd58fbfc8b40ec7642100a

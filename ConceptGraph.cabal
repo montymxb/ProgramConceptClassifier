@@ -58,6 +58,8 @@ library
     , matrix
     , directory
     , partial-order
+    , Spiel-Lang
+    , parsec
   default-language: Haskell2010
 
 executable ConceptGraph-exe

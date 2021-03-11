@@ -5,7 +5,6 @@
 module R32 where
 
 import Data.Data
---import Data.Either
 import General
 import qualified Data.Set as S
 import Data.List
