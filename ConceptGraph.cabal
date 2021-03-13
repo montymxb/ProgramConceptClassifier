@@ -30,7 +30,7 @@ library
       Bogl_Specifics
       General
       GraphViz
-      R32
+      FormalConceptAnalysis
   other-modules:
       Paths_ConceptGraph
   hs-source-dirs:

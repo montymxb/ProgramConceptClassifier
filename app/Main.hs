@@ -1,6 +1,6 @@
 module Main where
 
-import R32
+import FormalConceptAnalysis
 import Bogl_Specifics
 import System.Directory
 import System.Process
@@ -59,9 +59,7 @@ main = do
   let extraProgs    = []
   let extraAttribs  = []
 
-
-
-  dotContent <- r32 (FCA
+  (dotContent,fringe) <- fca (FCA
         boglConceptMapping
         known
         goal
@@ -69,7 +67,10 @@ main = do
         extraProgs
         extraAttribs)
 
+  putStrLn $ "Program Count: " ++ show (length bglFiles)
+  putStrLn $ "Fringe: " ++ show fringe
+
   -- write GV spec
   writeFile "R32_Test_1.gv" dotContent
-  _ <- system ("dot -Tsvg -oR32_Test_1.svg R32_Test_1.gv")
+  _ <- system ("dot -Tpng -oR32_Test_1.png R32_Test_1.gv")
   return ()

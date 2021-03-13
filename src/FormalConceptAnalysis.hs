@@ -1,8 +1,8 @@
 {-# LANGUAGE DeriveDataTypeable, StandaloneDeriving #-}
 --
--- Modern revision of the tool
+-- FormalConceptAnalysis implementation
 --
-module R32 where
+module FormalConceptAnalysis where
 
 import Data.Data
 import General
@@ -130,8 +130,8 @@ getJoin :: ConceptLattice -> FormalConcept
 getJoin (nodes,_) = head $ PO.maxima nodes
 
 -- returns the infimum of the concept lattice (Bottom most node, most specific, concept of all attributes)
---getMeet :: ConceptLattice -> FormalConcept
---getMeet (nodes,_) = head $ PO.minima nodes
+getMeet :: ConceptLattice -> FormalConcept
+getMeet (nodes,_) = head $ PO.minima nodes
 
 -- updates a single concept in both the nodes & edges portion and returns the updated lattice
 -- focuses on updating name only
@@ -157,16 +157,27 @@ asIsConceptMapping s = Just (Wrap s)
 data KnowledgeState = KnowledgeState [FormalConcept] [Object] [Attribute]
   deriving Show
 
+-- | Gets the next programs, by concepts that don't have empty object labels
+getNextPrograms :: [FormalConcept] -> ConceptLattice -> [FormalConcept]
+getNextPrograms [] _  = []
+getNextPrograms ks cl = let lf = filter (\x -> not $ null (fst $ conceptLabel x)) ks in
+                        let le = filter (\x -> null (fst $ conceptLabel x)) ks in
+                        lf ++ (getNextPrograms (concatMap (getLowerNeighbors cl) le) cl)
+
+
 -- This is for TESTING, the actual setup will not be an IO monad (essentially a prototyping sandbox)
 -- run the analysis, taking an FCA analysis instance
 -- Takes known programs, goal programs, and course programs (programs available in the course)
-r32 :: (Data a, Show a, Subsumable b, Show b) => FCA a b -> IO (String)
-r32 (FCA conceptMapping kps gps cps extraKnownProgs extraKnownIntents) = do
+-- returns a Dot specification & a list of programs in the outer 'fringe'
+fca :: (Data a, Show a, Subsumable b, Show b) => FCA a b -> IO (String,[(String,[String])])
+fca (FCA conceptMapping kps gps cps extraKnownProgs extraKnownIntents) = do
   -- extract terms for the these program lists, preserving names
+  -- ### STEP 1: extract AST, (program,[term])
   let knownTaggedPrograms   = S.toList $ S.fromList $ map (astToTerms conceptMapping) kps
   let goalTaggedPrograms    = S.toList $ S.fromList $ map (astToTerms conceptMapping) gps
   let courseTaggedPrograms  = S.toList $ S.fromList $ map (astToTerms conceptMapping) cps
 
+  -- ### STEP 2: produce formal context
   -- produce total context
   -- from known & goal programs, we want to create an 'intent of interest'
   -- we will use this to reduce the attributes we have in our graph to only those we care about (between goal & known inclusively)
@@ -186,6 +197,7 @@ r32 (FCA conceptMapping kps gps cps extraKnownProgs extraKnownIntents) = do
                         []  -> (g',m',i')
                         ul  -> (g', filter (`elem` ul) m', filter (\(_,b) -> b `elem` ul) i')
 
+  -- ### STEP 3: get formal concepts
   -- produce total concepts from total context
   let totalConcepts' = getConceptsFromContext totalContext
   -- get known formal concepts, factoring in those that have been implicitly indicated by the programs & attributes added so far while learning
@@ -200,9 +212,8 @@ r32 (FCA conceptMapping kps gps cps extraKnownProgs extraKnownIntents) = do
   -- Apply Bounding concepts to get sub-lattice to work with
   let boundingConcepts = catMaybes $ map (findObjectConcept totalConcepts') ((map fst knownTaggedPrograms) ++ (map fst goalTaggedPrograms))
 
-  putStrLn $ show $ map conceptLabel knownFormalConcepts
-
-  putStrLn $ "Pre-filter Classification Count: " ++ (show $ length totalConcepts')
+  --putStrLn $ show $ map conceptLabel knownFormalConcepts
+  --putStrLn $ "Pre-filter Classification Count: " ++ (show $ length totalConcepts')
 
   let upKnownNeigh = concatMap (getAllUpperNeighbors totalConcepts') knownFormalConcepts
   let upGoalNeigh = concatMap (getAllUpperNeighbors totalConcepts') goalFormalConcepts
@@ -223,23 +234,28 @@ r32 (FCA conceptMapping kps gps cps extraKnownProgs extraKnownIntents) = do
                         --(False,True)  -> filter (\x -> elem x upGoalNeigh || elem x goalFormalConcepts) totalConcepts'
                         (False,True)  -> filter (\x -> any (x PO.>=) (PO.minima boundingConcepts)) totalConcepts'
 
-  let dnKnownNeigh = concatMap (getLowerNeighbors' totalConcepts') knownFormalConcepts
+  --let dnKnownNeigh = concatMap (getLowerNeighbors' totalConcepts') knownFormalConcepts
+  --let dnNextProgs = concatMap (fst . conceptLabel) (getNextPrograms knownFormalConcepts totalConcepts')
   --let totalConcepts = filter (\x -> elem x dnKnownNeigh) totalConcepts''
 
+  {-
   putStrLn $ "Num Course Progs: " ++ (show $ length cps)
   putStrLn $ "Num Course Objects: " ++ (show $ length ((\(x,_,_) -> x) totalContext))
   putStrLn $ "Num Course attributes: " ++ (show $ length ((\(_,x,_) -> x) totalContext))
   putStrLn $ "Num Formal Concepts (Program,Attribute set pairs): " ++ (show $ length totalConcepts)
   putStrLn $ showConcepts totalConcepts
+  -}
 
   -- report Known Concepts
-  let knownConcepts = S.toList $ S.fromList (concatMap conceptIntent knownFormalConcepts)
-  putStrLn $ "Known Concepts: " ++ show knownConcepts
+  --let knownConcepts = S.toList $ S.fromList (concatMap conceptIntent knownFormalConcepts)
+  --putStrLn $ "Known Concepts: " ++ show knownConcepts
 
   -- report Goal concepts (minus Known), these represent all concepts in the reduced set
-  let goalConcepts = (S.toList $ S.fromList (concatMap conceptIntent goalFormalConcepts)) \\ knownConcepts
-  putStrLn $ "Goal Concepts: " ++ show goalConcepts
+  --let goalConcepts = (S.toList $ S.fromList (concatMap conceptIntent goalFormalConcepts)) \\ knownConcepts
+  --putStrLn $ "Goal Concepts: " ++ show goalConcepts
 
+
+  -- ### STEP 4:  produce concept lattice
   -- create Formal Concept of all intents
   let fcm = FormalConcept (([],[]), [], contextIntent totalContext)
   -- create Formal Concept of all extents
@@ -254,6 +270,11 @@ r32 (FCA conceptMapping kps gps cps extraKnownProgs extraKnownIntents) = do
   let conceptLattice = mkConceptLattice l2
 
 
+  let dnNextProgs' = getNextPrograms [getJoin conceptLattice] conceptLattice
+  -- reduce down by concepts that are not subsets of others
+  let dnNextProgsLabels = map conceptLabel $ filter (\x -> all (\y -> x == y || not (x PO.< y)) dnNextProgs') dnNextProgs'
+  let dnNextProgs  = concatMap (\(a,b) -> map (\y -> (y,b)) a) dnNextProgsLabels
+
   -- TODO, this removed conflicting implications, but there may be a better way to do this
   --let implications = filterCommonPremise (conceptIntent $ getJoin conceptLattice) $ removeConflictingImplications $ deriveImplications (conceptIntent totalContext) $ getTT totalContext
   --let implications = filterCommonPremise (conceptIntent $ getJoin conceptLattice) $ deriveImplications (conceptIntent totalContext) $ getTT totalContext
@@ -262,22 +283,22 @@ r32 (FCA conceptMapping kps gps cps extraKnownProgs extraKnownIntents) = do
 
   -- 0) get object concepts of the goal (knownFormalConcepts)
   -- 1) compute the final knowledge state desired from OCG
-  let finalKS = KnowledgeState goalFormalConcepts (concatMap conceptExtent knownFormalConcepts) (concatMap conceptIntent goalFormalConcepts) --(concatMap conceptExtent knownFormalConcepts, concatMap conceptIntent goalFormalConcepts)
-  putStrLn $ "\n\nFinal Knowledge State: " ++ knowledgeStateToStr finalKS
+  --let finalKS = KnowledgeState goalFormalConcepts (concatMap conceptExtent knownFormalConcepts) (concatMap conceptIntent goalFormalConcepts) --(concatMap conceptExtent knownFormalConcepts, concatMap conceptIntent goalFormalConcepts)
+  --putStrLn $ "\n\nFinal Knowledge State: " ++ knowledgeStateToStr finalKS
 
   -- 2) get the initially known object concepts
   -- 3) use these to build the initial knowledge state
-  let initKS = KnowledgeState knownFormalConcepts (extraKnownProgs ++ map fst knownTaggedPrograms) ((map show extraKnownIntents) ++ concatMap conceptIntent knownFormalConcepts) -- (map fst knownTaggedPrograms, concatMap conceptIntent knownFormalConcepts)
-  putStrLn $ "\nCurrent Knowledge State: " ++ knowledgeStateToStr initKS
+  --let initKS = KnowledgeState knownFormalConcepts (extraKnownProgs ++ map fst knownTaggedPrograms) ((map show extraKnownIntents) ++ concatMap conceptIntent knownFormalConcepts) -- (map fst knownTaggedPrograms, concatMap conceptIntent knownFormalConcepts)
+  --putStrLn $ "\nCurrent Knowledge State: " ++ knowledgeStateToStr initKS
   -- 4) store the known concepts as well
     -- model this as a data type for knowledge
   -- 5) compute the direct lower neighbors of this knowledge state (these are the next transitions)
   --let nxtNeighbors = concatMap (getLowerNeighbors conceptLattice) knownFormalConcepts \\ knownFormalConcepts
   --putStrLn $ show nxtNeighbors
-  putStrLn ""
-  let knowledgeSteps = getKnowledgeSteps initKS conceptLattice
-  putStrLn $ show knowledgeSteps
-  putStrLn $ show $ makeUnique $ fg2 knowledgeSteps
+  --putStrLn ""
+  --let knowledgeSteps = getKnowledgeSteps initKS conceptLattice
+  --putStrLn $ show knowledgeSteps
+  --putStrLn $ show $ makeUnique $ fg2 knowledgeSteps
 
   --let prettyLattice = mapL conceptLabel conceptLattice
 
@@ -294,7 +315,9 @@ r32 (FCA conceptMapping kps gps cps extraKnownProgs extraKnownIntents) = do
   --printWebPage (filter (\(a,_) -> a `elem` extraKnownProgs) cps) kps gps initKS finalKS knowledgeSteps
 
   dotSpec <- GV.makeDot conceptLattice
-  return dotSpec
+
+  return (dotSpec,dnNextProgs)
+
 
 
 -- | Finds the object concept (classification) from a list of classifications (if present)
@@ -303,9 +326,10 @@ findObjectConcept fc o = find (\(FormalConcept ((g,_),_,_)) -> elem o g) fc
 
 
 -- | simple knowledge state printout
+{-
 knowledgeStateToStr :: KnowledgeState -> String
 knowledgeStateToStr (KnowledgeState ks progs _) = "{"++ join "," progs ++"}\n{" ++ join "," (concatMap conceptIntent ks) ++ "}"
-
+-}
 
 {-
 printWebPage :: [(String,String)] -> KnownPrograms -> GoalPrograms -> KnowledgeState -> KnowledgeState -> [KnowledgeStep] -> IO ()
