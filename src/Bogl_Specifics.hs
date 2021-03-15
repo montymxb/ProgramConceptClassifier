@@ -156,7 +156,7 @@ boglConceptMapping "App" = Just App
 boglConceptMapping "Plus" = Just Add
 boglConceptMapping "Ref" = Just Ref
 -- Annotation ~ used for annotating for parsing (n)
-boglConceptMapping "I" = Just IntExpr
+boglConceptMapping "I" = Just Integer_Expressions
 boglConceptMapping "Op" = Just BinOp
 -- Parlist ~ list of names to bind to funtion equation parameters (n)
 -- Expr SourcePos ~ nothing lost here
