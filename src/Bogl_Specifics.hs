@@ -76,7 +76,7 @@ data AttributeConcept = NotEquiv
   | Tru
   | Fls
   | PlainType
-  | IntExpr
+  | Integer_Expressions
   | Name
   deriving (Eq,Show,Enum)
 
