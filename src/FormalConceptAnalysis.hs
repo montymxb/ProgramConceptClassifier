@@ -70,13 +70,15 @@ instance PO.PartialOrd FormalConcept where
               Just r  -> r == GT
               Nothing -> False
 
+underscoreReplace :: String -> String
+underscoreReplace = map (\x -> if x == '_' then ' ' else x)
 
 instance GV.GraphVizable FormalConcept where
   node (FormalConcept (([],[]),_,_))  = [("label","")]
-  node (FormalConcept ((g,_),_,_))    = [("label",join ", " g),("fontcolor","purple"),("fontname","Helvetica")]
+  node (FormalConcept ((g,_),_,_))    = [("label",join ", " (map underscoreReplace g)),("fontcolor","purple"),("fontname","Helvetica")]
   edge (FormalConcept ((_,a),_,_)) (FormalConcept ((_,b),_,_)) = let d = (b \\ a) in
                                                                  if length d > 0 then
-                                                                   [("label",join ", " d),("fontname","Helvetica")]
+                                                                   [("label",join ", " (map underscoreReplace d)),("fontname","Helvetica")]
                                                                  else
                                                                    []
 

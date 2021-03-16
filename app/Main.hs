@@ -69,6 +69,7 @@ main = do
 
   putStrLn $ "Program Count: " ++ show (length bglFiles)
   putStrLn $ "Fringe: " ++ show fringe
+  putStrLn dotContent
 
   -- write GV spec
   writeFile "R32_Test_1.gv" dotContent
