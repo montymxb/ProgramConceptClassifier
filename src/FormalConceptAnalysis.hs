@@ -78,7 +78,7 @@ instance GV.GraphVizable FormalConcept where
   node (FormalConcept ((g,_),_,_))    = [("label",join ", " (map underscoreReplace g)),("fontcolor","purple"),("fontname","Helvetica")]
   edge (FormalConcept ((_,a),_,_)) (FormalConcept ((_,b),_,_)) = let d = (b \\ a) in
                                                                  if length d > 0 then
-                                                                   [("label",join ", " (map underscoreReplace d)),("fontname","Helvetica")]
+                                                                   [("label",join ", " (map underscoreReplace d)),("fontname","Helvetica"),("fontcolor","darkorange")]
                                                                  else
                                                                    []
 
