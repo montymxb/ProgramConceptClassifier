@@ -75,6 +75,7 @@ underscoreReplace = map (\x -> if x == '_' then ' ' else x)
 
 instance GV.GraphVizable FormalConcept where
   node (FormalConcept (([],[]),_,_))  = [("label","")]
+  node (FormalConcept (([],_),_,_))   = [("shape","point")] -- point marks
   node (FormalConcept ((g,_),_,_))    = [("label",join ", " (map underscoreReplace g)),("fontcolor","purple"),("fontname","Helvetica")]
   edge (FormalConcept ((_,a),_,_)) (FormalConcept ((_,b),_,_)) = let d = (b \\ a) in
                                                                  if length d > 0 then
@@ -186,7 +187,7 @@ fca (FCA conceptMapping kps gps cps extraKnownProgs extraKnownIntents) = do
   -- filter by lower intent, removing any programs that are less any other program we 'know'
   let fcp1 = case knownTaggedPrograms of
               [] -> courseTaggedPrograms
-              _  -> filter (\(_,b) -> all (\z -> not $ S.fromList b `S.isSubsetOf` S.fromList z) (map snd knownTaggedPrograms)) courseTaggedPrograms
+              _  -> filter (\(_,b) -> all (\z -> (not $ S.fromList b `S.isSubsetOf` S.fromList z)) (map snd knownTaggedPrograms)) courseTaggedPrograms
   -- filter by upper intent, including any program that is a subset of any goal program
   let filteredCourseProgs = case goalTaggedPrograms of
               [] -> fcp1
@@ -207,7 +208,7 @@ fca (FCA conceptMapping kps gps cps extraKnownProgs extraKnownIntents) = do
   -- find known concepts plus any concepts that we could additionally mark as known (ones that are subsets of what we indicated we have learned so far, beyond the known program)
   -- TODO, this may be unnecessary now (the addition of the other concepts from the filter)
   -- The only reason this is here was to make 'Concepts' and 'Programs' explicit by hand...but not sure I want to do that anymore (it's not in our specification, should be dropped)
-  let knownFormalConcepts = kfc ++ (filter (\(FormalConcept ((g,m),_,_)) -> S.fromList g `S.isSubsetOf` S.fromList extraKnownProgs && S.fromList m `S.isSubsetOf` S.fromList (map show extraKnownIntents) && (not $ S.null $ S.fromList g) && (not $ S.null $ S.fromList m)) totalConcepts')
+  let knownFormalConcepts = (filter (\(FormalConcept ((g,m),_,_)) -> S.fromList g `S.isSubsetOf` S.fromList extraKnownProgs && S.fromList m `S.isSubsetOf` S.fromList (map show extraKnownIntents) && (not $ S.null $ S.fromList g) && (not $ S.null $ S.fromList m)) totalConcepts')
   --let knownFormalConcepts = knownFormalConcepts' ++ (filter (\x -> all (x PO.>) knownFormalConcepts') totalConcepts')
   -- the above line should have done this, but it seems to have failed in this regard
   let goalFormalConcepts = catMaybes $ map (findObjectConcept totalConcepts') (map fst goalTaggedPrograms)
