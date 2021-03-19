@@ -29,10 +29,19 @@ type Attribute = String
 -- States "If an object has attributes A^B^C, then it has attributes D^E"
 type Implication = ([Attribute],[Attribute])
 
+-- attribute pairs to help describe nodes in GraphViz
+type AttributePairs = [(String,String)]
+
 -- A label for a formal concept corresponds
 -- the objects & attributes that map directly to this closure
 -- i.e. the single objects & attributes (sets of 1) that map to this
-type Label = ([Object],[Attribute])
+type Label = ([Object],[Attribute],AttributePairs)
+
+lfst :: Label -> [Object]
+lfst (a,_,_) = a
+
+lsnd :: Label -> [Attribute]
+lsnd (_,b,_) = b
 
 -- Pair of sets, (A subset G, B subset M)
 -- A is the extent: set of all objs that have all the attributes in B
@@ -73,15 +82,27 @@ instance PO.PartialOrd FormalConcept where
 underscoreReplace :: String -> String
 underscoreReplace = map (\x -> if x == '_' then ' ' else x)
 
+-- Full purple for the graph
+purple :: String
+purple = "#770077"
+
+-- Faded purple for the graph
+fadedPurple :: String
+fadedPurple = "#77007733"
+
 instance GV.GraphVizable FormalConcept where
-  node (FormalConcept (([],[]),_,_))  = [("label","")]
-  node (FormalConcept (([],_),_,_))   = [("shape","point")] -- point marks
-  node (FormalConcept ((g,_),_,_))    = [("label",join ", " (map underscoreReplace g)),("fontcolor","purple"),("fontname","Helvetica")]
-  edge (FormalConcept ((_,a),_,_)) (FormalConcept ((_,b),_,_)) = let d = (b \\ a) in
+  node (FormalConcept (([],[],a),_,_))  = [("label","")] ++ a
+  node (FormalConcept (([],_,a),_,_))   = [("shape","point")] ++ a -- point marks
+  node (FormalConcept ((g,_,a),_,_))    = case elem "Known" g of
+    True  -> [("label",join ", " (map underscoreReplace g)),("fontcolor","white"),("style","filled"),("fillcolor",purple),("fontname","Helvetica")] ++ a
+    False -> [("label",join ", " (map underscoreReplace g)),("fontname","Helvetica")] ++ a
+  edge (FormalConcept ((_,a,atrs),_,_)) (FormalConcept ((_,b,atrs'),_,_)) = let d = (b \\ a) in
                                                                  if length d > 0 then
-                                                                   [("label",join ", " (map underscoreReplace d)),("fontname","Helvetica"),("fontcolor","darkorange")]
+                                                                   case elem ("fontcolor",fadedPurple) atrs' of
+                                                                     True  -> [("label",join ", " (map underscoreReplace d)),("fontname","Helvetica"),("fontcolor","#ff8c0033")] ++ atrs' -- fade it
+                                                                     False -> [("label",join ", " (map underscoreReplace d)),("fontname","Helvetica"),("fontcolor","darkorange")] ++ atrs' -- normal color
                                                                  else
-                                                                   []
+                                                                   [] ++ atrs'
 
 -- formal context (G,M,I)
 -- G = Set of all objects (programs)
@@ -163,8 +184,8 @@ data KnowledgeState = KnowledgeState [FormalConcept] [Object] [Attribute]
 -- | Gets the next programs, by concepts that don't have empty object labels
 getNextPrograms :: [FormalConcept] -> ConceptLattice -> [FormalConcept]
 getNextPrograms [] _  = []
-getNextPrograms ks cl = let lf = filter (\x -> not $ null (fst $ conceptLabel x)) ks in
-                        let le = filter (\x -> null (fst $ conceptLabel x)) ks in
+getNextPrograms ks cl = let lf = filter (\x -> not $ null (lfst $ conceptLabel x)) ks in
+                        let le = filter (\x -> null (lfst $ conceptLabel x)) ks in
                         lf ++ (getNextPrograms (concatMap (getLowerNeighbors cl) le) cl)
 
 
@@ -208,7 +229,7 @@ fca (FCA conceptMapping kps gps cps extraKnownProgs extraKnownIntents) = do
   -- find known concepts plus any concepts that we could additionally mark as known (ones that are subsets of what we indicated we have learned so far, beyond the known program)
   -- TODO, this may be unnecessary now (the addition of the other concepts from the filter)
   -- The only reason this is here was to make 'Concepts' and 'Programs' explicit by hand...but not sure I want to do that anymore (it's not in our specification, should be dropped)
-  let knownFormalConcepts = (filter (\(FormalConcept ((g,m),_,_)) -> S.fromList g `S.isSubsetOf` S.fromList extraKnownProgs && S.fromList m `S.isSubsetOf` S.fromList (map show extraKnownIntents) && (not $ S.null $ S.fromList g) && (not $ S.null $ S.fromList m)) totalConcepts')
+  let knownFormalConcepts = (filter (\(FormalConcept ((g,m,_),_,_)) -> S.fromList g `S.isSubsetOf` S.fromList extraKnownProgs && S.fromList m `S.isSubsetOf` S.fromList (map show extraKnownIntents) && (not $ S.null $ S.fromList g) && (not $ S.null $ S.fromList m)) totalConcepts')
   --let knownFormalConcepts = knownFormalConcepts' ++ (filter (\x -> all (x PO.>) knownFormalConcepts') totalConcepts')
   -- the above line should have done this, but it seems to have failed in this regard
   let goalFormalConcepts = catMaybes $ map (findObjectConcept totalConcepts') (map fst goalTaggedPrograms)
@@ -260,9 +281,9 @@ fca (FCA conceptMapping kps gps cps extraKnownProgs extraKnownIntents) = do
 
   -- ### STEP 4:  produce concept lattice
   -- create Formal Concept of all intents
-  let fcm = FormalConcept (([],[]), [], contextIntent totalContext)
+  let fcm = FormalConcept (([],[],[]), [], contextIntent totalContext)
   -- create Formal Concept of all extents
-  let fcg = FormalConcept (([],[]), contextExtent totalContext, [])
+  let fcg = FormalConcept (([],[],[]), contextExtent totalContext, [])
   -- Add the Formal Concept of all Extents ONLY if a program does not exist that captures this notion
   let l1 = if length (PO.maxima totalConcepts) > 1 then fcg:totalConcepts else totalConcepts
   --let l1 = if doesConceptExtentAlreadyExist fcg totalConcepts then totalConcepts else fcg:totalConcepts
@@ -272,11 +293,24 @@ fca (FCA conceptMapping kps gps cps extraKnownProgs extraKnownIntents) = do
 
   let conceptLattice = mkConceptLattice l2
 
-
-  let dnNextProgs' = getNextPrograms [getJoin conceptLattice] conceptLattice
+  -- combining from the join & the known program, because they are not always at the same position, and the fringe extends from the join AND the known
+  -- this accounts for programs that directly follow from what is know, AND programs that are not connected, but require a step to get started in
+  -- these may overlap, and so they are filtered afterwards
+  -- HOWEVER, must remove the 'known' program, otherwise it will cause all those items that are explorable below it to be subsumed away by accident
+  let dnNextProgs' = filter (\x -> not $ elem x kfc) $ (getNextPrograms (getLowerNeighbors conceptLattice (getJoin conceptLattice)) conceptLattice) ++ (getNextPrograms (concatMap (getLowerNeighbors conceptLattice) kfc) conceptLattice)
   -- reduce down by concepts that are not subsets of others
-  let dnNextProgsLabels = map conceptLabel $ filter (\x -> all (\y -> x == y || not (x PO.< y)) dnNextProgs') dnNextProgs'
-  let dnNextProgs  = concatMap (\(a,b) -> map (\y -> (y,b)) a) dnNextProgsLabels
+  let dnNextProgsReduced = filter (\x -> all (\y -> x == y || not (x PO.< y)) dnNextProgs') dnNextProgs'
+  let dnNextProgs  = concatMap (\(a,b,_) -> map (\y -> (y,b)) a) (map conceptLabel dnNextProgsReduced)
+
+  -- TODO this...
+  -- remap ALL concepts, if any are a subset of the fringe programs, add full color (including the fringe)
+  -- any that are not, make them partial colors
+  let l2' = map (\x@(FormalConcept ((lg,lm,la),g,m)) -> case (any (x PO.>=) dnNextProgsReduced) of
+                          True  -> FormalConcept ((lg,lm,("fontcolor","#770077"):("color","#000000"):la),g,m) -- full color (reachable/known)
+                          False -> FormalConcept ((lg,lm,("fontcolor","#77007733"):("color","#00000033"):la),g,m)) l2 -- faded color (not yet reached/unknown)
+
+  -- rebuild the lattice again, using the annotated elements (setting faded elements past the fringe) (using l2')
+  let conceptLattice = mkConceptLattice l2'
 
   -- TODO, this removed conflicting implications, but there may be a better way to do this
   --let implications = filterCommonPremise (conceptIntent $ getJoin conceptLattice) $ removeConflictingImplications $ deriveImplications (conceptIntent totalContext) $ getTT totalContext
@@ -325,7 +359,7 @@ fca (FCA conceptMapping kps gps cps extraKnownProgs extraKnownIntents) = do
 
 -- | Finds the object concept (classification) from a list of classifications (if present)
 findObjectConcept :: [FormalConcept] -> Object -> Maybe FormalConcept
-findObjectConcept fc o = find (\(FormalConcept ((g,_),_,_)) -> elem o g) fc
+findObjectConcept fc o = find (\(FormalConcept ((g,_,_),_,_)) -> elem o g) fc
 
 
 -- | simple knowledge state printout
@@ -357,6 +391,7 @@ printWebPage eps kps gps (KnowledgeState _ _ attrs') (KnowledgeState _ _ attrs) 
 -}
 
 
+-- TODO this may not be helpful anymore
 data KnowledgeStep =
   -- a step from a classification to zero or more steps
   Step Label (S.Set KnowledgeStep) |
@@ -365,11 +400,13 @@ data KnowledgeStep =
     deriving (Show,Ord,Eq)
 
 -- get and report only the total fringe
+-- TODO this may not be helpful anymore
 fringe :: KnowledgeStep -> KnowledgeStep -> KnowledgeStep
 fringe fs (Step _ ks) = foldl fringe fs ks
 fringe (Fringe o' a'') (Fringe o a) = Fringe (makeUnique $ o++o') (makeUnique $ a++a'')
 fringe _ _ = error "Unexpected case for 'fringe'"
 
+-- TODO this may not be helpful anymore
 fg2 :: [KnowledgeStep] -> [KnowledgeStep]
 fg2 [] = []
 fg2 ((Step _ ks):ls) = fg2 (S.toList ks) ++ fg2 ls
@@ -377,6 +414,7 @@ fg2 (x:ls) = x : fg2 ls
 
 
 -- Get knowledge steps to learn from
+-- TODO this may not be helpful anymore
 getKnowledgeSteps :: KnowledgeState -> ConceptLattice -> [KnowledgeStep]
 getKnowledgeSteps (KnowledgeState ks kprogs kc) cl =
   let mm = PO.maxima ks in
@@ -386,8 +424,8 @@ getKnowledgeSteps (KnowledgeState ks kprogs kc) cl =
   where
     getKnowledgeSteps' :: [FormalConcept] -> FormalConcept -> KnowledgeStep
     getKnowledgeSteps' ks' x  = let unknownClassifications = conceptLabel x in
-                                let unknownConcepts = (uniqueInSameOrder $ snd unknownClassifications) \\ kc in
-                                let unknownPrograms = (uniqueInSameOrder $ fst unknownClassifications) \\ kprogs in
+                                let unknownConcepts = (uniqueInSameOrder $ lsnd unknownClassifications) \\ kc in
+                                let unknownPrograms = (uniqueInSameOrder $ lfst unknownClassifications) \\ kprogs in
                                 -- ??? how to fix this relation here
                                 case (length unknownConcepts, length unknownPrograms) of
                                   (0,0)  -> Step (conceptLabel x) $ S.fromList $ map (getKnowledgeSteps' (x:ks')) (filter (\q -> (getUpperNeighbors cl q) PO.<= (x:ks')) (getLowerNeighbors cl x))
@@ -417,13 +455,13 @@ doesConceptIntentAlreadyExist (FormalConcept (_,_,intent)) ls = any (\(FormalCon
 
 showConcepts :: [FormalConcept] -> String
 showConcepts [] = "\n"
-showConcepts ((FormalConcept ((s,s'),n,a)):ls) = ("({" ++ join "," s ++ "},{" ++ join "," s' ++ "})") ++ " Extent: " ++ (show n) ++ "\nIntent: " ++ (show a) ++ "\n\n" ++ (showConcepts ls)
+showConcepts ((FormalConcept ((s,s',_),n,a)):ls) = ("({" ++ join "," s ++ "},{" ++ join "," s' ++ "})") ++ " Extent: " ++ (show n) ++ "\nIntent: " ++ (show a) ++ "\n\n" ++ (showConcepts ls)
 
 fcDiffButSameGM :: FormalConcept -> FormalConcept -> Bool
 fcDiffButSameGM (FormalConcept (n1,g1,m1)) (FormalConcept (n2,g2,m2)) = (S.fromList g1) == (S.fromList g2) && (S.fromList m1) == (S.fromList m2) && n1 /= n2
 
 mergeLabels :: [Label] -> Label
-mergeLabels ls = foldl (\(g,m) (sg,sm) -> (sg++g, sm++m)) ([],[]) ls
+mergeLabels ls = foldl (\(g,m,_) (sg,sm,_) -> (sg++g, sm++m, [])) ([],[],[]) ls
 
 -- | Combines identical concepts with the same extent & intent, by joining their names & tossing one
 combineIdenticalConcepts :: [FormalConcept] -> [FormalConcept]
@@ -493,14 +531,14 @@ b' (x:ls) fc@(_,_,i) = let filt = filter (\(_,a) -> a == x) i in
 -- (A'',A')
 -- A'' is the extent closure
 mkFormalConceptsFromExtents :: FormalContext -> [FormalConcept]
-mkFormalConceptsFromExtents fc@(g,_,_) = map (\obj -> FormalConcept (([obj],[]), b' (a' [obj] fc) fc, a' [obj] fc)) g
+mkFormalConceptsFromExtents fc@(g,_,_) = map (\obj -> FormalConcept (([obj],[],[]), b' (a' [obj] fc) fc, a' [obj] fc)) g
 
 -- find formal concepts through attribute analysis
 -- or set B of attributes determines a concept
 -- (B',B'')
 -- B'' is the intent closure
 mkFormalConceptsFromIntents :: FormalContext -> [FormalConcept]
-mkFormalConceptsFromIntents fc@(_,m,_) = map (\atr -> FormalConcept (([],[atr]), b' [atr] fc, a' (b' [atr] fc) fc)) m
+mkFormalConceptsFromIntents fc@(_,m,_) = map (\atr -> FormalConcept (([],[atr],[]), b' [atr] fc, a' (b' [atr] fc) fc)) m
 
 -- partially ordered by extents
 -- (A1,B1) <= (A2,B2) iff A1 is a subset A2
