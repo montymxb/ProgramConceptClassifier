@@ -39,11 +39,11 @@ deriving instance Data Ftype
 
 
 -- | Attributes we want to map to from their equivalent direct representations in the BoGL abstract syntax
-data AttributeConcept = Not_Equivalence
+data AttributeConcept = Relational_Inequality
   | Greater_Than_or_Equal_To
   | Less_Than_or_Equal_To
   | Symbol_Expressions
-  | Equivalence
+  | Relational_Equality
   | Division
   | Let_Expressions
   | Multiplication
@@ -58,10 +58,10 @@ data AttributeConcept = Not_Equivalence
   | Indexed_Board_Positions
   | Board_Equations
   | Value_Equations
-  | Get_Board_Value
+  | Get_Board_Value_Expression
   | Game
   | Values
-  | Function_Equations
+  | Functions
   | Types
   | Function_Applications
   | Binary_Operators
@@ -70,11 +70,11 @@ data AttributeConcept = Not_Equivalence
   | Integer_Types
   | Board_Definitions
   | Input_Definitions
-  | Symbol_Types
+  | Enumeration_Types
   | Tuple_Types
   | Bool_Types
-  | True_Value
-  | False_Value
+  -- | True_Value
+  -- | False_Value
   | Plain_Types
   | Integer_Expressions
   | Names
@@ -97,12 +97,12 @@ instance Subsumable AttributeConcept where
 
 -- | Partial mapping of bogl syntactic categories (concepts) to refined ones (attribute concepts)
 boglConceptMapping :: String -> Maybe AttributeConcept
-boglConceptMapping "Top" = Just Symbol_Types
-boglConceptMapping "NotEquiv" = Just Not_Equivalence
+boglConceptMapping "Top" = Just Enumeration_Types
+boglConceptMapping "NotEquiv" = Just Relational_Inequality
 boglConceptMapping "Geq" = Just Greater_Than_or_Equal_To
 boglConceptMapping "Leq" = Just Less_Than_or_Equal_To
 boglConceptMapping "S" = Just Symbol_Expressions
-boglConceptMapping "Equiv" = Just Equivalence
+boglConceptMapping "Equiv" = Just Relational_Equality
 boglConceptMapping "Div" = Just Division
 boglConceptMapping "Let" = Just Let_Expressions
 boglConceptMapping "Times" = Just Multiplication
@@ -114,10 +114,10 @@ boglConceptMapping "If" = Just If_Then_Else_Control_Instructions
 boglConceptMapping "Tup" = Just Tuple_Types
 boglConceptMapping "Booltype" = Just Bool_Types
 -- [Xtype] ~ a list of Xtypes (n)
-boglConceptMapping "True" = Just True_Value
+boglConceptMapping "True" = Just Bool_Expressions
 -- B ~ constructor for expression that evaluates to a Boolean, should probably have this? (n)
 boglConceptMapping "B" = Just Bool_Expressions
-boglConceptMapping "False" = Just False_Value
+boglConceptMapping "False" = Just Bool_Expressions
 -- Bool ~ not needed, as we will always have 'B' above when this is here too (the type of the value in B)
 boglConceptMapping "ForAll" = Just For_All_Board_Positions
 -- BVal ~ a Board Value (n), doesn't add anything new
@@ -129,7 +129,7 @@ boglConceptMapping "BoardEq SourcePos" = Just Board_Equations
 -- [BoardEq SourcePos] ~ array of board equations, which are the same as array of PosDef (n)
 boglConceptMapping "Plain" = Just Plain_Types
 boglConceptMapping "Veq" = Just Value_Equations
-boglConceptMapping "Get" = Just Get_Board_Value
+boglConceptMapping "Get" = Just Get_Board_Value_Expression
 boglConceptMapping "Tuple" = Just Tuples
 -- [Expr SourcePos] ~ List of expressions (n)
 -- Game SourcePos ~ Annotated Game (n)
@@ -148,7 +148,7 @@ boglConceptMapping "Val" = Just Values
 -- Xtype ~ Sum type, X Tup or Hole (n)
 -- Ftype ~ Function Type, plain type -> plain type (implied by functions) (n)
 boglConceptMapping "Type" = Just Types
-boglConceptMapping "Feq" = Just Function_Equations
+boglConceptMapping "Feq" = Just Functions
 -- Pars ~ parameters, nothing added
 -- [[Char]] ~ List of names, probably for symbols & or other thing (n)
 boglConceptMapping "App" = Just Function_Applications

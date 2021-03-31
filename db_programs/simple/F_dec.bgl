@@ -1,3 +1,4 @@
 game E
+
 dec : Int -> Int
 dec(x) = x-1

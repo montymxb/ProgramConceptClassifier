@@ -49,7 +49,8 @@ main = do
   k5 <- getSimpleBGLFile "Input1"
   k6 <- getSimpleBGLFile "V_AddSub"
   k7 <- getSimpleBGLFile "V_Let1"
-  let known = rightProgs $ parseBOGLPrograms [k1]
+  let known = rightProgs $ parseBOGLPrograms [k7]
+  putStrLn $ show known
   -- k1,k2,k3,k4,k5,k6,k7 has empty classification!
 
   g1 <- getSimpleBGLFile "V_LetAddSub" -- tictactoe
@@ -67,9 +68,11 @@ main = do
         extraProgs
         extraAttribs)
 
+  {-
   putStrLn $ "Program Count: " ++ show (length bglFiles)
   putStrLn $ "Fringe: " ++ show fringe
   putStrLn dotContent
+  -}
 
   -- write GV spec
   writeFile "R32_Test_1.gv" dotContent

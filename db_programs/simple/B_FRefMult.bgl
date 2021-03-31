@@ -1,7 +1,7 @@
 game T
 
-f20 : Int
-f20 = 5
+five : Int
+five = 5
 
 multByFive : Int -> Int
-multByFive(x) = x * f20
+multByFive(x) = x * five

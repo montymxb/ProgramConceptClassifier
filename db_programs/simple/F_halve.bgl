@@ -1,3 +1,4 @@
 game E
+
 halve : Int -> Int
 halve(x) = x/2

@@ -1,4 +1,4 @@
-game T
+game IfThenElse
 
-f22 : Int -> Bool
-f22(x) = if x > 0 then True else False
+ifThenElseEx : Int -> Bool
+ifThenElseEx(x) = if x > 0 then True else False

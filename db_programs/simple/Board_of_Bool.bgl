@@ -1,4 +1,6 @@
 game B
+
 type Board = Array(1,1) of Bool
+
 b : Board
 b!(1,1) = False

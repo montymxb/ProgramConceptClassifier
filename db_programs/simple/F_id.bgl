@@ -1,3 +1,5 @@
-game E
-id : Int -> Int
-id(x) = x
+game Identity
+
+-- the simplest function with an Int you can make
+identity : Int -> Int
+identity(x) = x

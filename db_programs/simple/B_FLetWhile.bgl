@@ -1,5 +1,5 @@
-game T
+game LetWhile
 
-f28 : Int
-f28 = let x = 100 in
+letWhile : Int
+letWhile = let x = 100 in
       while x > 50 do x / 2

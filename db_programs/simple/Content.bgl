@@ -1,4 +1,3 @@
--- a game to verify that the Content type is created and useable
 game TestContentType
 
 type Board = Array (3,3) of Int
