@@ -1,14 +1,102 @@
 # Sources for Bibliography
 
-Started organizing everything Mar. 28th, 2021
+Started organizing everything Mar. 28th, 2021 ~ Finished on April 2nd, 2021 (6 days lost to organize things)
 
 ## Sources
 
 ### Lattice Theory / Concept Lattices / FCA
+- [Lattice Theory](https://search.library.oregonstate.edu/permalink/f/ueodtl/CP71109807550001451)
+  - 1940, G. Birkhoff, the OG Lattice Theory book
 - [Lattices, closures systems and implication bases: A survey of structural aspects and algorithms](https://www-sciencedirect-com.ezproxy.proxy.library.oregonstate.edu/science/article/pii/S0304397516306806?via%3Dihub#br0290)
   - survey of lattice theory in connection with concept lattices, 'implication bases', and the algorithms behind them
   - [SUPPORTS] provides a basis for concept lattices and lattice theory, in particular providing a definition of the closure system used in Section 2.2. Definition number 8
-- [...](https://search.library.oregonstate.edu/permalink/f/1g9lfhc/TN_cdi_springer_books_10_1007_978_3_319_59271_8_13)
+- [Learning Thresholds in Formal Concept Analysis](https://search.library.oregonstate.edu/permalink/f/1g9lfhc/TN_cdi_springer_books_10_1007_978_3_319_59271_8_13)
+  - talks about pushing for general understanding of FCA, that 'formal concept' is a learning threshold
+  - [SUPPORTS] on second glance this paper doesn't seem useful, but my notes indicate that this shows the relevance of FCA in the context of represnting the learning of new things on the boundary of existing understanding, with a 'good quote' (see todo for it, just says how learning thresholds are transformative, can't go back once you pass them, can contradict and change your thoughts on things)
+- [Delving Source code with Formal Concept Analysis](https://doi.org/10.1016/j.cl.2004.11.004)
+  - FAC applied to pull out concepts from source code (concrete syntax parsing however)
+  - [SUPPORTS] That this has been before, (PRIOR WORK)
+- [Applying Formal Concept Analysis to Cascading Style Sheets](https://www.cs.utexas.edu/users/wcook/Drafts/2010/FCAtoCSS.pdf)
+  - Paper that talks about using FCA on CSS ASTs, this is relevant, finish reading tomorrow
+  - they discuss elements as being the tags themselves (ids, classes, names), and the properties as being distinct key-value pairs
+- [Concept Location using Formal Concept Analysis and Information Retrieval](https://search.library.oregonstate.edu/permalink/f/1g9lfhc/TN_cdi_crossref_primary_10_1145_2377656_2377660)
+  - very much related work, concept location using FCA and information retrieval in source code
+  - [SUPPORTS] related work that's close to what we're doing, but is instead looking at concepts as the functional purpose of a section of code, rather than the syntactic elements themselves (i.e. not targeted towards learners of the language, but rather engineers navigating a system)
+- [From Reality to Programs and (Not Quite) Back Again](https://search.library.oregonstate.edu/permalink/f/1g9lfhc/TN_cdi_ieee_primary_4268244)
+  - very close to what I am doing, but ties in 'real world concepts', into the code, still this is really close, I need to cite this
+  - [SUPPORTS] that this has been done before in some way to support the understanding of programs for learners
+- [The Role of Concepts in Program Comprehension](https://search.library.oregonstate.edu/permalink/f/1g9lfhc/TN_cdi_ieee_primary_1021348)
+  - summary, talks about how program concepts factor into program comprehension
+  - [SUPPORTS] Concepts are in code and abstract concepts (notions expressed semantically)
+- [Assessing Modular Structure of Legacy Code Based on Mathematical Concept Theory](https://search.library.oregonstate.edu/permalink/f/1g9lfhc/TN_cdi_ieee_primary_610285)
+  - Uses FCA to find concepts in old legacy code by looking at relationship between procedures & global variables to extract the concepts
+  - [SUPPORTS] FCA has been used to analyze programs for some time (1997)
+- [An Invitation to Knowledge Space Theory](https://search.library.oregonstate.edu/permalink/f/1g9lfhc/TN_cdi_springer_books_10_1007_978_3_319_59271_8_1)
+  - connects Knowledge Space Theory and Formal Concept Analysis, specifically the educational component and learning
+- [Restructuring lattice theory: an approach based on hierarchies of concepts](https://search.library.oregonstate.edu/permalink/f/1g9lfhc/TN_cdi_springer_books_10_1007_978_3_642_01815_2_23)
+  - an additional reference to FCA, excellent quote: "The concept lattice can be understood as a basic answer to two fundamental questions concerning a context, namely the question of an appropriate classification of the objects and the question about the dependencies between the attributes." (very very helpful)
+- [Contributions to Pattern Discovery and Formal Concept Analysis](https://hal.archives-ouvertes.fr/tel-02495263/document)
+  - Mehdi Kaytoue's thesis
+  - [S. O. Kuznetsov and J. Poelmans. Knowledge representation and processing with formal concept analysis.Wiley Interdisc. Rew.: Data Mining and Knowledge Discovery, 3(3):200–215, 2013.](https://www-sciencedirect-com.ezproxy.proxy.library.oregonstate.edu/science/article/pii/S0957417413002935)
+    - This one is another literature survey, might be helpful there
+    - "A concept is considered to be a unit of thought constituted of two parts: its extent and its intent.", yet again, heard this one before
+    - Indicates ordering is (O1,A1) <= (O2,A2) iff (O1 subset O2 iff A2 subset A1)
+      - suggests my partial ordering is incorrect? Well at least the parts are abundantly clear
+    - and then (O1,A1) would be a subconcept of (O2,A2), and (O2,A2) is superconcept
+    - Mention of obeying Armstrong rules when Implication comes in
+      - A,B subset of M... A -> B if A' subset B'...hmm
+      - what are Armstrong rules?
+        - a set of 3 axioms, reflexivity, transitivity, and augmentation
+        - these all relate to DB management stuff, and A -> B means "A functionally determines B"
+- [Assisted Software Exploration using Formal Concept Analysis](https://www.scitepress.org/papers/2012/41754/41754.pdf)
+ - use prolog DB to represent full AST of a Java program under analysis. But their approach looks at just classes and the relationships between classes (has-a, is-a, etc.)
+ - however still very relevant
+- [Aleks Knowledge Space Theory](https://www.aleks.com/about_aleks/knowledge_space_theory)
+   - ALEKS KST page, this is worth looking into
+   - closely related, a learning system
+- [A Framework for Conceptually Modeling the Domain Knowledge of an Instructional System](https://link.springer.com/chapter/10.1007/11758525_27)
+  - "used LCA (Logical Concept Analysis) to model training domain knowledge in a computer-assisted instructional environment"
+  - 8 pg. text describes an approach using FCA and Logical Concept Analysis (LCA). The approach seems pretty good, but they define hand relations based on what the teacher thinks, and this may help/hurt the approach.
+- [Methods of Conceptual Knowledge Processing](https://search.library.oregonstate.edu/permalink/f/1g9lfhc/TN_cdi_pascalfrancis_primary_19206583)
+  - subfield, but most importantly brings up attribute exploration (which I have not had time to explore, and would be worth future work)
+- [B. Ganter, R. Wille: Formal Concept Analysis: mathematical foundations. Springer, Heidelberg 1999](https://search.library.oregonstate.edu/permalink/f/ueodtl/CP71157531710001451)
+  - a more recent foundational book on the topic (should have read it...)
+- [Formal Concept Analysis: Foundations and Applications](https://search.library.oregonstate.edu/permalink/f/ueodtl/CP71133049210001451)
+  - One of the core books with Willes
+  - Extremely telling quote: "The aim and meaning of Formal Concept Analysis as mathematical theory of concepts and concept hierarchies is to support the rational communication of humans by mathematically developing appropriate conceptual structures which can be logically activated."
+  - first part, helpful
+    - also talks about attribute implication
+    - A -> B, if whenever A(X) -> B(X)
+    - same for A,B -> C if whenever A(X) & B(X) then C(X)
+    - it's these attribute implications that will allow us to make judgement mistakes (leading into expanding our knowledge universe, that something new is ready to be learned?)
+  - pg. 114 (Treating Incomplete Knowledge in Formal Concept Analysis)
+    - for the case of (g,m) not in I, and if we know the history fully, then we state case (ii). That it is unknown whether or not object g has attribute m, but this has not been made explicit yet
+    - apparently multi-valued contexts (triadic for ex.) simplify issues with this, as there are 3 cases that can pop up if you don't know your history
+    - can construct an incomplete context with x,?,- hmmm...
+    - okay, what the hell, Kripke semantics & Kleene semantics can be used, but Kripke is best (for compound attributes), and even modal logic can be used in this context, are you serious right now? That was not intentional to come across this, coincidence perhaps or not?...
+    - okay, there are some aspects of this that may be helpful, but we're not trying to build up knowledge that we don't know about, we have a known goal, and a target...so it's very akin to this, but well structured, there are no wrong queries, and we only allow valid progressions to the goal knowledge
+    - I should read this again later, it was really dense, especially the compound attribute parts, and whether I have to construct a totally different formal context.
+    - but it does seem this in at least some form for attribute exploration will work...that or object exploration...and a rule system can be devised (can write up a better presentation on this as well)
+- Coulet, Adrien, Florent Domenach, Mehdi Kaytoue, and Amedeo Napoli (2013). [“Using Pattern Structures for Analyzing Ontology-Based Annotations of Biomedical Data"](https://search.library.oregonstate.edu/permalink/f/1g9lfhc/TN_cdi_springer_books_10_1007_978_3_642_38317_5_5)
+    - I already had this one open, going over it again
+    - [THESIS] This has been used in such a way that it may be helpful for very large languages with Pattern Structures (closely related)
+
+### ASTs and such
+- [Formal Concept Analysis applied to fault localization](https://search.library.oregonstate.edu/permalink/f/1g9lfhc/TN_cdi_acm_primary_1370220)
+  - connection of FCA and ASTs, only one I could find apparently
+- [Case study on which relations to use for clustering-based software architecture recovery](https://search.library.oregonstate.edu/permalink/f/1g9lfhc/TN_cdi_gale_infotracacademiconefile_A499186161)
+  - Case study on which relations to use for clustering-based software architecture recovery
+  - Limitation with using the entire AST is it is not tractable for large languages
+  - Either the language internals are not available, or the AST is tremendously huge
+  - "Experience has shown that for very large systems obtaining a fully linked abstract syntax tree, or loading it in-memory for analysis is not always possible"
+
+### Knowledge Space Theory
+- [A possible future for next generation adaptive learning systems](https://search.library.oregonstate.edu/permalink/f/1g9lfhc/TN_cdi_proquest_journals_1987907659)
+  - notion of adaptive tutors
+  - [SUPPORTS] idea that better systems work with a user's pre-existing knowledge, rather than working on a forced track
+- [Problem solving learning environments and assessment: A knowledge space theory approach](https://search.library.oregonstate.edu/permalink/f/1g9lfhc/TN_cdi_gale_infotracacademiconefile_A322439212)
+  - Knowledge Space Theory in terms of problem solving and how to test for this in assessment
+  - [SUPPORTS] talks about how assessment is tough (and has important quotes itself that can be used too), and makes it important for building teacher competency to this end (and this backs what we are doing, helping teachers build up understanding so that they can teach and assess properly)
 
 ### Program Construction
 - [PCEX: Interactive Program Construction Examples for Learning Programming](https://dl-acm-org.ezproxy.proxy.library.oregonstate.edu/doi/abs/10.1145/3279720.3279726)
@@ -47,6 +135,19 @@ Started organizing everything Mar. 28th, 2021
 - [Computer Science Pedagogical Content Knowledge: Characterizing Teacher Performance](https://search.library.oregonstate.edu/permalink/f/1g9lfhc/TN_cdi_crossref_primary_10_1145_3303770)
   - talks about measuring content knowledge to help teachers out in CS, talks about identifying this knowledge in various ways, but different from what I see here
   - [SUPPORTS] they find that prior teaching experience does not influence performance, and that
+
+### Ontologies
+- [AI could constantly scan the internet for data privacy violations, a quicker, easier way to enforce compliance](https://theconversation.com/ai-could-constantly-scan-the-internet-for-data-privacy-violations-a-quicker-easier-way-to-enforce-compliance-128973)
+  - not really a good source, but generally helps describing ontology
+- [Logic and Ontology](https://plato.stanford.edu/entries/logic-ontology/)
+  - stanford philosophy doc, particularly interested in "ontology" as "...what the most general features and relations of these things are"
+- [Web Ontology Language (OWL)](https://www.w3.org/OWL/)
+  - "semantic web language designed to represent rich and complex knowledge about things, groups of things, and relations between things."
+
+### Orthogonality
+- [Michael L. Scott, Programming Language Pragmatics, p. 228](https://search.library.oregonstate.edu/permalink/f/ueodtl/CP71189427280001451)
+  - Ah, excellent definition of "Orthogonality" in terms of CS
+  - "Orthogonality means that features can be used in any combination, the combinations all make sense, and the meaning of a given feature is consistent, regardless of the other features with which it is combined."
 
 ### Prototype Components
 - [D3 Graphviz, Github](https://github.com/magjac/d3-graphviz)
