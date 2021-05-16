@@ -1,0 +1,4 @@
+game MixedBoolRelationalOp
+
+v : Bool
+v = False == True

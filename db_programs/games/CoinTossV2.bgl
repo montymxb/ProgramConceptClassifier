@@ -1,0 +1,17 @@
+-- Example RUN: whoGoesFirst
+game CoinToss
+
+type Coin = {Heads, Tails}
+type Player = {Jack, Rosa}
+
+type Input = Coin
+
+-- We changed this to whoGoesFirst, so it returns a
+-- winner, instead of whoDoesDishes with the loser
+-- The function also gets input from the user during
+-- execution.
+whoGoesFirst : Player
+whoGoesFirst = if input == input then
+                  Jack
+               else
+                  Rosa

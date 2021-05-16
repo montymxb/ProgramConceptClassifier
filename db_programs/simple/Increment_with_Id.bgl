@@ -1,0 +1,7 @@
+game IncWithId
+
+id : Int -> Int
+id(x) = x
+
+increment : Int -> Int
+increment(x) = id(x + 1)

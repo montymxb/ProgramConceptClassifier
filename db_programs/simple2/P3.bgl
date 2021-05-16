@@ -1,0 +1,4 @@
+game Subtraction
+
+v : Int
+v = 1 - 1

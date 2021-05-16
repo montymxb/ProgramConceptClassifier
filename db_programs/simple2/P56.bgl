@@ -1,0 +1,5 @@
+game Double
+
+-- doubles an Integer
+double : Int -> Int
+double(x) = x * 2

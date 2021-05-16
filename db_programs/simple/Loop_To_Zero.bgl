@@ -1,0 +1,7 @@
+game LoopToZero
+
+-- the while loop repeats while x > 0,
+-- reducing it by 1 each time and checking again whether it should continue looping.
+-- If x <= 0, it does not loop, and you'll get back your value as it is
+toZero : Int -> Int
+toZero(x) = while x > 0 do x - 1

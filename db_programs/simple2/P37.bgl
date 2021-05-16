@@ -1,0 +1,6 @@
+game Simple3x3BoardOf1s
+
+type Board = Array(3,3) of Int
+
+b : Board
+b!(x,y) = 1

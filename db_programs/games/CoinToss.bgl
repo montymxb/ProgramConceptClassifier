@@ -1,0 +1,23 @@
+{-
+ALGORITHM for deciding who does the dishes:
+
+Jack picks H or T for the winning side
+Rosa tosses the coin
+IF the coin toss is equal to the pick THEN
+     Jack does the dishes
+ELSE
+     Rosa does the dishes
+-}
+
+-- Coin Toss program without comments to show comparison to algorithm
+-- Example RUN: whoDoesDishes(H, T)
+game CoinToss
+
+type Coin = {H, T}
+type Player = {Jack, Rosa}
+
+whoDoesDishes : (Coin, Coin) -> Player
+whoDoesDishes(pick, toss) = if toss == pick then
+                               Rosa
+                            else
+                               Jack

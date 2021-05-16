@@ -1,0 +1,4 @@
+game InfiniteRecursion
+
+infinite : Int -> Int
+infinite(x) = infinite(x+1)

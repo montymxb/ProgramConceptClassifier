@@ -1,0 +1,4 @@
+game BoolTuple
+
+v : (Bool,Bool)
+v = (True,False)

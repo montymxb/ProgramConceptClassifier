@@ -1,0 +1,9 @@
+game Halve
+
+-- Keep in mind division produces whole Ints in BoGL
+-- no fractions, no decimals
+-- ex. halve(4)  = 2
+--     halve(5)  = 2
+--     halve(10) = 3
+halve : Int -> Int
+halve(x) = x/2

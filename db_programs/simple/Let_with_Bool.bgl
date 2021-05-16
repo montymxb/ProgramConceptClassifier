@@ -1,0 +1,4 @@
+game LetWithBool
+
+v : Bool
+v = let x = True in False

@@ -1,0 +1,5 @@
+game FirstFromTuple
+
+-- get the first element from a tuple
+fst : (Int,Int) -> Int
+fst(x,y) = x

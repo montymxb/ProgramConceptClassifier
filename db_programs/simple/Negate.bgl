@@ -1,0 +1,7 @@
+game Negate
+
+-- another way to write the builtin 'not' function
+-- ex. negate(True)  = False
+--     negate(False) = True
+negate : Bool -> Bool
+negate(x) = if x then False else True

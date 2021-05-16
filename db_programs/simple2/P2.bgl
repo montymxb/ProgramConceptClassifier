@@ -1,0 +1,4 @@
+game P1
+
+v : Int
+v = 1 + 1

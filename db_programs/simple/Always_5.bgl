@@ -1,0 +1,4 @@
+game Always5
+
+always5 : Int -> Int
+always5(x) = 5

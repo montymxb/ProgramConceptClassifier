@@ -1,0 +1,5 @@
+game BoolFunction
+
+-- simplest function with a Bool
+identityBool : Bool -> Bool
+identityBool(x) = x

@@ -1,0 +1,4 @@
+game LessThan
+
+v : Bool
+v = 5 < 2

@@ -1,0 +1,4 @@
+game RelationalOpBools
+
+v : Bool
+v = True == True

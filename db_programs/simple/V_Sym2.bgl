@@ -1,4 +1,0 @@
-game E
-type T = {A,B}
-f : T -> T
-f(x) = if x == A then B else A

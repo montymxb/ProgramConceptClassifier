@@ -1,0 +1,4 @@
+game LoopUpTo10
+
+upTo10 : Int -> Int
+upTo10(x) = while x < 10 do x + 1

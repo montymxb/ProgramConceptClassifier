@@ -1,4 +1,0 @@
-game T
-
-addOne : Int -> Int
-addOne(x) = let y = 1 in x + y

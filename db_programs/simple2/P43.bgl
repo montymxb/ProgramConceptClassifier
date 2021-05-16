@@ -1,0 +1,4 @@
+game GeneralDivision
+
+div : (Int,Int) -> Int
+div(x,y) = x/y

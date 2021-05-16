@@ -221,7 +221,7 @@ fca (FCA conceptMapping kps gps cps extraKnownProgs extraKnownIntents) = do
                         []  -> (g',m',i')
                         ul  -> (g', filter (`elem` ul) m', filter (\(_,b) -> b `elem` ul) i')
 
-  -- ### STEP 3: get formal concepts
+  -- ### STEP 3: get classifications
   -- produce total concepts from total context
   let totalConcepts' = getConceptsFromContext totalContext
   -- get known formal concepts, factoring in those that have been implicitly indicated by the programs & attributes added so far while learning
@@ -262,13 +262,13 @@ fca (FCA conceptMapping kps gps cps extraKnownProgs extraKnownIntents) = do
   --let dnNextProgs = concatMap (fst . conceptLabel) (getNextPrograms knownFormalConcepts totalConcepts')
   --let totalConcepts = filter (\x -> elem x dnKnownNeigh) totalConcepts''
 
-  {-
+  {--}
   putStrLn $ "Num Course Progs: " ++ (show $ length cps)
   putStrLn $ "Num Course Objects: " ++ (show $ length ((\(x,_,_) -> x) totalContext))
   putStrLn $ "Num Course attributes: " ++ (show $ length ((\(_,x,_) -> x) totalContext))
   putStrLn $ "Num Formal Concepts (Program,Attribute set pairs): " ++ (show $ length totalConcepts)
   putStrLn $ showConcepts totalConcepts
-  -}
+  {--}
 
   -- report Known Concepts
   --let knownConcepts = S.toList $ S.fromList (concatMap conceptIntent knownFormalConcepts)

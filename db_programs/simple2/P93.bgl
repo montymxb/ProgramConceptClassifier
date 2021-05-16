@@ -1,0 +1,4 @@
+game RelationalOpForInts
+
+v : Bool
+v = 5 == 2

@@ -1,0 +1,4 @@
+game GreaterThanEqualTo
+
+v : Bool
+v = 5 >= 2

@@ -1,0 +1,11 @@
+game Symbol
+
+-- 'A' and 'B' are now values of type 'T'
+type T = {A,B}
+
+-- and so we can write two value equations like so:
+x : T
+x = A
+
+y : T
+y = B

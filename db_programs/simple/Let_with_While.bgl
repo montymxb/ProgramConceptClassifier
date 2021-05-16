@@ -1,0 +1,4 @@
+game LetWhile
+
+w : Int
+w = let z = 10 in while z > 0 do z - 1

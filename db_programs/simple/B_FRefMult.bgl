@@ -1,7 +1,0 @@
-game T
-
-five : Int
-five = 5
-
-multByFive : Int -> Int
-multByFive(x) = x * five

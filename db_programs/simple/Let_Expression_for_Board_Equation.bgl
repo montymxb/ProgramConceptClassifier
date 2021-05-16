@@ -1,0 +1,6 @@
+game LetBoard
+
+type Board = Array(1,1) of Int
+
+b : Board
+b!(x,y) = let q = 5 in q

@@ -1,0 +1,4 @@
+game AddSubMult
+
+v : Int
+v = 1 + 5 - 1 * 5

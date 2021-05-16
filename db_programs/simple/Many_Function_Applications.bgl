@@ -1,0 +1,10 @@
+game ManyFunctionApps
+
+app1 : Int -> Int
+app1(x) = x * 2
+
+app2 : Int -> Int
+app2(x) = x + 2
+
+f : Int -> Int
+f(x) = app1(x) + app2(x)

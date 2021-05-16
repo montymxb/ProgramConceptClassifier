@@ -1,0 +1,4 @@
+game And1
+
+v : Bool
+v = and(True,True)

@@ -1,0 +1,10 @@
+game ExtendedEnum
+
+-- describes 1,2,3,4,.... & Nothing
+type ExtendedInt = Int & {Nothing}
+
+just5 : ExtendedInt
+just5 = 5
+
+nada : ExtendedInt
+nada = Nothing

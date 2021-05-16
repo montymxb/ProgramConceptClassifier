@@ -1,0 +1,4 @@
+game PickSnd
+
+pick2nd : ((Bool,Bool),Bool) -> Bool
+pick2nd(x,y) = y

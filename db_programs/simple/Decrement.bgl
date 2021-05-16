@@ -1,0 +1,4 @@
+game Decrement
+
+dec : Int -> Int
+dec(x) = x-1

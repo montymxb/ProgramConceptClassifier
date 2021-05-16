@@ -1,0 +1,6 @@
+game SimpleFunction
+
+-- a very simple function
+-- returns what it is given
+identity : Int -> Int
+identity(x) = x

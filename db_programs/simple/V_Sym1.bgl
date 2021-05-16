@@ -1,4 +1,0 @@
-game E
-type T = {A,B}
-v : T
-v = A

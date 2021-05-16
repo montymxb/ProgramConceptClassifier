@@ -1,0 +1,4 @@
+game Integer
+
+v : Int
+v = 0

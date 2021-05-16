@@ -1,0 +1,4 @@
+game LetWithArithmeticAndConditional
+
+v : Bool
+v = let x = 5 + 1 * 2 - 3 in x == 0

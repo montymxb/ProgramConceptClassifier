@@ -1,0 +1,4 @@
+game DoubleLet
+
+dlet : Int -> Int
+dlet(x) = let y = 2 in let z = 2 in x*y*z

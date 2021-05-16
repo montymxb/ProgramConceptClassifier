@@ -1,0 +1,5 @@
+game Second
+
+-- gets the 2nd value in a tuple
+snd : (Int,Int) -> Int
+snd(x,y) = y

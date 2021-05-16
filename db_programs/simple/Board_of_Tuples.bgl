@@ -1,0 +1,6 @@
+game BoardOfTuples
+
+type Board = Array(1,1) of (Bool,Bool)
+
+boardOfTups : Board
+boardOfTups!(x,y) = (True,False)

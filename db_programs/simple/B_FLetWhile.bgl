@@ -1,5 +1,0 @@
-game LetWhile
-
-letWhile : Int
-letWhile = let x = 100 in
-      while x > 50 do x / 2

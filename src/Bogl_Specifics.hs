@@ -51,7 +51,7 @@ data AttributeConcept = Relational_Inequality
   | Subtraction
   | Less_Than
   | While_Loops
-  | If_Then_Else_Control_Instructions
+  | Branching
   | Tuples
   | Bool_Expressions
   | For_All_Board_Positions
@@ -67,12 +67,12 @@ data AttributeConcept = Relational_Inequality
   | Binary_Operators
   | Addition
   | References
-  | Integer_Types
+  | Integer_Type
   | Board_Definitions
   | Input_Definitions
   | Enumeration_Types
   | Tuple_Types
-  | Bool_Types
+  | Bool_Type
   -- | True_Value
   -- | False_Value
   | Plain_Types
@@ -110,9 +110,9 @@ boglConceptMapping "Greater" = Just Greater_Than
 boglConceptMapping "Minus" = Just Subtraction
 boglConceptMapping "Less" = Just Less_Than
 boglConceptMapping "While" = Just While_Loops
-boglConceptMapping "If" = Just If_Then_Else_Control_Instructions
+boglConceptMapping "If" = Just Branching
 boglConceptMapping "Tup" = Just Tuple_Types
-boglConceptMapping "Booltype" = Just Bool_Types
+boglConceptMapping "Booltype" = Just Bool_Type
 -- [Xtype] ~ a list of Xtypes (n)
 boglConceptMapping "True" = Just Bool_Expressions
 -- B ~ constructor for expression that evaluates to a Boolean, should probably have this? (n)
@@ -127,8 +127,10 @@ boglConceptMapping "Index" = Just Indexed_Board_Positions
 -- Pos ~ no help (n)
 boglConceptMapping "BoardEq SourcePos" = Just Board_Equations
 -- [BoardEq SourcePos] ~ array of board equations, which are the same as array of PosDef (n)
-boglConceptMapping "Plain" = Just Plain_Types
-boglConceptMapping "Veq" = Just Value_Equations
+-- TODO removed for paper analysis
+--boglConceptMapping "Plain" = Just Plain_Types
+-- TODO removed for paper analysis
+--boglConceptMapping "Veq" = Just Value_Equations
 boglConceptMapping "Get" = Just Get_Board_Value_Expression
 boglConceptMapping "Tuple" = Just Tuples
 -- [Expr SourcePos] ~ List of expressions (n)
@@ -162,7 +164,7 @@ boglConceptMapping "Op" = Just Binary_Operators
 -- Expr SourcePos ~ nothing lost here
 -- (:) ~ cons (n)
 -- Char ~ single char (n)
-boglConceptMapping "Int" = Just Integer_Types
+boglConceptMapping "Int" = Just Integer_Type
 -- Signature ~ general signature (n)
 -- Equation SourcePos ~ general equation (n)
 -- SourcePos ~ annotation stuff (n)

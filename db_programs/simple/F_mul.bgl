@@ -1,3 +1,0 @@
-game E
-mul : (Int,Int) -> Int
-mul(x,y) = x*y

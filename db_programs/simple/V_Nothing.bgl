@@ -1,6 +1,0 @@
-game T
-
-type S6 = Int & {Nothing}
-
-f4 : S6
-f4 = Nothing

@@ -1,3 +1,0 @@
-game E
-nt : Bool -> Bool
-nt(x) = if x then False else True

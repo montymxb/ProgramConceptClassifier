@@ -1,0 +1,4 @@
+game NEQInts
+
+v : Bool
+v = 1 /= 2

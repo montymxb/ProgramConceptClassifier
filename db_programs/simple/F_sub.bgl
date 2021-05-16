@@ -1,3 +1,0 @@
-game E
-sub : (Int,Int) -> Int
-sub(x,y) = x-y

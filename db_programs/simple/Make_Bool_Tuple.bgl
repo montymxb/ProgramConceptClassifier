@@ -1,0 +1,4 @@
+game MakeBoolTuple
+
+f : Bool -> (Bool,Bool)
+f(x) = (x,x)

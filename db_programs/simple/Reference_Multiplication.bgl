@@ -1,0 +1,7 @@
+game ReferenceMult
+
+five : Int
+five = 5
+
+multBy5 : Int -> Int
+multBy5(x) = x * five

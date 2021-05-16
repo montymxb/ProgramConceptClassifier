@@ -1,0 +1,7 @@
+game TwoBoardEquations
+
+type Board = Array(3,3) of Int
+
+b : Board
+b!(x,y) = 1
+b!(2,2) = 0

@@ -1,0 +1,4 @@
+game Division
+
+v : Int
+v = 10 / 2

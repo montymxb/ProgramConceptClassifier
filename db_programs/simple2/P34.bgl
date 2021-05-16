@@ -1,0 +1,4 @@
+game LetAddSub
+
+addSub : (Int,Int) -> Int
+addSub(x,y) = let z = 1 in x+y - z

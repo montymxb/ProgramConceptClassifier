@@ -1,0 +1,6 @@
+game IfThenElseNEQ
+
+type T = {A,B}
+
+flip : T -> T
+flip(x) = if x /= A then B else A

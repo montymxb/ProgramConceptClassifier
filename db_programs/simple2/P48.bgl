@@ -1,0 +1,4 @@
+game GeneralLessThan
+
+lt : (Int,Int) -> Bool
+lt(x,y) = x < y

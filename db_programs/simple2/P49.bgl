@@ -1,0 +1,11 @@
+game NestedIfs
+
+ifLet : (Int,Bool) -> Int
+ifLet(x,y) = if x > 10 then
+               let y = 2 in
+               x * y
+             else
+               if y == True then
+                 False
+               else
+                 True

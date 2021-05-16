@@ -1,0 +1,4 @@
+game Example
+
+v : Int
+v = if True then 1 else 0

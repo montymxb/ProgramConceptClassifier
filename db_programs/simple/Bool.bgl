@@ -1,0 +1,7 @@
+game SimpleBool
+
+tru : Bool
+tru = True
+
+fls : Bool
+fls = False

@@ -1,4 +1,0 @@
-game T
-
-idBool : Bool -> Bool
-idBool(x) = x

@@ -1,0 +1,7 @@
+game Not
+
+f : Bool
+f = not(True)
+
+t : Bool
+t = not(False)

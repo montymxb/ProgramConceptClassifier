@@ -38,24 +38,28 @@ main = do
   let getSimpleBGLFile = getFileFromDir ".bgl" (dir ++ "simple/")
   let getGameBGLFile = getFileFromDir ".bgl" (dir ++ "games/")
 
-  bglFiles1 <- getAllBGLFilesFromDir (dir ++ "simple/")
+  bglFiles1 <- getAllBGLFilesFromDir (dir ++ "simple2/")
   bglFiles2 <- getAllBGLFilesFromDir (dir ++ "games/")
   let bglFiles = rightProgs $ parseBOGLPrograms $ bglFiles1 ++ bglFiles2
 
-  k1 <- getSimpleBGLFile "Simplest" -- Notakto
-  k2 <- getSimpleBGLFile "V_Ref"
-  k3 <- getSimpleBGLFile "V_Sub"
-  k4 <- getSimpleBGLFile "V_Add"
-  k5 <- getSimpleBGLFile "Input1"
-  k6 <- getSimpleBGLFile "V_AddSub"
-  k7 <- getSimpleBGLFile "V_Let1"
-  let known = rightProgs $ parseBOGLPrograms [k7]
+  --k1 <- getSimpleBGLFile "Simplest" -- Notakto
+  --k2 <- getSimpleBGLFile "V_Ref"
+  --k3 <- getSimpleBGLFile "V_Sub"
+  --k4 <- getSimpleBGLFile "V_Add"
+  --k5 <- getSimpleBGLFile "Input1"
+  --k6 <- getSimpleBGLFile "V_AddSub"
+  k7 <- getSimpleBGLFile "Factorial"
+
+  ct <- getGameBGLFile "CoinToss"
+
+  let known = rightProgs $ parseBOGLPrograms [ct]
   putStrLn $ show known
   -- k1,k2,k3,k4,k5,k6,k7 has empty classification!
 
-  g1 <- getSimpleBGLFile "V_LetAddSub" -- tictactoe
+  -- <- getSimpleBGLFile "tictactoe" -- tictactoe
   g2 <- getGameBGLFile "tictactoe"
-  let goal = rightProgs $ parseBOGLPrograms [] -- ("G1","game S\nv : Int\nv = let x = 24 in 24 * 2 + 5 - x")
+  let ex = ("G1","game S\nf : Int -> Int\nf(x) = if x > 1 then x * f(x-1) else 1\nt : Bool\nt = True\nv : Int\nv = let x = 24 in 24 * 2 + 5 - x")
+  let goal = rightProgs $ parseBOGLPrograms [g2] -- ("G1","game S\nv : Int\nv = let x = 24 in 24 * 2 + 5 - x")
 
   let extraProgs    = []
   let extraAttribs  = []

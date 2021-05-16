@@ -1,0 +1,9 @@
+game GetBoardValue
+
+type Board = Array(3,3) of Int
+
+b : Board
+b!(x,y) = 5
+
+v : Int
+v = b!(2,2)

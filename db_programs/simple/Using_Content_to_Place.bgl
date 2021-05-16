@@ -1,0 +1,14 @@
+game ContentPlace
+
+-- 3x3 board of Int
+-- Content = Int
+type Board = Array (3,3) of Int
+
+ourBoard : Board
+ourBoard!(x,y) = 1
+
+-- Content describes the type of the pieces on the board
+-- which are 'Int', as noted above ^
+-- this function only places a value of 'Content' if it is > 0
+placeIfPositive : (Content, Board, (Int, Int)) -> Board
+placeIfPositive(c, b, p) = if c > 0 then ourBoard(c, b, p) else b

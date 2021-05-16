@@ -1,0 +1,4 @@
+game AndwithIntBool
+
+v : Bool
+v = and(1 == 1, True == False)

@@ -1,0 +1,22 @@
+game GetIntInput
+
+-- introduces the concept of input
+-- 'input' is a reference that pauses the execution of a program,
+-- and asks for a value of type 'Input'
+
+-- here, you can indicate what that type is
+type Input = Int
+
+-- this value asks for an Int, and whatever Int
+-- it gets is the value it then has.
+-- Everytime this is referenced, it will ask for another value.
+getAnInt : Int
+getAnInt = input
+
+-- asks you for a number, and adds 1 to it
+addOneToYourNumber : Int
+addOneToYourNumber = getAnInt + 1
+
+-- this is the same...
+addOneToYourNumber2 : Int
+addOneToYourNumber2 = input + 1

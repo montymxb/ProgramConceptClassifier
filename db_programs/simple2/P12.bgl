@@ -1,0 +1,10 @@
+game Tuples
+
+-- get the first element from a tuple
+fst : (Int,Int) -> Int
+fst(x,y) = x
+
+
+-- gets the 2nd value in a tuple
+snd : (Int,Int) -> Int
+snd(x,y) = y

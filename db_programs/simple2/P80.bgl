@@ -1,0 +1,6 @@
+game BoardWithIndex
+
+type Board = Array(1,1) of Int
+
+b : Board
+b!(1,1) = 8

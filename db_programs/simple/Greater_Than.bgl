@@ -1,0 +1,4 @@
+game GreaterThan
+
+v : Bool
+v = 5 > 2

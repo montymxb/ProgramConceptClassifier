@@ -1,0 +1,4 @@
+game TupleType
+
+-- A new type 'Pair', which is akin to a pair of Integers
+type Pair = (Int,Int)

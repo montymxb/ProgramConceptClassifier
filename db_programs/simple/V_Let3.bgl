@@ -1,3 +1,0 @@
-game E
-v : Int
-v = let x = 5 + 1 * 2 - 3 in x

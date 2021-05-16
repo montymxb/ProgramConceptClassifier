@@ -1,0 +1,6 @@
+game BoolBoardForAll
+
+type Board = Array(4,5) of Bool
+
+b : Board
+b!(x,y) = True

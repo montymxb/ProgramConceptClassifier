@@ -1,9 +1,0 @@
-game TestContentType
-
-type Board = Array (3,3) of Int
-
-positive : Board
-positive!(x,y) = 1
-
-placePositive : (Content, Board, (Int, Int)) -> Board
-placePositive(c, b, p) = if c > 0 then place(c, b, p) else b

@@ -9,6 +9,7 @@ type ConcreteProgram = (String,String)
 class Subsumable a where
   -- if the 1st subsumes the 2nd
   subsumes :: a -> a -> Bool
+  subsumes _ _ = False
 
   -- attempts to reduce a list by applying subsumption
   subsume :: [a] -> [a]

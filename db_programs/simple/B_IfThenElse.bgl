@@ -1,4 +1,0 @@
-game IfThenElse
-
-ifThenElseEx : Int -> Bool
-ifThenElseEx(x) = if x > 0 then True else False

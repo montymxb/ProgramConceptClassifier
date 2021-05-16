@@ -1,0 +1,4 @@
+game Or
+
+o : Bool
+o = or(False,True)

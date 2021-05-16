@@ -1,0 +1,4 @@
+game FalseIfThenElse
+
+v : Int
+v = if False then 1 else 0

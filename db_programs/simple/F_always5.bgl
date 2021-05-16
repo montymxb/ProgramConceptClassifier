@@ -1,4 +1,0 @@
-game E
-
-a5 : Int -> Int
-a5(x) = 5

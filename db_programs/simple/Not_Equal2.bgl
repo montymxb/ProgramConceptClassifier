@@ -1,0 +1,4 @@
+game NEQ2
+
+v : Bool
+v = True /= True

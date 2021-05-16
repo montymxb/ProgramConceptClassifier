@@ -1,0 +1,4 @@
+game Tuple
+
+v : (Int,Int)
+v = (1,2)

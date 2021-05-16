@@ -1,0 +1,4 @@
+game IncWithLet
+
+inc : Int -> Int
+inc(x) = let y = 1 in x + y

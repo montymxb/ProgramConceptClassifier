@@ -1,0 +1,4 @@
+game GreaterThanWithTuples
+
+gt : (Int,Int) -> Bool
+gt(x,y) = x > y

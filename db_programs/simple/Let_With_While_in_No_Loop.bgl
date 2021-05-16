@@ -1,0 +1,5 @@
+game LetWhileNoLoop
+
+-- does not loop
+noloop : Bool
+noloop = let z = True in while False do z

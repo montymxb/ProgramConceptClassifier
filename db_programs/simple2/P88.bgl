@@ -1,0 +1,4 @@
+game SimpleLet
+
+v : Int
+v = let x = 5 in x

@@ -1,5 +1,0 @@
-game E
-a : Int
-a = 5
-b : Int -> Int
-b(x) = x + a

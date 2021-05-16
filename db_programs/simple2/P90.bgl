@@ -1,0 +1,7 @@
+game And1
+
+v : Bool
+v = and(True,True)
+
+o : Bool
+o = or(False,True)

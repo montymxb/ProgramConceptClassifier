@@ -1,0 +1,5 @@
+game LetWithWhile
+
+v : Int
+v = let x = 100 in
+    while x > 50 do x / 2
