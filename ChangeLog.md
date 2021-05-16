@@ -1,3 +1,3 @@
-# Changelog for ConceptGraph
+# Changelog for ProgramConceptClassifier
 
 ## Unreleased changes

@@ -1,6 +1,6 @@
 module Main where
 
-import FormalConceptAnalysis
+import ProgramConceptClassifier
 import Bogl_Specifics
 import System.Directory
 import System.Process
@@ -30,7 +30,6 @@ main :: IO ()
 main = do
 
   let dir = "db_programs/"
-  --let dir = "/Users/Bfriedman/OSU/Research/ConceptGraph/db_programs/"
   --let dir160 = "/Users/Bfriedman/Downloads/CS160-BoGL-section/assignment_9_tictactoe/"
   --let dir160 = "/Users/Bfriedman/Downloads/CS160-BoGL-section/assignment_8_nim_board/"
   --let dir160 = "/Users/Bfriedman/Downloads/CS160-BoGL-section/sub_8/"
@@ -52,33 +51,22 @@ main = do
 
   ct <- getGameBGLFile "CoinToss"
 
-  let known = rightProgs $ parseBOGLPrograms [ct]
+  let known = rightProgs $ parseBOGLPrograms [k7]
   putStrLn $ show known
   -- k1,k2,k3,k4,k5,k6,k7 has empty classification!
 
   -- <- getSimpleBGLFile "tictactoe" -- tictactoe
   g2 <- getGameBGLFile "tictactoe"
   let ex = ("G1","game S\nf : Int -> Int\nf(x) = if x > 1 then x * f(x-1) else 1\nt : Bool\nt = True\nv : Int\nv = let x = 24 in 24 * 2 + 5 - x")
-  let goal = rightProgs $ parseBOGLPrograms [g2] -- ("G1","game S\nv : Int\nv = let x = 24 in 24 * 2 + 5 - x")
+  let goal = rightProgs $ parseBOGLPrograms [ct] -- ("G1","game S\nv : Int\nv = let x = 24 in 24 * 2 + 5 - x")
 
-  let extraProgs    = []
-  let extraAttribs  = []
-
-  (dotContent,fringe) <- fca (FCA
+  let (dotContent, _) = analyze (MappablePrograms
         boglConceptMapping
         known
         goal
-        bglFiles
-        extraProgs
-        extraAttribs)
-
-  {-
-  putStrLn $ "Program Count: " ++ show (length bglFiles)
-  putStrLn $ "Fringe: " ++ show fringe
-  putStrLn dotContent
-  -}
+        bglFiles)
 
   -- write GV spec
   writeFile "R32_Test_1.gv" dotContent
-  _ <- system ("dot -Tpng -oR32_Test_1.png R32_Test_1.gv")
+  system ("dot -Tpng -oR32_Test_1.png R32_Test_1.gv")
   return ()

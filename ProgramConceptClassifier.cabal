@@ -6,14 +6,14 @@ cabal-version: 1.12
 --
 -- hash: 693b758c709d0f42d565c7446a5b46d7d1959fb26b8abbf7c7792d80d26f529c
 
-name:           ConceptGraph
+name:           ProgramConceptClassifier
 version:        0.2.0.0
-description:    Please see the README on GitHub at <https://github.com/montymxb/ConceptGraph#readme>
-homepage:       https://github.com/montymxb/ConceptGraph#readme
-bug-reports:    https://github.com/montymxb/ConceptGraph/issues
-author:         Benjamin Friedman
+description:    Please see the README on GitHub at <https://github.com/montymxb/ProgramConceptClassifier#readme>
+homepage:       https://github.com/montymxb/ProgramConceptClassifier#readme
+bug-reports:    https://github.com/montymxb/ProgramConceptClassifier/issues
+author:         Benjamin Friedman Wilson
 maintainer:     friedmab@oregonstate.edu
-copyright:      2020 Benjamin Friedman
+copyright:      2020 Benjamin Friedman Wilson
 license:        BSD3
 license-file:   LICENSE
 build-type:     Simple
@@ -23,16 +23,16 @@ extra-source-files:
 
 source-repository head
   type: git
-  location: https://github.com/montymxb/ConceptGraph
+  location: https://github.com/montymxb/ProgramConceptClassifier
 
 library
   exposed-modules:
       Bogl_Specifics
       General
       GraphViz
-      FormalConceptAnalysis
+      ProgramConceptClassifier
   other-modules:
-      Paths_ConceptGraph
+      Paths_ProgramConceptClassifier
   hs-source-dirs:
       src
   build-depends:
@@ -50,15 +50,15 @@ library
     , parsec
   default-language: Haskell2010
 
-executable ConceptGraph-exe
+executable ProgramConceptClassifier-exe
   main-is: Main.hs
   other-modules:
-      Paths_ConceptGraph
+      Paths_ProgramConceptClassifier
   hs-source-dirs:
       app
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      ConceptGraph
+      ProgramConceptClassifier
     , base >=4.7 && <5
     , containers
     , haskell-src-exts
@@ -73,16 +73,16 @@ executable ConceptGraph-exe
     , parsec
   default-language: Haskell2010
 
-test-suite ConceptGraph-test
+test-suite ProgramConceptClassifier-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
-      Paths_ConceptGraph
+      Paths_ProgramConceptClassifier
   hs-source-dirs:
       test
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      ConceptGraph
+      ProgramConceptClassifier
     , base >=4.7 && <5
     , containers
     , haskell-src-exts
