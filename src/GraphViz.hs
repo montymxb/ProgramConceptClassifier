@@ -16,13 +16,14 @@ uidForVerts x (y:ys) = (("V" ++ (show x), y) : (uidForVerts (x+1) ys))
 
 -- | Produces uniquely identifiable edges
 uidForEdges :: (Eq a, GraphVizable a) => [(UID,a)] -> [(a,a)] -> [((UID,a),(UID,a))]
-uidForEdges verts edges = let firsts = map (\(a,b) -> case (find (\(_,n) -> a == n) verts) of
-                                                        Just (u,_) -> ((u,a),b)
-                                                        Nothing-> error "first FAILED") edges in
-                          let scnds  = map (\(a,b) -> case (find (\(_,n) -> b == n) verts) of
-                                                        Just (u,_) -> (a,(u,b))
-                                                        Nothing-> error "second FAILED") firsts in
-                          scnds
+uidForEdges verts edges =
+  let firsts = map (\(a,b) -> case (find (\(_,n) -> a == n) verts) of
+                                Just (u,_) -> ((u,a),b)
+                                Nothing-> error "first FAILED") edges in
+  let scnds  = map (\(a,b) -> case (find (\(_,n) -> b == n) verts) of
+                                Just (u,_) -> (a,(u,b))
+                                Nothing-> error "second FAILED") firsts in
+  scnds
 
 -- | Folds pairs of strings into GV properties
 foldPairsIntoProps :: [(String,String)] -> String

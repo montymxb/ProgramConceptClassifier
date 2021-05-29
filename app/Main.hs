@@ -4,6 +4,7 @@ import ProgramConceptClassifier
 import Bogl_Specifics
 import System.Directory
 import System.Process
+import Toy
 
 
 --getBGLFileFromDir :: String -> String -> (String,IO String)
@@ -39,6 +40,8 @@ main = do
 
   bglFiles1 <- getAllBGLFilesFromDir (dir ++ "simple2/")
   bglFiles2 <- getAllBGLFilesFromDir (dir ++ "games/")
+  bglFiles3 <- getAllBGLFilesFromDir (dir ++ "simple/")
+  -- TODO remove bglFiles3, was used for testing ONLY
   let bglFiles = rightProgs $ parseBOGLPrograms $ bglFiles1 ++ bglFiles2
 
   --k1 <- getSimpleBGLFile "Simplest" -- Notakto
@@ -51,14 +54,14 @@ main = do
 
   ct <- getGameBGLFile "CoinToss"
 
-  let known = rightProgs $ parseBOGLPrograms [k7]
+  let known = rightProgs $ parseBOGLPrograms []
   putStrLn $ show known
   -- k1,k2,k3,k4,k5,k6,k7 has empty classification!
 
   -- <- getSimpleBGLFile "tictactoe" -- tictactoe
   g2 <- getGameBGLFile "tictactoe"
   let ex = ("G1","game S\nf : Int -> Int\nf(x) = if x > 1 then x * f(x-1) else 1\nt : Bool\nt = True\nv : Int\nv = let x = 24 in 24 * 2 + 5 - x")
-  let goal = rightProgs $ parseBOGLPrograms [ct] -- ("G1","game S\nv : Int\nv = let x = 24 in 24 * 2 + 5 - x")
+  let goal = rightProgs $ parseBOGLPrograms [] -- ("G1","game S\nv : Int\nv = let x = 24 in 24 * 2 + 5 - x")
 
   let (dotContent, _) = analyze (MappablePrograms
         boglConceptMapping
@@ -69,4 +72,16 @@ main = do
   -- write GV spec
   writeFile "R32_Test_1.gv" dotContent
   system ("dot -Tpng -oR32_Test_1.png R32_Test_1.gv")
+  return ()
+
+-- Toy programs
+main2 :: IO ()
+main2 = do
+  let (dotContent, _) = analyze (MappablePrograms
+                                  toyConceptMapping
+                                  [p1]
+                                  []
+                                  [p1,p2,p3,p4])
+  writeFile "Toy.gv" dotContent
+  system ("dot -Tpng -oToy.png Toy.gv")
   return ()
