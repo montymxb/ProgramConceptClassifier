@@ -4,6 +4,7 @@ import ProgramConceptClassifier
 import Bogl_Specifics
 import System.Directory
 import System.Process
+import Toy
 
 --getBGLFileFromDir :: String -> String -> (String,IO String)
 getFileFromDir :: String -> String -> String -> IO (String, String)
