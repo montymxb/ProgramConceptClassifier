@@ -37,10 +37,10 @@ class GraphVizable a where
   edge :: a -> a -> [(String,String)]
 
   -- | Writes out a DOT file suitable for using with `dot`, system dependent
-  makeDot :: Eq a => ([a],[(a,a)]) -> IO (String)
+  makeDot :: Eq a => ([a],[(a,a)]) -> String
   makeDot (n,e) = do
     let uV = uidForVerts 1 n
     let uE = uidForEdges uV e
     let nodes = map (\(u,x) -> u ++ " " ++ foldPairsIntoProps (node x)) uV
     let edges = map (\((u,a),(u',b)) -> u ++ " -> " ++ u' ++ " " ++ foldPairsIntoProps (edge a b)) uE
-    return $ "strict digraph {\n" ++ join ";\n" nodes ++ ";\n" ++ join ";\n" edges ++ "\n}"
+    "strict digraph {\n" ++ join ";\n" nodes ++ ";\n" ++ join ";\n" edges ++ "\n}"

@@ -15,9 +15,10 @@ import General
 import Parser.Parser
 import Data.Data
 
-import Debug.Trace
-
--- Data, Typeable, and Eq instances for the data types we we need to traverse
+-- | Orphan Data, Typeable (and Eq for a few cases) instances for the BoGL AST data types
+-- These are critical to allow generic mapping of an otherwise opaque structure
+-- Fixed approaches can be devised for an encoding on a case by case basis,
+-- but they are inflexible, time-consuming to write, and potentially error prone
 deriving instance (Eq a) => Eq (LS.Game a)
 deriving instance Eq BoardDef
 deriving instance Eq InputDef
@@ -185,7 +186,7 @@ parseBOGLPrograms ls = map (\(n,p) -> (n, parsePreludeAndGameText "" p n)) ls
 rightProgs :: Show a => [(String,Either a (LS.Game SourcePos))] -> [(String,LS.Game SourcePos)]
 rightProgs [] = []
 rightProgs ((n,x):ls) = case x of
-                      Left l  -> rightProgs ls
+                      Left _  -> rightProgs ls
                       Right g -> (n,g) : rightProgs ls
 
 -- | Get unparsable programs

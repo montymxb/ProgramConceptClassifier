@@ -2,7 +2,7 @@
 --
 -- FormalConceptAnalysis implementation
 --
-module FormalConceptAnalysis where
+module ProgramConceptClassifier where
 
 import Data.Data
 import General
@@ -96,7 +96,7 @@ instance GV.GraphVizable FormalConcept where
   node (FormalConcept ((g,_,a),_,_))    = case elem "Known" g of
     True  -> [("label",join ", " (map underscoreReplace g)),("fontcolor","white"),("style","filled"),("fillcolor",purple),("fontname","Helvetica")] ++ a
     False -> [("label",join ", " (map underscoreReplace g)),("fontname","Helvetica")] ++ a
-  edge (FormalConcept ((_,a,atrs),_,_)) (FormalConcept ((_,b,atrs'),_,_)) = let d = (b \\ a) in
+  edge (FormalConcept ((_,a,_),_,_)) (FormalConcept ((_,b,atrs'),_,_)) = let d = (b \\ a) in
                                                                  if length d > 0 then
                                                                    case elem ("fontcolor",fadedPurple) atrs' of
                                                                      True  -> [("label",join ", " (map underscoreReplace d)),("fontname","Helvetica"),("fontcolor","#ff8c0033")] ++ atrs' -- fade it
@@ -123,7 +123,7 @@ type GoalPrograms a   = [(String,a)]
 type CoursePrograms a = [(String,a)]
 
 -- Configuration for performing Formal Concept Analysis
-data FCA a b = FCA (ConceptMapping b) (KnownPrograms a) (GoalPrograms a) (CoursePrograms a) [Object] [b]
+data MappablePrograms a b = MappablePrograms (ConceptMapping b) (KnownPrograms a) (GoalPrograms a) (CoursePrograms a)
 
 type ConceptLattice = ([FormalConcept],[(FormalConcept,FormalConcept)])
 
@@ -157,17 +157,6 @@ getJoin (nodes,_) = head $ PO.maxima nodes
 getMeet :: ConceptLattice -> FormalConcept
 getMeet (nodes,_) = head $ PO.minima nodes
 
--- updates a single concept in both the nodes & edges portion and returns the updated lattice
--- focuses on updating name only
-{-
-updateInLattice :: ConceptLattice -> FormalConcept -> ConceptLattice
-updateInLattice (nodes,edges) fc@(FormalConcept (_,a,b)) = let n = map maybeReplace nodes in
-                                                           let e = map (\(f1,f2) -> (maybeReplace f1, maybeReplace f2)) edges in
-                                                           (n,e) where
-                                                             maybeReplace :: FormalConcept -> FormalConcept
-                                                             maybeReplace fc2@(FormalConcept (_,a2,b2)) = if a == a2 && b == b2 then fc else fc2
--}
-
 data Wrapper = Wrap String
 
 instance Show Wrapper where
@@ -193,8 +182,8 @@ getNextPrograms ks cl = let lf = filter (\x -> not $ null (lfst $ conceptLabel x
 -- run the analysis, taking an FCA analysis instance
 -- Takes known programs, goal programs, and course programs (programs available in the course)
 -- returns a Dot specification & a list of programs in the outer 'fringe'
-fca :: (Data a, Show a, Subsumable b, Show b) => FCA a b -> IO (String,[(String,[String])])
-fca (FCA conceptMapping kps gps cps extraKnownProgs extraKnownIntents) = do
+analyze :: (Data a, Show a, Subsumable b, Show b) => MappablePrograms a b -> (String,[(String,[String])])
+analyze (MappablePrograms conceptMapping kps gps cps) = do
   -- extract terms for the these program lists, preserving names
   -- ### STEP 1: extract AST, (program,[term])
   let knownTaggedPrograms   = S.toList $ S.fromList $ map (astToTerms conceptMapping) kps
@@ -229,15 +218,12 @@ fca (FCA conceptMapping kps gps cps extraKnownProgs extraKnownIntents) = do
   -- find known concepts plus any concepts that we could additionally mark as known (ones that are subsets of what we indicated we have learned so far, beyond the known program)
   -- TODO, this may be unnecessary now (the addition of the other concepts from the filter)
   -- The only reason this is here was to make 'Concepts' and 'Programs' explicit by hand...but not sure I want to do that anymore (it's not in our specification, should be dropped)
-  let knownFormalConcepts = (filter (\(FormalConcept ((g,m,_),_,_)) -> S.fromList g `S.isSubsetOf` S.fromList extraKnownProgs && S.fromList m `S.isSubsetOf` S.fromList (map show extraKnownIntents) && (not $ S.null $ S.fromList g) && (not $ S.null $ S.fromList m)) totalConcepts')
+  let knownFormalConcepts = (filter (\(FormalConcept ((g,m,_),_,_)) -> S.fromList g `S.isSubsetOf` S.empty && S.fromList m `S.isSubsetOf` S.empty && (not $ S.null $ S.fromList g) && (not $ S.null $ S.fromList m)) totalConcepts')
   --let knownFormalConcepts = knownFormalConcepts' ++ (filter (\x -> all (x PO.>) knownFormalConcepts') totalConcepts')
   -- the above line should have done this, but it seems to have failed in this regard
   let goalFormalConcepts = catMaybes $ map (findObjectConcept totalConcepts') (map fst goalTaggedPrograms)
   -- Apply Bounding concepts to get sub-lattice to work with
   let boundingConcepts = catMaybes $ map (findObjectConcept totalConcepts') ((map fst knownTaggedPrograms) ++ (map fst goalTaggedPrograms))
-
-  --putStrLn $ show $ map conceptLabel knownFormalConcepts
-  --putStrLn $ "Pre-filter Classification Count: " ++ (show $ length totalConcepts')
 
   let upKnownNeigh = concatMap (getAllUpperNeighbors totalConcepts') knownFormalConcepts
   let upGoalNeigh = concatMap (getAllUpperNeighbors totalConcepts') goalFormalConcepts
@@ -258,26 +244,14 @@ fca (FCA conceptMapping kps gps cps extraKnownProgs extraKnownIntents) = do
                         --(False,True)  -> filter (\x -> elem x upGoalNeigh || elem x goalFormalConcepts) totalConcepts'
                         (False,True)  -> filter (\x -> any (x PO.>=) (PO.minima boundingConcepts)) totalConcepts'
 
-  --let dnKnownNeigh = concatMap (getLowerNeighbors' totalConcepts') knownFormalConcepts
-  --let dnNextProgs = concatMap (fst . conceptLabel) (getNextPrograms knownFormalConcepts totalConcepts')
-  --let totalConcepts = filter (\x -> elem x dnKnownNeigh) totalConcepts''
-
-  {--}
+  {-
+  -- helpful for debugging
   putStrLn $ "Num Course Progs: " ++ (show $ length cps)
   putStrLn $ "Num Course Objects: " ++ (show $ length ((\(x,_,_) -> x) totalContext))
   putStrLn $ "Num Course attributes: " ++ (show $ length ((\(_,x,_) -> x) totalContext))
   putStrLn $ "Num Formal Concepts (Program,Attribute set pairs): " ++ (show $ length totalConcepts)
   putStrLn $ showConcepts totalConcepts
-  {--}
-
-  -- report Known Concepts
-  --let knownConcepts = S.toList $ S.fromList (concatMap conceptIntent knownFormalConcepts)
-  --putStrLn $ "Known Concepts: " ++ show knownConcepts
-
-  -- report Goal concepts (minus Known), these represent all concepts in the reduced set
-  --let goalConcepts = (S.toList $ S.fromList (concatMap conceptIntent goalFormalConcepts)) \\ knownConcepts
-  --putStrLn $ "Goal Concepts: " ++ show goalConcepts
-
+  -}
 
   -- ### STEP 4:  produce concept lattice
   -- create Formal Concept of all intents
@@ -286,9 +260,7 @@ fca (FCA conceptMapping kps gps cps extraKnownProgs extraKnownIntents) = do
   let fcg = FormalConcept (([],[],[]), contextExtent totalContext, [])
   -- Add the Formal Concept of all Extents ONLY if a program does not exist that captures this notion
   let l1 = if length (PO.maxima totalConcepts) > 1 then fcg:totalConcepts else totalConcepts
-  --let l1 = if doesConceptExtentAlreadyExist fcg totalConcepts then totalConcepts else fcg:totalConcepts
   -- Add the Formal Concept of all Intents ONLY if a program does not exist that captures this notion
-  --let l2 = if doesConceptIntentAlreadyExist fcm l1 then l1 else fcm:l1
   let l2 = if length (PO.minima totalConcepts) > 1 then fcm:l1 else l1
 
   let conceptLattice = mkConceptLattice l2
@@ -302,9 +274,6 @@ fca (FCA conceptMapping kps gps cps extraKnownProgs extraKnownIntents) = do
   let dnNextProgsReduced = filter (\x -> all (\y -> x == y || not (x PO.< y)) dnNextProgs') dnNextProgs'
   let dnNextProgs  = concatMap (\(a,b,_) -> map (\y -> (y,b)) a) (map conceptLabel dnNextProgsReduced)
 
-  -- TODO this...
-  -- remap ALL concepts, if any are a subset of the fringe programs, add full color (including the fringe)
-  -- any that are not, make them partial colors
   let l2' = map (\x@(FormalConcept ((lg,lm,la),g,m)) -> case (any (x PO.>=) dnNextProgsReduced) of
                           True  -> FormalConcept ((lg,lm,("fontcolor","#770077"):("color","#000000"):la),g,m) -- full color (reachable/known)
                           False -> FormalConcept ((lg,lm,("fontcolor","#77007733"):("color","#00000033"):la),g,m)) l2 -- faded color (not yet reached/unknown)
@@ -312,124 +281,20 @@ fca (FCA conceptMapping kps gps cps extraKnownProgs extraKnownIntents) = do
   -- rebuild the lattice again, using the annotated elements (setting faded elements past the fringe) (using l2')
   let conceptLattice = mkConceptLattice l2'
 
-  -- TODO, this removed conflicting implications, but there may be a better way to do this
-  --let implications = filterCommonPremise (conceptIntent $ getJoin conceptLattice) $ removeConflictingImplications $ deriveImplications (conceptIntent totalContext) $ getTT totalContext
-  --let implications = filterCommonPremise (conceptIntent $ getJoin conceptLattice) $ deriveImplications (conceptIntent totalContext) $ getTT totalContext
-  --putStrLn $ "Num implications: " ++ (show $ length implications)
-  --qq <- stringImplications $ sort $ implications
+  -- Can be reintroduced separately to produce a CSV output for hand analysis
+  -- produce a small matrix
+  --let smallMat = mkFormalConceptMatrixSmall totalContext
+  -- export to CSV
+  --exportCSV totalContext smallMat
 
-  -- 0) get object concepts of the goal (knownFormalConcepts)
-  -- 1) compute the final knowledge state desired from OCG
-  --let finalKS = KnowledgeState goalFormalConcepts (concatMap conceptExtent knownFormalConcepts) (concatMap conceptIntent goalFormalConcepts) --(concatMap conceptExtent knownFormalConcepts, concatMap conceptIntent goalFormalConcepts)
-  --putStrLn $ "\n\nFinal Knowledge State: " ++ knowledgeStateToStr finalKS
-
-  -- 2) get the initially known object concepts
-  -- 3) use these to build the initial knowledge state
-  --let initKS = KnowledgeState knownFormalConcepts (extraKnownProgs ++ map fst knownTaggedPrograms) ((map show extraKnownIntents) ++ concatMap conceptIntent knownFormalConcepts) -- (map fst knownTaggedPrograms, concatMap conceptIntent knownFormalConcepts)
-  --putStrLn $ "\nCurrent Knowledge State: " ++ knowledgeStateToStr initKS
-  -- 4) store the known concepts as well
-    -- model this as a data type for knowledge
-  -- 5) compute the direct lower neighbors of this knowledge state (these are the next transitions)
-  --let nxtNeighbors = concatMap (getLowerNeighbors conceptLattice) knownFormalConcepts \\ knownFormalConcepts
-  --putStrLn $ show nxtNeighbors
-  --putStrLn ""
-  --let knowledgeSteps = getKnowledgeSteps initKS conceptLattice
-  --putStrLn $ show knowledgeSteps
-  --putStrLn $ show $ makeUnique $ fg2 knowledgeSteps
-
-  --let prettyLattice = mapL conceptLabel conceptLattice
-
-  -- full detailed formal context as a matrix
-  --let (pm,mm,matt) = mkFormalConceptMatrix totalContext
-  --putStrLn $ showMatLegend pm
-  --putStrLn $ showMatLegend mm
-  --putStrLn $ prettyMatrix matt
-  let smallMat = mkFormalConceptMatrixSmall totalContext
-  --putStrLn $ prettyMatrix smallMat
-  --putStrLn "* Exported to CSV"
-  exportCSV totalContext smallMat
-  -- printout a webpage
-  --printWebPage (filter (\(a,_) -> a `elem` extraKnownProgs) cps) kps gps initKS finalKS knowledgeSteps
-
-  dotSpec <- GV.makeDot conceptLattice
-
-  return (dotSpec,dnNextProgs)
+  -- return DOT spec & fringe
+  (GV.makeDot conceptLattice,dnNextProgs)
 
 
 
 -- | Finds the object concept (classification) from a list of classifications (if present)
 findObjectConcept :: [FormalConcept] -> Object -> Maybe FormalConcept
 findObjectConcept fc o = find (\(FormalConcept ((g,_,_),_,_)) -> elem o g) fc
-
-
--- | simple knowledge state printout
-{-
-knowledgeStateToStr :: KnowledgeState -> String
-knowledgeStateToStr (KnowledgeState ks progs _) = "{"++ join "," progs ++"}\n{" ++ join "," (concatMap conceptIntent ks) ++ "}"
--}
-
-{-
-printWebPage :: [(String,String)] -> KnownPrograms -> GoalPrograms -> KnowledgeState -> KnowledgeState -> [KnowledgeStep] -> IO ()
-printWebPage eps kps gps (KnowledgeState _ _ attrs') (KnowledgeState _ _ attrs) ls = do
-  let dt = "<!DOCTYPE html><html><head><title>Ex. 1</title><script src='site/script.js'></script><link href='site/style.css' type='text/css' rel='stylesheet'/></link></head><div></div><body><div id='main'>"
-  let ks = "<div id='wrap'><div class='left'><div>" ++ concatMap t2s kps ++ "<p class='attributes'>(" ++ join ", " (makeUnique attrs') ++ ")</p>" ++ "</div></div><div class='right'><div>" ++ concatMap t2s gps ++ "<p class='attributes'>(" ++ join ", " (makeUnique (attrs \\ attrs')) ++ ")</p></div></div></div>"
-  let img = "<img src='R32_Test_1.svg'>"
-  --let prgs = "<h2>Step Programs</h2><div>" ++ concatMap sprg eps ++ "</div>"
-  --let stps = "<h2>Frontier Steps</h2><div class='steps'>" ++ join "<br/><br/><br/>" (map kstep ls) ++ "</div>"
-  let db = "<h3>Here those extra programs on the graph should be shown...</h3></div></body></html>"
-  writeFile ("Result.html") $ dt ++ ks ++ img ++ db
-  where
-    t2s :: (String,String) -> String
-    t2s (a,b) = "<h3 class='pn'>" ++ a ++ "</h3><br/><div class='code'>" ++ b ++ "</div>"
-
-    kstep :: KnowledgeStep -> String
-    kstep (Step (o,a) ks) = "<div class='step'>Step ({" ++ join "," o ++ "},{" ++ join "," a  ++ "})" ++ "<div class='step-block'>" ++ concatMap kstep ks ++ "</div></div>"
-    kstep (Fringe o a) = "<div class='step'>Fringe ({" ++ join "," o ++ "},{" ++ join "," a  ++ "})</div>"
-
-    sprg :: (String,String) -> String
-    sprg (a,b) = "<h4>" ++ a ++ "</h4><div class='code'>" ++ b ++ "</div>"
--}
-
-
--- TODO this may not be helpful anymore
-data KnowledgeStep =
-  -- a step from a classification to zero or more steps
-  Step Label (S.Set KnowledgeStep) |
-  -- a fringe step, which ends with a set of unknown programs & concepts that remain to be learned
-  Fringe [Object] [Attribute]
-    deriving (Show,Ord,Eq)
-
--- get and report only the total fringe
--- TODO this may not be helpful anymore
-fringe :: KnowledgeStep -> KnowledgeStep -> KnowledgeStep
-fringe fs (Step _ ks) = foldl fringe fs ks
-fringe (Fringe o' a'') (Fringe o a) = Fringe (makeUnique $ o++o') (makeUnique $ a++a'')
-fringe _ _ = error "Unexpected case for 'fringe'"
-
--- TODO this may not be helpful anymore
-fg2 :: [KnowledgeStep] -> [KnowledgeStep]
-fg2 [] = []
-fg2 ((Step _ ks):ls) = fg2 (S.toList ks) ++ fg2 ls
-fg2 (x:ls) = x : fg2 ls
-
-
--- Get knowledge steps to learn from
--- TODO this may not be helpful anymore
-getKnowledgeSteps :: KnowledgeState -> ConceptLattice -> [KnowledgeStep]
-getKnowledgeSteps (KnowledgeState ks kprogs kc) cl =
-  let mm = PO.maxima ks in
-  let ln = concatMap (getLowerNeighbors cl) mm in --concatMap (\un -> map (\y -> (un,y)) (getLowerNeighbors cl un)) ks in
-  --let lowerNeighbors = ln in --filter (\(_,q) -> not (q `elem` ks) && (getUpperNeighbors cl q) PO.<= ks) ln in
-  map (getKnowledgeSteps' ks) ln
-  where
-    getKnowledgeSteps' :: [FormalConcept] -> FormalConcept -> KnowledgeStep
-    getKnowledgeSteps' ks' x  = let unknownClassifications = conceptLabel x in
-                                let unknownConcepts = (uniqueInSameOrder $ lsnd unknownClassifications) \\ kc in
-                                let unknownPrograms = (uniqueInSameOrder $ lfst unknownClassifications) \\ kprogs in
-                                -- ??? how to fix this relation here
-                                case (length unknownConcepts, length unknownPrograms) of
-                                  (0,0)  -> Step (conceptLabel x) $ S.fromList $ map (getKnowledgeSteps' (x:ks')) (filter (\q -> (getUpperNeighbors cl q) PO.<= (x:ks')) (getLowerNeighbors cl x))
-                                  (_,_)  -> Step (conceptLabel x) $ S.fromList [(Fringe unknownPrograms unknownConcepts)]
 
 convertToCSV :: [[String]] -> String
 convertToCSV ls = join "\n" $ map (\q -> join "," (map show q)) ls
@@ -439,11 +304,13 @@ addNames [] [] = []
 addNames (x:xs) (y:ys) = (x : y) : addNames xs ys
 addNames _ _ = error "Unexpected case for 'addNames'"
 
-exportCSV :: FormalContext -> Matrix Mark -> IO ()
-exportCSV (g,m,_) mm = do
-  let lsts = map (\q -> map show q) (toLists mm)
-  let addedNames = addNames g lsts
-  writeFile ("export.csv") $ convertToCSV (("":m) : addedNames)
+-- | TODO phased out for now, but can be used to reintroduce CSV output
+-- for hand analysis
+-- exportCSV :: FormalContext -> Matrix Mark -> IO ()
+-- exportCSV (g,m,_) mm = do
+--   let lsts = map (\q -> map show q) (toLists mm)
+--   let addedNames = addNames g lsts
+--   writeFile ("export.csv") $ convertToCSV (("":m) : addedNames)
 
 -- determine whether a concept extent already exists
 doesConceptExtentAlreadyExist :: FormalConcept -> [FormalConcept] -> Bool
