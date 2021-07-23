@@ -30,7 +30,8 @@ library
       Bogl_Specifics
       General
       GraphViz
-      FormalConceptAnalysis
+      ProgramConceptClassifier
+      Toy
   other-modules:
       Paths_ProgramConceptClassifier
   hs-source-dirs:
