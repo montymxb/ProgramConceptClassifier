@@ -4,11 +4,15 @@ The Program Concept Classifier is a practical application of a technique for pro
 
 The associated thesis: [Structuring Teachable Knowledge through Program-Concept Classifications](https://ir.library.oregonstate.edu/concern/graduate_thesis_or_dissertations/tq57nz829).
 
+The project is built using [stack](https://docs.haskellstack.org/en/stable/README/).
+
 ## What's in this?
 
 This project contains a generalizable implementation of the program-concept classification technique. It utilizes Formal Concept Analysis (FCA) to classify objects and their attributes (programs and their concepts) with respect to each other.
 
 This particular implementation allows taking a list of objects that derive the **Data** typeclass. This allows a generic mapping to be defined recursively over objects, combined with a user-provided mapping function, to extract and associate each 'program' with the concepts entailed by its AST. This approach can work beyond programs in AST form considering the **Data** limitation is still quite broad, but this work did not explore those possibilities.
+
+Upon running `stack ghci`, the functions `main` and `exampleToy` provide examples that can be run immediately to produce the files **AnalysisLattice.png** and **Toy.png** for inspection.
 
 ## How does it work?
 

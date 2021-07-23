@@ -59,3 +59,16 @@ main = do
   writeFile "AnalysisDOT.gv" dotContent
   _ <- system ("dot -Tpng -oAnalysisLattice.png AnalysisDOT.gv")
   return ()
+
+
+-- | Similar to 'main', but an Example using a toy language
+exampleToy :: IO ()
+exampleToy = do
+  let (dotContent, _) = analyze (MappablePrograms
+                                  toyConceptMapping
+                                  [p1]
+                                  []
+                                  [p1,p2,p3,p4])
+  writeFile "Toy.gv" dotContent
+  system ("dot -Tpng -oToy.png Toy.gv")
+  return ()

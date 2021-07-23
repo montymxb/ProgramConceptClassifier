@@ -31,7 +31,11 @@ p4 = ("P4", L3 Neg (L2 And (L1 Tru) (L1 Tru)))
 
 p5 :: (String, L)
 p5 = ("P5", IfThenElse (L1 Fls) (L1 Tru) (L1 Fls))
+
+p6 :: (String, L)
 p6 = ("P6", IfThenElse (L1 Tru) (L2 Or (L1 Fls) (L1 Tru)) (L1 Fls))
+
+p7 :: (String, L)
 p7 = ("P7", IfThenElse (L2 And (L1 Tru) (L1 Fls)) (L3 Neg (L1 Tru)) (L3 Neg (L1 Fls)))
 
 data ToyConcept = Const | BinaryOp | UnaryOp | Program | Branching
